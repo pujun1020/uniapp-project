@@ -3,7 +3,7 @@
 		<!-- <u-navbar :is-back="false" :background="background" :border-bottom="false"></u-navbar> -->
 		<u-gap height="88" bg-color="#EBF5FF"></u-gap>
 
-		<view class="wrap__head">
+		<view v-show="localChannel == '1'" class="wrap__head">
 			<u-tabs :list="list" :is-scroll="false" :current="current" @change="tabsChange" bg-color="#EBF5FF"
 				font-size="32" active-color="#1F252A" bar-width="67"></u-tabs>
 			<!-- <u-icon name="plus" color="#1F252A" size="40" class="wrap__head__plus"></u-icon> -->
@@ -113,6 +113,13 @@
 				</view>
 			</view> -->
 			<!-- <u-loadmore bg-color="rgb(240, 240, 240)" :status="loadStatus" @loadmore="addRandomData"></u-loadmore> -->
+			<u-empty
+				style="margin-top: 50px"
+				v-if="localChannel != '1' || (!cloundFirst.id)"
+				mode="data"
+				text="无数据"
+			>
+			</u-empty>
 		</view>
 
 		<view v-show="current === 1">
@@ -347,12 +354,14 @@
 				calendarShow: false,
 				calendarValue: '',
 				// 上传进度条
-				uploadShow: false
+				uploadShow: false,
+				localChannel: ''
 			}
 		},
 		onLoad() {
 			this.loadData()
 			this.addRandomData();
+			this.localChannel = uni.getStorageSync('channel')
 		},
 		onReachBottom() {
 			this.loadStatus = 'loading';

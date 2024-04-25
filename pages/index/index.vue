@@ -2,7 +2,7 @@
 	<view class="wrap">
 		<u-gap height="88" bg-color="#EBF5FF"></u-gap>
 		<view class="wrap__head">
-			<u-tabs :list="list" :is-scroll="false" :current="current" @change="change" bg-color="#EBF5FF"
+			<u-tabs v-show="localChannel == '1'" :list="list" :is-scroll="false" :current="current" @change="change" bg-color="#EBF5FF"
 				font-size="32" active-color="#1F252A" bar-width="67"></u-tabs>
 				<zb-popover placement="bottom-end"
 					theme="dark"
@@ -34,7 +34,7 @@
 				<view class="u-m-t-10 u-font-26">MCU：{{ equipInfo ? equipInfo.mcuVersion : '' }}</view>
 				<view class="u-m-t-10 u-font-26">系统：{{ equipInfo ? equipInfo.osAppProjectSN : '' }}</view>
 			</view>
-			<view class="u-m-l-30 u-m-r-30 u-flex wrap__bottom u-row-between">
+			<view v-show="localChannel == '1'" class="u-m-l-30 u-m-r-30 u-flex wrap__bottom u-row-between">
 				<view class="wrap__bottom__view" @click="carinfo(0)">
 					<u-icon name="/static/index/menu-1.png" size="64"></u-icon>
 					<view class="u-font-26 u-type-info">车辆信息</view>
@@ -95,7 +95,8 @@
 					value: 'sanc'
 				}],
 				socketStatus: '未连接',
-				equipInfo: {}
+				equipInfo: {},
+				localChannel: ''
 			}
 		},
 		onLoad() {
@@ -106,6 +107,7 @@
 			loadData() {
 				const token = uni.getStorageSync('apitoken')
 				const user = uni.getStorageSync('user')
+				this.localChannel = uni.getStorageSync('channel')
 				if (token && user) {
 					getApp().globalData.apitoken = token
 					getApp().globalData.user = user
@@ -180,24 +182,29 @@
 						success: (res) => {
 							const result = res.result.split('&')
 							console.log(result)
-							if (result.length !== 3) {
+							if (result.length !== 8) {
 								uni.showToast({
-									title: '匹配失败！非适配仪表盘',
+									title: '仪表版本非最新，请检查',
 									icon: 'none'
 								});
-								return
 							}
 							try {
 								const ssid = result[0].split('=')[1].replace('\n', '')
 								const password = result[1].split('=')[1]
 								const url = result[2].split('=')[1]
+								const channel = result[3] ? result[3].split('=')[1] : '0'
+								const devsn = result[4] ? result[4].split('=')[1] : ssid
+								const osver = result[5] ? result[6].split('=')[1] : 'HB-MK630-HJ-256.03HJ-R2104-0.0-231205.A'
+								const mcuver = result[6] ? result[6].split('=')[1] : 'BR160-15-00-231205'
+								const conf = result[7] ? result[7].split('=')[1] : ''
 								uni.setStorageSync('ssid', ssid)
 								uni.setStorageSync('wifipwd', password)
 								uni.setStorageSync('socketurl', url)
+								uni.setStorageSync('channel', channel)
+								this.localChannel = channel
 								// 上报设备信息到云端
-								const params = { devSN: ssid, devOSAppVersion: 'HB-MK630-HJ-256.03HJ-R2104-0.0-231205.A', devMCUVersion: 'BR160-15-00-231205' }
+								const params = { devSN: devsn, devOSAppVersion: osver, devMCUVersion: mcuver, channel, conf }
 								this.$u.api.sendDevInfo(params).then(res => {
-									console.log(res)
 									getApp().globalData.devSN = ssid
 								})
 								this.getWifiList(ssid, password)
