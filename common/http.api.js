@@ -35,8 +35,12 @@ const install = (Vue, vm) => {
 	let getLastPackage = (params = {}) => vm.$u.get(requestUrl + '/api/apppackage/lastpackage', params);
 	// 获取设备列表信息
 	let getEquipList = (params = {}) => vm.$u.get(requestUrl + '/api/dev', params);
+	// 获取MCU最新版本信息（用于MCU升级）
+	let getMcuPackage = (params = {}) => vm.$u.get(requestUrl + '/api/mcupackage/lastpackage', params);
+	// 获取OSAPP最新版本信息（用于OSAPP升级）
+	let getOsAppPackage = (params = {}) => vm.$u.get(requestUrl + '/api/osapppackage/lastpackage', params);
 	// 将各个定义的接口名称，统一放进对象挂载到vm.$u.api(因为vm就是this，也即this.$u.api)下
-	vm.$u.api = {getCloud, setRequestUrl, register, login, getUser, setUser, modifypwd, getConfig, setConfig, feedback, sendDevInfo, getCloundVideoList, getLastPackage, getEquipList};
+	vm.$u.api = {getCloud, setRequestUrl, register, login, getUser, setUser, modifypwd, getConfig, setConfig, feedback, sendDevInfo, getCloundVideoList, getLastPackage, getEquipList, getMcuPackage, getOsAppPackage};
 }
 
 export default {

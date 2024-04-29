@@ -96,7 +96,10 @@
 				}],
 				socketStatus: '未连接',
 				equipInfo: {},
-				localChannel: ''
+				localChannel: '',
+				osAppProjectSN: '',
+				mcuProjectSN: '',
+				mcuOTCSN: ''
 			}
 		},
 		onLoad() {
@@ -105,6 +108,7 @@
 		},
 		methods: {
 			loadData() {
+				// uni.setStorageSync('channel', '1') // 测试全功能
 				const token = uni.getStorageSync('apitoken')
 				const user = uni.getStorageSync('user')
 				this.localChannel = uni.getStorageSync('channel')
@@ -134,6 +138,9 @@
 					.then(res => {
 						if (res.code === 0) {
 							this.equipInfo = res.data[0]
+							this.mcuProjectSN = this.equipInfo ? this.equipInfo.mcuVersion : ''
+							this.mcuOTCSN = this.equipInfo ? this.equipInfo.mcuOTCSN : ''
+							this.osAppProjectSN = this.equipInfo ? this.equipInfo.osAppProjectSN : ''
 						}
 					})
 			},
@@ -163,7 +170,7 @@
 			},
 			upgradation() {
 				uni.navigateTo({
-					url: "/pages/index/upgradation"
+					url: `/pages/index/upgradation?mcuProjectSN=${this.mcuProjectSN}&mcuOTCSN=${this.mcuOTCSN}&osAppProjectSN=${this.osAppProjectSN}`
 				})
 			},
 			autoConnection() {
