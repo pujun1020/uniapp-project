@@ -19,7 +19,8 @@
 				<view class="u-flex-col u-col-center u-p-t-38">
 					<u-image src="/static/index/car.png" width="602rpx" height="448rpx" mode="aspectFit"></u-image>
 					<view class="u-flex-col u-col-center">
-						<view class="bg__name">金浪318</view>
+						<view class="bg__name" v-show="localChannel == '1'">金浪318</view>
+						<view class="bg__name" v-show="localChannel == '0'">恒勃智联</view>
 						<view class="bg__status" :style="{ color: socketStatus === '已连接' ? 'green' : '#7D818C' }">{{ socketStatus }} | BT</view>
 					</view>
 				</view>
@@ -34,16 +35,16 @@
 				<view class="u-m-t-10 u-font-26">MCU：{{ equipInfo ? equipInfo.mcuVersion : '' }}</view>
 				<view class="u-m-t-10 u-font-26">系统：{{ equipInfo ? equipInfo.osAppProjectSN : '' }}</view>
 			</view>
-			<view v-show="localChannel == '1'" class="u-m-l-30 u-m-r-30 u-flex wrap__bottom u-row-between">
-				<view class="wrap__bottom__view" @click="carinfo(0)">
+			<view class="u-m-l-30 u-m-r-30 u-flex wrap__bottom u-row-between">
+				<view  v-show="localChannel == '1'" class="wrap__bottom__view" @click="carinfo(0)">
 					<u-icon name="/static/index/menu-1.png" size="64"></u-icon>
 					<view class="u-font-26 u-type-info">车辆信息</view>
 				</view>
-				<view class="wrap__bottom__view" @click="carinfo(1)">
+				<view  v-show="localChannel == '1'" class="wrap__bottom__view" @click="carinfo(1)">
 					<u-icon name="/static/index/menu-2.png" size="64"></u-icon>
 					<view class="u-font-26 u-type-info">仪表设置</view>
 				</view>
-				<view class="wrap__bottom__view" @click="upgradation">
+				<view v-show="localChannel == '0'" class="wrap__bottom__view" @click="upgradation">
 					<u-icon name="/static/index/menu-3.png" size="64"></u-icon>
 					<view class="u-font-26 u-type-info">OTA</view>
 				</view>
@@ -59,6 +60,7 @@
 
 <script>
 	import DvrList from './components/dvrlist.vue'
+	import {connectWifi,getConnectedSSID,removeWifi,removeWifiBySSID} from '../../common/cx-wifi/cx-wifi.js'
 	export default {
 		components: { DvrList },
 		data() {
@@ -137,6 +139,7 @@
 				this.$u.api.getEquipList({ userId: getApp().globalData.user.id })
 					.then(res => {
 						if (res.code === 0) {
+							console.log(res.data)
 							this.equipInfo = res.data[0]
 							this.mcuProjectSN = this.equipInfo ? this.equipInfo.mcuVersion : ''
 							this.mcuOTCSN = this.equipInfo ? this.equipInfo.mcuOTCSN : ''
@@ -174,11 +177,14 @@
 				})
 			},
 			autoConnection() {
-				const ssid = uni.getStorageSync('ssid')
-				const password = uni.getStorageSync('wifipwd')
+				//   ap=JL560397 &password=88888888&server_url=ws://192.168.3.1:7686
+				// 这里要加一个逻辑，根据channel来判断是否自动连接
+				const ssid ="JL560397";// uni.getStorageSync('ssid')
+				const password ="88888888" ;//uni.getStorageSync('wifipwd')
 				const url = uni.getStorageSync('socketurl')
 				if (ssid && password && url) {
-					this.getWifiList(ssid, password)
+					// this.getWifiList(ssid, password)
+					connectWifi(ssid,password);
 					this.openWebSocket(url)
 					getApp().globalData.devSN = ssid
 				}
@@ -186,6 +192,8 @@
 			onPlusDialog(e) {
 				if (e.value === 'sanc') {
 					uni.scanCode({
+						scanType:['qrCode'],
+						autoZoom:false,
 						success: (res) => {
 							const result = res.result.split('&')
 							console.log(result)
@@ -196,13 +204,19 @@
 								});
 							}
 							try {
+								var devName="恒勃智联";
 								const ssid = result[0].split('=')[1].replace('\n', '')
 								const password = result[1].split('=')[1]
 								const url = result[2].split('=')[1]
 								const channel = result[3] ? result[3].split('=')[1] : '0'
 								const devsn = result[4] ? result[4].split('=')[1] : ssid
-								const osver = result[5] ? result[6].split('=')[1] : 'HB-MK630-HJ-256.03HJ-R2104-0.0-231205.A'
+								const osver = result[5] ? result[5].split('=')[1] : 'HB-MK630-HJ-256.03HJ-R2104-0.0-231205.A'
 								const mcuver = result[6] ? result[6].split('=')[1] : 'BR160-15-00-231205'
+								if(!channel){
+									osver='HB-JL318-JL-318.01JL-0.0-231205-10.1';
+									mcuver='BR160-15-00-231205';
+									devName="金浪318";
+								}
 								const conf = result[7] ? result[7].split('=')[1] : ''
 								uni.setStorageSync('ssid', ssid)
 								uni.setStorageSync('wifipwd', password)
@@ -210,12 +224,28 @@
 								uni.setStorageSync('channel', channel)
 								this.localChannel = channel
 								// 上报设备信息到云端
-								const params = { devSN: devsn, devOSAppVersion: osver, devMCUVersion: mcuver, channel, conf }
+								const params = { devSN: devsn, devOSAppVersion: osver, devMCUVersion: mcuver, channel, conf,
+									apSN:ssid,apPassword:password,apWebsocket:url,devName:devName
+								}
+								console.log('params:',params)
 								this.$u.api.sendDevInfo(params).then(res => {
-									getApp().globalData.devSN = ssid
+									console.log('sendDevInfo:',res);
+									if(res.code!==0){
+										uni.showToast({
+											title:res.message,
+											icon:'none'
+										})
+									}else{
+										getApp().globalData.devSN = ssid;
+										this.loadEquipList();
+										if(channel!='0'){
+											console.log(ssid);
+											console.log(password);
+											connectWifi(ssid,password);
+											this.openWebSocket(url);
+										}
+									}
 								})
-								this.getWifiList(ssid, password)
-								this.openWebSocket(url)
 							} catch(e) {
 								console.error(e)
 							}
@@ -245,19 +275,27 @@
 				const hasStart = await this.startWifi()
 				console.log(hasStart)
 				if (hasStart !== true) return
-				uni.getWifiList({
-					success: (res1) => {
-						console.log('获取wifi列表命令发送 成功', res1)
-						this.getLianjie(ssid, password)
-					},
-					fail: (err) => {
-						console.error('获取wifi列表 失败', err)
-						uni.showModal({
-							content: err.errMsg,
-							showCancel: false
-						})
-					},
-				})
+				
+					uni.getWifiList({
+						success: (res1) => {
+							console.log('获取wifi列表命令发送 成功', res1)
+							uni.onGetWifiList((res)=>{
+								console.log('监听wifi列表',res)
+							})
+							setTimeout(()=> {
+								this.getLianjie(ssid, password)
+							}, 10000);
+						},
+						fail: (err) => {
+							console.error('获取wifi列表 失败', err)
+							uni.showModal({
+								content: err.errMsg,
+								showCancel: false
+							})
+						},
+					})
+				
+				
 			},
 			getLianjie(ssid, password) {
 				uni.connectWifi({

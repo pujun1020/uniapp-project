@@ -1,6 +1,6 @@
 {
     "name" : "DVR存储",
-    "appid" : "__UNI__EB53E91",
+    "appid" : "__UNI__3D8F432",
     "description" : "",
     "versionName" : "1.0.0",
     "versionCode" : "100",
@@ -95,7 +95,23 @@
             "portrait-secondary",
             "landscape-primary",
             "landscape-secondary"
-        ]
+        ],
+        "nativePlugins" : {
+            "Aimer-TCPPlugin" : {
+                "__plugin_info__" : {
+                    "name" : "TCP-Socket原生插件(支持Android和IOS) ",
+                    "description" : "Uniapp实现基于TCP的数据通信,支持单片机、智能家居等硬件交互,联系QQ: 462108858",
+                    "platforms" : "Android,iOS",
+                    "url" : "https://ext.dcloud.net.cn/plugin?id=2029",
+                    "android_package_name" : "com.hb.dvr",
+                    "ios_bundle_id" : "com.hb.dvr.ios",
+                    "isCloud" : true,
+                    "bought" : 1,
+                    "pid" : "2029",
+                    "parameters" : {}
+                }
+            }
+        }
     },
     /* 快应用特有相关 */
     "quickapp" : {},

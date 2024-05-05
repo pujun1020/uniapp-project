@@ -1,5 +1,9 @@
 import App from './App'
 
+import socket from './common/socket.js'
+
+Vue.prototype.$socket = socket;
+
 // #ifndef VUE3
 import Vue from 'vue'
 
