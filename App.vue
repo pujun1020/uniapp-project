@@ -7,7 +7,7 @@
 			socketTask: null,
 			devSN: '',
 			uploadUrl: '',
-			channel: ''
+			equip: {}
 		},
 		onLaunch: function() {
 			this.$u.api.getCloud().then(res => {

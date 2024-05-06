@@ -17,7 +17,7 @@
 		<view v-show="current === 0">
 			<view class="bg">
 				<view class="u-flex-col u-col-center u-p-t-38">
-					<u-image src="/static/index/car.png" width="602rpx" height="448rpx" mode="aspectFit"></u-image>
+					<u-image @click="toEquipList" src="/static/index/car.png" width="602rpx" height="448rpx" mode="aspectFit"></u-image>
 					<view class="u-flex-col u-col-center">
 						<view class="bg__name" v-show="localChannel == '1'">金浪318</view>
 						<view class="bg__name" v-show="localChannel == '0'">恒勃智联</view>
@@ -106,14 +106,11 @@
 		},
 		onLoad() {
 			this.loadData()
-			this.autoConnection()
 		},
 		methods: {
 			loadData() {
-				// uni.setStorageSync('channel', '1') // 测试全功能
 				const token = uni.getStorageSync('apitoken')
 				const user = uni.getStorageSync('user')
-				this.localChannel = uni.getStorageSync('channel')
 				if (token && user) {
 					getApp().globalData.apitoken = token
 					getApp().globalData.user = user
@@ -136,14 +133,16 @@
 				this.upgradeInfo()
 			},
 			loadEquipList() {
-				this.$u.api.getEquipList({ userId: getApp().globalData.user.id })
+				this.$u.api.getEquipList({ userId: getApp().globalData.user.id, sn: uni.getStorageSync('devsn') })
 					.then(res => {
 						if (res.code === 0) {
-							console.log(res.data)
 							this.equipInfo = res.data[0]
 							this.mcuProjectSN = this.equipInfo ? this.equipInfo.mcuVersion : ''
 							this.mcuOTCSN = this.equipInfo ? this.equipInfo.mcuOTCSN : ''
 							this.osAppProjectSN = this.equipInfo ? this.equipInfo.osAppProjectSN : ''
+							this.localChannel = this.equipInfo ? this.equipInfo.channel : ''
+							getApp().globalData.equip = this.equipInfo
+							this.autoConnection()
 						}
 					})
 			},
@@ -179,14 +178,15 @@
 			autoConnection() {
 				//   ap=JL560397 &password=88888888&server_url=ws://192.168.3.1:7686
 				// 这里要加一个逻辑，根据channel来判断是否自动连接
-				const ssid ="JL560397";// uni.getStorageSync('ssid')
-				const password ="88888888" ;//uni.getStorageSync('wifipwd')
-				const url = uni.getStorageSync('socketurl')
-				if (ssid && password && url) {
-					// this.getWifiList(ssid, password)
-					connectWifi(ssid,password);
-					this.openWebSocket(url)
-					getApp().globalData.devSN = ssid
+				if (this.localChannel === '1') {
+						const ssid = this.equipInfo.apSN
+						const password = this.equipInfo.apPassword
+						const url = this.equipInfo.apWebsocket
+						if (ssid && password && url) {
+							connectWifi(ssid,password);
+							this.openWebSocket(url)
+							getApp().globalData.devSN = ssid
+						}
 				}
 			},
 			onPlusDialog(e) {
@@ -204,30 +204,27 @@
 								});
 							}
 							try {
-								var devName="恒勃智联";
+								let devName="恒勃智联";
 								const ssid = result[0].split('=')[1].replace('\n', '')
 								const password = result[1].split('=')[1]
 								const url = result[2].split('=')[1]
-								const channel = result[3] ? result[3].split('=')[1] : '0'
+								let channel = result[3] ? result[3].split('=')[1] : ''
 								const devsn = result[4] ? result[4].split('=')[1] : ssid
-								const osver = result[5] ? result[5].split('=')[1] : 'HB-MK630-HJ-256.03HJ-R2104-0.0-231205.A'
-								const mcuver = result[6] ? result[6].split('=')[1] : 'BR160-15-00-231205'
+								let osver = result[5] ? result[5].split('=')[1] : 'HB-MK630-HJ-256.03HJ-R2104-0.0-231205.A'
+								let mcuver = result[6] ? result[6].split('=')[1] : 'BR160-15-00-231205'
 								if(!channel){
 									osver='HB-JL318-JL-318.01JL-0.0-231205-10.1';
 									mcuver='BR160-15-00-231205';
 									devName="金浪318";
+									channel = '1'
 								}
 								const conf = result[7] ? result[7].split('=')[1] : ''
-								uni.setStorageSync('ssid', ssid)
-								uni.setStorageSync('wifipwd', password)
-								uni.setStorageSync('socketurl', url)
-								uni.setStorageSync('channel', channel)
+								uni.setStorageSync('devsn', devsn)
 								this.localChannel = channel
 								// 上报设备信息到云端
 								const params = { devSN: devsn, devOSAppVersion: osver, devMCUVersion: mcuver, channel, conf,
 									apSN:ssid,apPassword:password,apWebsocket:url,devName:devName
 								}
-								console.log('params:',params)
 								this.$u.api.sendDevInfo(params).then(res => {
 									console.log('sendDevInfo:',res);
 									if(res.code!==0){
@@ -239,8 +236,6 @@
 										getApp().globalData.devSN = ssid;
 										this.loadEquipList();
 										if(channel!='0'){
-											console.log(ssid);
-											console.log(password);
 											connectWifi(ssid,password);
 											this.openWebSocket(url);
 										}
@@ -252,68 +247,6 @@
 						}
 					})
 				}
-			},
-			startWifi() {
-				return new Promise((resolve, reject) => {
-					uni.startWifi({
-						success: (res => {
-							console.log('启动wifi 成功', res)
-							resolve(true)
-						}),
-						fail: (err) => {
-							console.error('启动wifi 失败', err)
-							uni.showModal({
-								content: err.errMsg,
-								showCancel: false
-							})
-							reject(new Error(err))
-						},
-					})
-				})
-			},
-			async getWifiList(ssid, password) {
-				const hasStart = await this.startWifi()
-				console.log(hasStart)
-				if (hasStart !== true) return
-				
-					uni.getWifiList({
-						success: (res1) => {
-							console.log('获取wifi列表命令发送 成功', res1)
-							uni.onGetWifiList((res)=>{
-								console.log('监听wifi列表',res)
-							})
-							setTimeout(()=> {
-								this.getLianjie(ssid, password)
-							}, 10000);
-						},
-						fail: (err) => {
-							console.error('获取wifi列表 失败', err)
-							uni.showModal({
-								content: err.errMsg,
-								showCancel: false
-							})
-						},
-					})
-				
-				
-			},
-			getLianjie(ssid, password) {
-				uni.connectWifi({
-					SSID: ssid,
-					password: password,
-					forceNewApi:true,
-					success: (res) => {
-						console.log('wifi 成功:', res)
-						this.$uni.gettitle(res.errMsg)
-					},
-					fail: (err) => {
-						console.error('wifi连接 失败:', err)
-						uni.showModal({
-							content: err.errMsg,
-							showCancel: false
-						})
-					},
-				})
 			},
 			openWebSocket(url) {
 				this.socketStatus = '连接中'
@@ -361,6 +294,12 @@
 						}
 					})
 			},
+			// 设备列表选择
+			toEquipList() {
+				uni.navigateTo({
+					url: "/pages/index/myEquipList"
+				})
+			}
 		},
 	}
 </script>
