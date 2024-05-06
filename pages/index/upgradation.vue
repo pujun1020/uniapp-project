@@ -7,32 +7,49 @@
 				<u-image src="/static/index/ota/cloud.png" width="327rpx" height="233.82rpx" mode="aspectFit"></u-image>
 			</view>
 			<view class="info">
-				当前版本信息
+				当前设备信息
 			</view>
 			<view class="info-box">
 				<view class="u-p-t-34 u-p-b-34 u-p-r-24 u-p-l-34 u-flex u-row-between">
-					<view class="u-foont-24">APP</view>
+					<view class="u-foont-24">MCU</view>
 					<view class="u-flex">
-						<view class="u-font-22 u-type-info">{{ osAppProjectSN }}</view>
-						<view class="dot u-m-l-12"></view>
+						<view class="u-font-22 u-type-info">{{ equip.mcuVersion }}</view>
+						<!-- <view class="dot u-m-l-12"></view> -->
 					</view>
 				</view>
 				<view class="u-border-bottom"></view>
-				<view @click="onOtaUpgrad" class="u-p-t-34 u-p-b-34 u-p-r-24 u-p-l-34 u-flex u-row-between">
-					<view class="u-foont-24">MCU</view>
+				<view class="u-p-t-34 u-p-b-34 u-p-r-24 u-p-l-34 u-flex u-row-between">
+					<view class="u-foont-24">当前版本</view>
 					<view class="u-flex">
-						<view class="u-font-22 u-type-info">{{ mcuProjectSN }}</view>
-						<view v-show="otanew" class="dot u-m-l-12"></view>
+						<view class="u-font-22 u-type-info">{{ equip.mcuOTCSN }}</view>
+						<!-- <view v-show="otanew" class="dot u-m-l-12"></view> -->
 					</view>
-					<!-- <view class="u-font-22 u-type-info">{{ mcuProjectSN }}</view> -->
+				</view>
+				<view class="u-border-bottom"  v-show="otanew"></view>
+				<view  v-show="otanew" class="u-p-t-34 u-p-b-34 u-p-r-24 u-p-l-34 u-flex u-row-between">
+					<view class="u-foont-24">最新版本</view>
+					<view class="u-flex">
+						<view class="u-font-22 u-type-info">{{ otaNewVer }}</view>
+						<view class="dot u-m-l-12"></view>
+					</view>
+				</view>
+				<view v-show="otanew" class="u-border-bottom"></view>
+				<view v-show="otanew" class="u-p-t-34 u-p-b-34 u-p-r-24 u-p-l-34 u-flex u-row-between">
+					<view class="u-foont-24">最新版本描述</view>
+					<view class="u-flex" style="max-width: 70%;">
+						<view class="u-font-22 u-type-info">{{ otaDesc }}</view>
+						<view class="dot u-m-l-12"></view>
+					</view>
 				</view>
 			</view>
+			<view v-show="!otanew" style="text-align: center; margin-top: 30px;">已是最近版本</view>
+			<u-button v-show="otanew" style="width: 60%; margin-top: 50px;" @click="onOtaUpgrad" type="primary">OTA升级</u-button>
 		</view>
 		<!-- 下载进度弹出层 start -->
 		<u-popup v-model="uploadShow" mode="center" width="500" height="500" border-radius="14" :mask-close-able="false">
 			<view class="u-m-l-30 u-m-r-30 u-m-t-25 u-m-b-30">
 				<view class="u-text-center">
-					<view class="u-font-34 u-font-weight">正在下载OTA升级包</view>
+					<view class="u-font-34 u-font-weight">{{ progressTitle }}OTA升级包</view>
 					<view class="u-type-info u-font-24 u-m-t-30">{{ progressTxt }}</view>
 				</view>
 				
@@ -47,7 +64,7 @@
 
 <script>
 
-import {connectWifi,getConnectedSSID} from '../../common/cx-wifi/cx-wifi.js'
+import {connectWifi,getConnectedSSID,removeWifiBySSID} from '../../common/cx-wifi/cx-wifi.js'
 	var _self;
 	export default {
 		data() {
@@ -55,14 +72,15 @@ import {connectWifi,getConnectedSSID} from '../../common/cx-wifi/cx-wifi.js'
 				background: {
 					backgroundColor: "#D7EAFF",
 				},
-				osAppProjectSN: '',
-				mcuProjectSN: '',
-				mcuOTCSN: '',
+				equip: {},
 				otaDownUrl: '',
+				otaDesc:'',
+				otaNewVer:'',//最新版本号
 				otanew: false,
 				uploadShow: false,
 				progressVal: 0,
 				progressTxt: '',
+				progressTitle: '',
 				
 				fileBytes:[],//文件字节数组
 				ip: '192.168.13.1',
@@ -76,31 +94,31 @@ import {connectWifi,getConnectedSSID} from '../../common/cx-wifi/cx-wifi.js'
 		},
 		onLoad(option) {
 			_self = this;
-			
-			this.osAppProjectSN = option.osAppProjectSN
-			this.mcuProjectSN = option.mcuProjectSN
-			this.mcuOTCSN = option.mcuOTCSN
+			this.equip = getApp().globalData.equip
 			this.otanew = false
 			this.loadData()
 		},
 		methods: {
 			loadData() {
 				// ota升级
-				this.$u.api.getMcuPackage({ mcuProjectSN: this.mcuProjectSN })
+				console.log(this.equip)
+				console.log(this.equip.mcuProjectSN)
+				this.$u.api.getMcuPackage({ mcuprojectsn: this.equip.mcuVersion })
 					.then(res => {
-						console.log(res)
+						console.log('getMcuPackage',res)
 						if (res.code === 0 && res.data) {
 							const data = res.data
-							this.otanew = Number(data.vercode) - Number(this.mcuOTCSN) > 0
+							this.otanew = Number(data.vercode) - Number(this.equip.mcuOTCSN) > 0
 							if (this.otanew) {
+								setTimeout(()=>{
+									uni.showToast({
+										title:'发现新版本！'
+									})
+								},1500);
+								this.otaNewVer=data.vercode;
 								this.otaDownUrl = data.path
+								this.otaDesc=data.describe;
 							}
-						}
-					})
-				this.$u.api.getOsAppPackage({ projectSN: this.osAppProjectSN })
-					.then(res => {
-						if (res.code === 0) {
-							// app自动升级
 						}
 					})
 			},
@@ -122,15 +140,18 @@ import {connectWifi,getConnectedSSID} from '../../common/cx-wifi/cx-wifi.js'
 			},
 			otaDownLoad() {
 				this.uploadShow = true
+				this.progressTitle = '正在下载所需升级包'
 				const downloadTask = uni.downloadFile({
 					url: this.otaDownUrl,
 					success: (res) => {
 						console.log(res.tempFilePath)
 						plus.io.resolveLocalFileSystemURL(res.tempFilePath, (entry) => {
 							entry.file((file) => {
+								this.progressTitle = '开始检查升级包'
+								this.progressTxt = ''
+								this.progressVal = 0
 								var reader = new plus.io.FileReader();
 								reader.onload =async (e) => {
-									console.log('读取文件成功：');
 									var dataUrl = e.target.result;
 									// console.log(dataUrl.substr(0,8000))
 									var base64Index = dataUrl.indexOf('base64,') + 'base64,'.length;
@@ -139,13 +160,16 @@ import {connectWifi,getConnectedSSID} from '../../common/cx-wifi/cx-wifi.js'
 									for (var i = 0; i < binaryData.length; i++) {
 										bytes[i] = binaryData.charCodeAt(i);
 									}
-									console.log('读取文件成功=',bytes.length);
-									
+									this.progressTitle = '升级包检查成功, 请求连接车机中'
+									this.progressTxt = ''
+									this.progressVal = 20
 									var flag =await this.connectStartWifi();
-									console.log('wifi连接状态',flag);
 									if(flag){
 										setTimeout(async()=>{
-											var tcpStatus=await this.connectTCP();
+											var tcpStatus= await this.connectTCP();
+											this.progressTitle = '车机连接成功，开始传输升级包'
+											this.progressTxt = ''
+											this.progressVal = 40
 											if(tcpStatus){
 												this.fileBytes=bytes;
 												var bytesLength=bytes.length;
@@ -166,7 +190,7 @@ import {connectWifi,getConnectedSSID} from '../../common/cx-wifi/cx-wifi.js'
 												this.$socket.send(_self.channel, sendStr);
 												
 											}
-										},3000);
+										},3000)
 									}else{
 										uni.showToast({
 											title:'wifi连接失败，请使用手动连接',
@@ -220,7 +244,21 @@ import {connectWifi,getConnectedSSID} from '../../common/cx-wifi/cx-wifi.js'
 					this.$socket.receivedMsgCallBack = (channel, receivedMsg)=> {
 						console.log('通道:' + channel);
 						console.log(receivedMsg);
-						
+						if(receivedMsg.indexOf('same checksum')>-1){
+							this.progressTitle = '升级包传输完成，等待设备升级'
+							this.progressTxt = ''
+							this.progressVal = 0
+							this.uploadShow = false
+							this.otaUpgraStatus=0;
+							uni.showToast({
+								title:'已是最新版本',
+								icon:'none'
+							})
+							setTimeout(()=>{
+								this.verifyWifiToggle();
+							},2000)
+							return;
+						}
 						//服务器返回字符串
 						if(this.otaUpgraStatus==1){
 							if(receivedMsg.indexOf('ok')>-1){
@@ -273,16 +311,28 @@ import {connectWifi,getConnectedSSID} from '../../common/cx-wifi/cx-wifi.js'
 								this.position+=0x10000;
 								var buf = this.scoketPkg(this.position);
 								if(buf.length==0){
-									uni.showToast({
-										title:'升级包传输完成，等待设备升级！',
-										icon:'none'
+									this.progressTitle = '升级包传输完成，等待设备升级'
+									this.progressTxt = ''
+									this.progressVal = 100
+									this.uploadShow = false
+									uni.showModal({
+										title:'温馨提示',
+										content:'恭喜您，升级包传输完成，等待设备自动升级。设备会自动重启，重启成功即升级成功！',
+										showCancel:false,
+										success(res) {
+											if(res.confirm){
+												
+											}
+										}
 									})
+									// uni.showToast({
+									// 	title:'升级包传输完成，等待设备升级！',
+									// 	icon:'none'
+									// })
 									return;
 								}
-								console.log('输出CRC：',this.crcVal);
 								this.crcVal = this.xcrc32(buf,this.crcVal);
 								var sendStr="continue,"+this.position.toString(16)+","+buf.length.toString(16)+","+this.crcVal.toString(16)+",";
-								console.log(sendStr)
 								this.otaUpgraStatus=2;
 								this.$socket.send(_self.channel, sendStr);
 								
@@ -315,6 +365,22 @@ import {connectWifi,getConnectedSSID} from '../../common/cx-wifi/cx-wifi.js'
 					
 				});
 			},
+			//验证升级结束或者升级失败，判断如果连接的是车机wifi询问用户是否切换连接
+			verifyWifiToggle(){
+				var getCurSSID=getConnectedSSID();//当前的网络wifi
+				const ssid = this.equip.apSN;//设备绑定的wifi
+				if(`"${ssid}"`==getCurSSID){
+					uni.showModal({
+						title:'温馨提示',
+						content:'当前连接的网络是车技设备局域网络，是否切换？',
+						success(res) {
+							if(res.confirm){
+								removeWifiBySSID(ssid);
+							}
+						}
+					})
+				}
+			},
 			xcrc32(buf, init){
 				let crc = init;  
 				for (let i = 0; i < buf.length; i++) {  
@@ -331,8 +397,8 @@ import {connectWifi,getConnectedSSID} from '../../common/cx-wifi/cx-wifi.js'
 			},
 			connectStartWifi(){
 				return new Promise((resolve, reject) => {
-					const ssid =uni.getStorageSync('ssid')
-					const password =uni.getStorageSync('wifipwd')
+					const ssid = this.equip.apSN;// uni.getStorageSync('ssid')
+					const password =this.equip.apPassword;//  uni.getStorageSync('wifipwd')
 					console.log(ssid,password)
 					connectWifi(ssid,password);
 					var index=0;

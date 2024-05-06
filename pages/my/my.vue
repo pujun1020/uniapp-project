@@ -2,7 +2,7 @@
 	<view class="wrap">
 		<u-navbar :is-back="false" :background="background" :border-bottom="false"></u-navbar>
 		<!-- header -->
-		<view class="wrap__header" @click="login">
+		<view class="wrap__header">
 			<u-avatar src="/static/tabbar/menu_my_active.png" size="100"></u-avatar>
 			<view class="u-flex-col u-m-l-30">
 				<text class="u-font-30 u-font-weight">{{ user.nickName}}</text>
@@ -16,6 +16,7 @@
 				<u-cell-item icon="kefu-ermai" title="用户反馈" @click="menu(2)" hover-class="none"></u-cell-item>
 				<u-cell-item icon="setting" title="设置信息" @click="menu(3)" hover-class="none"></u-cell-item>
 				<u-cell-item icon="file-text" title="隐私协议" @click="menu(4)" hover-class="none"></u-cell-item>
+				<u-cell-item icon="man-delete" title="退出登陆" style="color: #dd6161" @click="login" hover-class="none"></u-cell-item>
 				<!-- <u-cell-item icon="file-text" title="scoket测试" @click="test()" hover-class="none"></u-cell-item> -->
 			</u-cell-group>
 		</view>
@@ -85,8 +86,16 @@
 				})
 			},
 			login() {
-				uni.navigateTo({
-					url: "/pages/login/login"
+				uni.showModal({
+					title: '提示',
+					content: '确认要退出登陆吗？',
+					success: (res) => {
+						if (res.confirm) {
+							uni.navigateTo({
+								url: "/pages/login/login"
+							})
+						}
+					}
 				})
 			},
 			changes(index) {

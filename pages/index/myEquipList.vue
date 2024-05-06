@@ -1,39 +1,21 @@
 <template>
-	<view class="gui-padding" style="min-height:100vh; background-color:#F8F8F8;">
-		<view class="gui-card-view gui-margin-top gui-box-shadow">
+	<view class="gui-padding" style="min-height:100vh; background-color:#EBF5FF;">
+		<view v-for="item of equipList" :key="item.id" class="gui-card-view gui-margin-top gui-box-shadow">
 			<view class="gui-card-body gui-border-b gui-flex gui-rows gui-nowrap">
 				<!-- <image src="https://images.unsplash.com/photo-1663188646682-7bdc8a7738d9?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxlZGl0b3JpYWwtZmVlZHw3fHx8ZW58MHx8fHw%3D&auto=format&fit=crop&w=100&q=80" 
 				class="gui-card-img"></image> -->
 				<view class="gui-card-desc">
 					<view class="gui-flex gui-rows gui-nowrap gui-align-items-center">
-						<text class="gui-card-name">张三</text>
-						<text class="gui-text-small gui-color-blue">当前设备</text>
+						<text class="gui-card-name">{{ item.abbreviation }}</text>
+						<text v-show="item.sn === equipSn" class="gui-text-small gui-color-blue">当前设备</text>
 					</view>
-					<text class="gui-card-text gui-block-text" style="margin-top:10rpx;">北京市朝阳区</text> 
-					<text class="gui-card-text gui-block-text">139*****888</text>
+					<view class="gui-card-text gui-block-text" style="margin-top:10rpx;">{{ item.mcuVersion }}</view> 
+					<view class="gui-card-text gui-block-text">{{ item.createTime }}</view>
 				</view>
 			</view>
 			<view class="gui-card-footer gui-flex gui-rows gui-nowrap gui-space-between gui-align-items-center">
-				<text class="gui-icons gui-card-footer-item gui-border-r"  style="color:red;">删除</text>
-				<text class="gui-icons gui-card-footer-item" style="color: #2B9DF3;">切换设备</text>
-			</view>
-		</view>
-		<view class="gui-card-view gui-margin-top gui-box-shadow">
-			<view class="gui-card-body gui-border-b gui-flex gui-rows gui-nowrap">
-				<!-- <image src="https://images.unsplash.com/photo-1663188646682-7bdc8a7738d9?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxlZGl0b3JpYWwtZmVlZHw3fHx8ZW58MHx8fHw%3D&auto=format&fit=crop&w=100&q=80" 
-				class="gui-card-img"></image> -->
-				<view class="gui-card-desc">
-					<view class="gui-flex gui-rows gui-nowrap gui-align-items-center">
-						<text class="gui-card-name">张三</text>
-						<!-- <text class="gui-text-small gui-color-blue">补充信息</text> -->
-					</view>
-					<text class="gui-card-text gui-block-text" style="margin-top:10rpx;">北京市朝阳区</text> 
-					<text class="gui-card-text gui-block-text">139*****888</text>
-				</view>
-			</view>
-			<view class="gui-card-footer gui-flex gui-rows gui-nowrap gui-space-between gui-align-items-center">
-				<text class="gui-icons gui-card-footer-item gui-border-r"  style="color:red;">删除</text>
-				<text class="gui-icons gui-card-footer-item" style="color: #2B9DF3;">切换设备</text>
+				<text @click="onDel(item)" class="gui-icons gui-card-footer-item gui-border-r" :style="{ color: item.sn === equipSn ? '#626675' : 'red' }">删除</text>
+				<text @click="onSelected(item)" class="gui-icons gui-card-footer-item" :style="{ color: item.sn === equipSn ? '#626675' : '#2B9DF3' }">切换设备</text>
 			</view>
 		</view>
 	</view>
@@ -43,13 +25,72 @@
 	export default {
 		data() {
 			return {
-				
+				equipList: [],
+				equipSn: '',
+			}
+		},
+		onLoad() {
+			this.equipSn = getApp().globalData.equip.sn
+			this.loadEquipList()
+		},
+		methods: {
+			loadEquipList() {
+				this.$u.api.getEquipList({ userId: getApp().globalData.user.id })
+					.then(res => {
+						if (res.code === 0) {
+							this.equipList = res.data
+							console.log(this.equipList)
+						}
+					})
+			},
+			onDel(equip) {
+				if (equip.sn === this.equipSn) return
+				uni.showModal({
+					title: '提示',
+					content: '确认要解绑该设备吗？',
+					success: (res) => {
+						if (res.confirm) {
+							this.$u.api.delteEquip([equip.id])
+								.then(res => {
+									if (res.code === 0) {
+										this.loadEquipList()
+									} else {
+										uni.showToast({
+											title: res.message,
+											icon: 'none'
+										})
+									}
+								})
+						}
+					}
+				})
+			},
+			onSelected(equip) {
+				if (equip.sn === this.equipSn) return
+				uni.showModal({
+					title: '提示',
+					content: '确认要切换到该设备吗？',
+					success: (res) => {
+						if (res.confirm) {
+							getApp().globalData.equip = equip
+							getApp().globalData.devSN = equip.sn
+							uni.setStorageSync('devsn', equip.sn)
+							uni.navigateTo({
+							    url: "/pages/index/index"
+							})
+						}
+					}
+				})
 			}
 		}
 	}
 </script>
 
 <style>
+	body,
+	html {
+		background-color: #EBF5FF;
+	}
 	.gui-padding{
 		padding: 30rpx;
 	}
@@ -67,7 +108,7 @@
 	.gui-color-blue{color:#008AFF !important;}
 	.gui-text-small{font-size: 24rpx;}
 	/* 卡片视图 */
-	.gui-card-view{background-color:#FFFFFF; padding:25rpx;}
+	.gui-card-view{background-color:#FFFFFF; padding:25rpx; border-radius: 24rpx;}
 	.gui-card-body{padding-bottom:25rpx;}
 	.gui-card-img{width:100rpx; height:100rpx; border-radius:80rpx;}
 	.gui-card-desc{width:400rpx; margin-left:25rpx; flex:1;}

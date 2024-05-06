@@ -317,23 +317,7 @@
 				// 筛选弹出层
 				screenShow: false,
 				// 设备
-				filterEquipList: [{
-						name: '全部',
-						disabled: false
-					},
-					{
-						name: '设备1',
-						disabled: false
-					},
-					{
-						name: '设备2',
-						disabled: false
-					},
-					{
-						name: '设备3',
-						disabled: false
-					}
-				],
+				filterEquipList: [],
 				selectEquip: '',
 				// 分类
 				translate: [{
@@ -361,7 +345,8 @@
 		onLoad() {
 			this.loadData()
 			this.addRandomData();
-			this.localChannel = uni.getStorageSync('channel')
+			this.localChannel = getApp().globalData.equip.channel
+			this.loadEquipList()
 		},
 		onReachBottom() {
 			this.loadStatus = 'loading';
@@ -447,6 +432,16 @@
 			},
 			sectionChange(index) {
 				this.current2 = index;
+			},
+			loadEquipList() {
+				this.$u.api.getEquipList({ userId: getApp().globalData.user.id })
+					.then(res => {
+						if (res.code === 0) {
+							this.filterEquipList = res.data.map(d => {
+								return { name: d.abbreviation, disabled: false }
+							})
+						}
+					})
 			},
 			loadData() {
 				if (this.current === 1) {

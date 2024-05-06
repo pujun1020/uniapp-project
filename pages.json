@@ -109,6 +109,14 @@
 				"navigationBarTitleText" : "视频详情",
 				"enablePullDownRefresh" : false
 			}
+		},
+		{
+			"path" : "pages/index/myEquipList",
+			"style" : 
+			{
+				"navigationBarTitleText" : "设备列表",
+				"enablePullDownRefresh" : false
+			}
 		}
 	,{
     "path": "uni_modules/rt-uni-update/components/rt-uni-update/rt-uni-update",
