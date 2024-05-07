@@ -90,6 +90,8 @@ import {connectWifi,getConnectedSSID,removeWifiBySSID} from '../../common/cx-wif
 				otaUpgraStatus:0,//
 				position:0,
 				crcVal:0xFFFFFFFF,
+				newMcuVersion: '',
+				fileSize: 0
 			}
 		},
 		onLoad(option) {
@@ -101,13 +103,14 @@ import {connectWifi,getConnectedSSID,removeWifiBySSID} from '../../common/cx-wif
 		methods: {
 			loadData() {
 				// ota升级
-				console.log(this.equip)
-				console.log(this.equip.mcuProjectSN)
 				this.$u.api.getMcuPackage({ mcuprojectsn: this.equip.mcuVersion })
 					.then(res => {
 						console.log('getMcuPackage',res)
 						if (res.code === 0 && res.data) {
 							const data = res.data
+							console.log(data)
+							console.log(this.equip)
+							this.newMcuVersion = data.mcuProjectSN.replace(this.equip.mcuOTCSN, data.vercode) // 该字段为最新版本号，用户升级成功后上报到服务器
 							this.otanew = Number(data.vercode) - Number(this.equip.mcuOTCSN) > 0
 							if (this.otanew) {
 								setTimeout(()=>{
@@ -162,28 +165,26 @@ import {connectWifi,getConnectedSSID,removeWifiBySSID} from '../../common/cx-wif
 									}
 									this.progressTitle = '升级包检查成功, 请求连接车机中'
 									this.progressTxt = ''
-									this.progressVal = 20
+									this.progressVal = 10
 									var flag =await this.connectStartWifi();
 									if(flag){
 										setTimeout(async()=>{
 											var tcpStatus= await this.connectTCP();
 											this.progressTitle = '车机连接成功，开始传输升级包'
 											this.progressTxt = ''
-											this.progressVal = 40
+											this.progressVal = 20
 											if(tcpStatus){
 												this.fileBytes=bytes;
 												var bytesLength=bytes.length;
+												this.fileSize = bytesLength;
 												const otaData =bytes;// new Uint8Array(e.target.result)
 												// 获取字节中第12个字节开始向后4个字节，以小端模式转换为int，此字段为crc校验位
 												const crc = new DataView(otaData.buffer, 12, 4).getInt32(0, true)
-												console.log('crc',crc);
 												
 												// 获取字节中第16个字节开始向后4个字节，以小端模式转换为int，此字段为文件类型
 												const fileType = new DataView(otaData.buffer, 16, 4).getInt32(0, true)
-												console.log('fileType',fileType);
 												// 发送文本指令
 												var sendStr="download,update.bin,"+bytesLength.toString(16)+","+fileType.toString(16)+","+crc.toString(16)+",";
-												console.log(sendStr)
 												this.position=0;
 												this.otaUpgraStatus=1;
 												this.crcVal = 0xFFFFFFFF;
@@ -197,9 +198,6 @@ import {connectWifi,getConnectedSSID,removeWifiBySSID} from '../../common/cx-wif
 											icon:'none'
 										})
 									}
-									
-									
-									
 								};
 								reader.onerror = function(e) {
 									console.log('读取文件失败：');
@@ -242,8 +240,6 @@ import {connectWifi,getConnectedSSID,removeWifiBySSID} from '../../common/cx-wif
 					};
 					
 					this.$socket.receivedMsgCallBack = (channel, receivedMsg)=> {
-						console.log('通道:' + channel);
-						console.log(receivedMsg);
 						if(receivedMsg.indexOf('same checksum')>-1){
 							this.progressTitle = '升级包传输完成，等待设备升级'
 							this.progressTxt = ''
@@ -278,14 +274,13 @@ import {connectWifi,getConnectedSSID,removeWifiBySSID} from '../../common/cx-wif
 								this.crcVal = this.xcrc32(deepCopy,this.crcVal);
 								console.log('4',this.crcVal);
 								var sendStr="continue,"+this.position.toString(16)+","+buf.length.toString(16)+","+this.crcVal.toString(16)+",";
-								console.log(sendStr)
 								this.otaUpgraStatus=2;
 								this.$socket.send(_self.channel, sendStr);
 								
 							}else if(receivedMsg.indexOf('same checksum')>-1){
 								this.otaUpgraStatus=0;
 								uni.showToast({
-									title:'已是最新版本',
+									title:'车机已是最新版本, 请重新扫描车机二维码更新信息',
 									icon:'none'
 								})
 							}
@@ -294,12 +289,14 @@ import {connectWifi,getConnectedSSID,removeWifiBySSID} from '../../common/cx-wif
 							var resultMsg="continue,"+this.position.toString(16).toUpperCase()+",ok";
 							if(receivedMsg.indexOf(resultMsg)>-1){
 								console.log('自定义结果：',resultMsg);
+								this.progressTitle = '正在传输升级包'
+								this.progressTxt = ''
+								this.progressVal = Math.floor((this.position / this.fileSize) * 80) + 20
 								var buf = this.scoketPkg(this.position);
 								var bufstr=[];
 								for(var i=0;i<buf.length;i++){
 									bufstr[i]=buf[i].toString(16).toUpperCase();
 								}
-								console.log('bufstr',bufstr.slice(0,20));
 								this.otaUpgraStatus=3;
 								this.$socket.sendBytes(_self.channel, JSON.stringify(bufstr));
 							}
@@ -372,14 +369,42 @@ import {connectWifi,getConnectedSSID,removeWifiBySSID} from '../../common/cx-wif
 				if(`"${ssid}"`==getCurSSID){
 					uni.showModal({
 						title:'温馨提示',
-						content:'当前连接的网络是车技设备局域网络，是否切换？',
+						content:'当前连接的网络是车机设备局域网络，是否切换？',
 						success(res) {
 							if(res.confirm){
 								removeWifiBySSID(ssid);
+								setTimeout(() => {
+									this.reportVer()
+								}, 2000)
 							}
 						}
 					})
 				}
+			},
+			reportVer() {
+				// 上报设备信息到云端
+				const params = {
+					devSN: this.equip.sn,
+					devOSAppVersion: this.equip.osAppVersion,
+					devMCUVersion: this.newMcuVersion,
+					channel: this.equip.channel,
+					conf: this.equip.conf,
+					apSN: this.equip.apSN,
+					apPassword: this.equip.apPassword,
+					apWebsocket: this.equip.apWebsocket,
+					devName: this.equip.abbreviation,
+				}
+				this.$u.api.sendDevInfo(params).then(res => {
+					if(res.code!==0){
+						uni.showToast({
+							title:res.message,
+							icon:'none'
+						})
+					} else {
+						getApp().globalData.devSN = ssid;
+						this.loadData()
+					}
+				})
 			},
 			xcrc32(buf, init){
 				let crc = init;  
