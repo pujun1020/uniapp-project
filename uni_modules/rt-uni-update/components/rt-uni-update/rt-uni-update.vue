@@ -42,8 +42,8 @@ export default {
 			downloadedSize:0,//当前已下载大小
 			packageFileSize:0,//安装包大小
 			data: {
-				describe: '1. 修复已知问题<br>2. 优化用户体验',
-				edition_url: 'https://vkceyugu.cdn.bspapp.com/VKCEYUGU-6bef1fe3-e3e3-4909-9f0c-6ed9bd11c93b/aae2360a-6628-4c93-b873-ce1600b9a852.apk', //安装包下载地址或者通用应用市场地址
+				describe: '1. 优化用户体验',
+				edition_url: '', //安装包下载地址或者通用应用市场地址
 				edition_force: 1, //是否强制更新 0代表否 1代表是
 				package_type: 0 ,//0是整包升级 1是wgt升级
 				edition_name:'1.0.1' //后端返回的版本名称
@@ -57,14 +57,22 @@ export default {
 			delta: 1
 		})
 	},
-	onLoad({obj}) {
-		this.data = JSON.parse(obj);
-		if (this.data.edition_force == 0) {
-			this.cancleBtn = true;
+	onLoad() {
+		var appAPK=uni.getStorageSync('appAPK');
+		if(appAPK){
+			
+			this.data.describe=appAPK.describe;
+			this.data.edition_url=appAPK.path;
+			this.data.edition_name=appAPK.vercode;
+			
+			if (this.data.edition_force == 0) {
+				this.cancleBtn = true;
+			}
+			plus.runtime.getProperty(plus.runtime.appid,(inf) => {
+				this.version = inf.version;
+			})
 		}
-		plus.runtime.getProperty(plus.runtime.appid,(inf) => {
-			this.version = inf.version;
-		})
+		
 	},
 
 	onBackPress() {
@@ -82,7 +90,9 @@ export default {
 			});
 		},
 		confirm() {
+			console.log(1)
 			if (this.data.package_type == 0) {
+				console.log(this.data.edition_url)
 				//apk整包升级 下载地址必须以.apk结尾
 				if (this.data.edition_url.includes('.apk')) {
 					this.updateBtn = false;
@@ -106,10 +116,13 @@ export default {
 		},
 		download() {
 			let package_type = this.data.package_type;
+			console.log(package_type)
 			let that = this;
 			const downloadTask = uni.downloadFile({
 				url: this.data.edition_url,
 				success: res => {
+					console.log('下载地址',this.data.edition_url);
+					console.log('下载结果',res);
 					if (res.statusCode === 200) {
 						plus.runtime.install(
 							res.tempFilePath,
