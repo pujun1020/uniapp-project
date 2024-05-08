@@ -1,10 +1,10 @@
 <template>
 	<view class="wrap">
 		<!-- 搜索框 start -->
-		<view class="u-m-l-30 u-m-r-30 u-p-t-30 u-flex bgb">
+		<!-- <view class="u-m-l-30 u-m-r-30 u-p-t-30 u-flex bgb">
 			<u-search placeholder="视频名称" :show-action='false' bg-color="#fff"></u-search>
 			<u-icon name="/static/index/bg-screen.png" size='40' class="u-m-l-30" @click="screen"></u-icon>
-		</view>
+		</view> -->
 		<!-- 搜索框 end -->
 
 		<view>
@@ -93,19 +93,6 @@
 				pageSize: 5,
 				allDate: [],
 				dateList: [],
-				// 模拟数据
-				// vieoList: [{
-				// 		// playUrl: 'https://admin.szjstong.com/Upload/Video/test.txt',
-				// 		playUrl: 'https://admin.szjstong.com/Upload/Video/1.mp4',
-				// 		// playUrl:'https://p.zazg.tech/radar/LRD-801-79G-%E6%AF%AB%E7%B1%B3%E6%B3%A2%E9%9B%B7%E8%BE%BE%E5%AE%89%E8%A3%85%E8%B0%83%E8%AF%95%E8%AF%B4%E6%98%8E%E4%B9%A6.pdf',
-				// 		name: '8-9点',
-				// 		title: '10个'
-				// 	},
-				// 	{
-				// 		playUrl: '/static/cover_video.png',
-				// 		name: '8-9点',
-				// 		title: '10个'
-				// 	}],
 				vieoList: [],
 				
 				// 筛选弹出层

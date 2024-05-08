@@ -22,7 +22,7 @@
 		<!-- button start -->
 		<view class="button">
 			<u-grid :col="3">
-				<u-grid-item bg-color="#fff">
+				<u-grid-item @click="onDelete" bg-color="#fff">
 					<u-icon name="trash" :size="46"></u-icon>
 					<view class="grid-text">删除</view>
 				</u-grid-item>
@@ -190,74 +190,30 @@
 							reject(e)
 						})
 				})
+			},
+			onDelete() {
+				uni.showModal({
+					title: '提示',
+					content: '确认要删除该视频吗？',
+					success: (res) => {
+						if (res.confirm) {
+							this.$u.api.delteCloundVideo({ devSN: this.params.devSN, id: this.params.id })
+								.then(res => {
+									if (res.code === 0) {
+										uni.navigateTo({
+											url:"/pages/home/home"
+										})
+									} else {
+										uni.showToast({
+											title: res.message,
+											icon: 'none'
+										})
+									}
+								})
+						}
+					}
+				})
 			}
-			// async onUpload() {
-			// 	const ws = await this.openWebSocket()
-			// 	const buffer = socketLogin()
-			// 	ws.send({ data: buffer })
-			// 	ws.onMessage(messageEvent => {
-			// 		if (messageEvent.data instanceof ArrayBuffer) {
-			// 			let dataView = new DataView(messageEvent.data);
-			// 			// 注意强制使用小端模式
-			// 			var version = dataView.getUint16(0, true)       // 协议版本号
-			// 			var messageId = dataView.getUint16(2, true)       // 登录消息号
-			// 			var bodySize = dataView.getUint16(4, true)       // 包体长度
-			// 			console.log('messageId:' + messageId)
-			// 			if (messageId == 2001) {
-			// 				const buffer = socket2001(dataView, messageEvent)
-			// 				ws.send({ data: buffer })
-			// 			} else if(messageId == 2003) {
-			// 				socket2003(dataView, messageEvent, this.params.playUrl, ws)
-			// 				// ws.send({ data: buffer })
-			// 			} else if (messageId == 2005) {
-			// 				var requestId = dataView.getInt32(6, true)       // 请求号
-			// 				var code  = dataView.getInt32(10, true)           // 错误码
-			// 				// code 转码
-			// 				var message = "";
-			// 				if (code === 1001) {
-			// 					message = "服务器处理异常";
-			// 				} else if(code === 1002){
-			// 					message = "文件上传位置和服务器当前位置不匹配";
-			// 				} else if(code === 1003){
-			// 					message = "文件上传字节数超出文件总大小";
-			// 				} else if(code === 1004){
-			// 					message = "未登录，请登录后请求该接口";
-			// 				} else if(code === 1005){
-			// 					message = "请求的fileKey不存在";
-			// 				} else if(code === 1006){
-			// 					message = "与云服务通讯异常";
-			// 				}
-			// 				console.log('收到请求文件信息响应消息：requestId:'+requestId+"  code:"+code + " message:"+message)
-			// 				if(code != 0) {
-			// 					// 弹出错误消息，注意是并发的，可能会来很多，但是只要弹出一次
-			// 				} else {
-			// 					// 根据requestID 确定最后一包如果code=0 上传结束成功
-			// 				}
-			// 			}
-			// 		}
-			// 	})
-			// },
-			// openWebSocket() {
-			// 	console.log('socket连接！')
-			// 	return new Promise((resolve, reject) => {
-			// 		const ws = uni.connectSocket({
-			// 		  url: 'ws://106.53.202.68:4001/',
-			// 			success: res => {
-			// 			},
-			// 			fail: err => {
-			// 				console.error(err)
-			// 			},
-			// 		});
-			// 		ws.onOpen(() => {
-			// 			console.log('上传socket连接成功');
-			// 			resolve(ws)
-			// 		});
-			// 		ws.onError((err) => {
-			// 			reject(err)
-			// 		  console.log('WebSocket连接打开失败，请检查！');
-			// 		});
-			// 	})
-			// },
 		}
 	}
 </script>

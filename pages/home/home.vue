@@ -11,7 +11,7 @@
 
 		<!-- 搜索框 start -->
 		<view class="u-m-l-30 u-m-r-30 u-m-t-30 u-flex">
-			<u-search placeholder="视频名称" :show-action='false' bg-color="#fff"></u-search>
+			<u-search placeholder="视频名称" :show-action='false' v-model="videoName" @search="loadCloundVideo()" @clear="loadCloundVideo()" bg-color="#fff"></u-search>
 			<u-icon name="/static/index/bg-screen.png" size='40' class="u-m-l-30" @click="screen"></u-icon>
 		</view>
 		<!-- 搜索框 end -->
@@ -55,63 +55,6 @@
 					</u-collapse-item>
 				</u-collapse>
 			</view>
-			<!-- <view class="clound-list u-m-t-30">
-				<view class="list_item">
-					<view class="title">
-						<view class="left">2024-02-26</view>
-						<view class="right">展开</view>
-					</view>
-					<view class="player" @click="videoDetail">
-						<u-image class="video" src="/static/cover_video.png" width="100%" height="250"></u-image>
-						<view class="tips">
-							<view class="name">视频11232</view>
-							<view class="timelong">30分钟</view>
-						</view>
-					</view>
-					<view class="player" @click="videoDetail">
-						<u-image class="video" src="/static/cover_video.png" width="100%" height="250"></u-image>
-						<view class="tips">
-							<view class="name">视频11232</view>
-							<view class="timelong">30分钟</view>
-						</view>
-					</view>
-					<view class="player" @click="videoDetail">
-						<u-image class="video" src="/static/cover_video.png" width="100%" height="250"></u-image>
-						<view class="tips">
-							<view class="name">视频11232</view>
-							<view class="timelong">30分钟</view>
-						</view>
-					</view>
-					<view class="player" @click="videoDetail">
-						<u-image class="video" src="/static/cover_video.png" width="100%" height="250"></u-image>
-						<view class="tips">
-							<view class="name">视频11232</view>
-							<view class="timelong">30分钟</view>
-						</view>
-					</view>
-					<view class="player" @click="videoDetail">
-						<u-image class="video" src="/static/cover_video.png" width="100%" height="250"></u-image>
-						<view class="tips">
-							<view class="name">视频11232</view>
-							<view class="timelong">30分钟</view>
-						</view>
-					</view>
-					<view class="player" @click="videoDetail">
-						<u-image class="video" src="/static/cover_video.png" width="100%" height="250"></u-image>
-						<view class="tips">
-							<view class="name">视频11232</view>
-							<view class="timelong">30分钟</view>
-						</view>
-					</view>
-					<view class="player" @click="videoDetail">
-						<u-image class="video" src="/static/cover_video.png" width="100%" height="250"></u-image>
-						<view class="tips">
-							<view class="name">视频11232</view>
-							<view class="timelong">30分钟</view>
-						</view>
-					</view>
-				</view>
-			</view> -->
 			<!-- <u-loadmore bg-color="rgb(240, 240, 240)" :status="loadStatus" @loadmore="addRandomData"></u-loadmore> -->
 			<u-empty
 				style="margin-top: 50px"
@@ -160,8 +103,8 @@
 				<!-- 标题 end -->
 				<u-divider>设备筛选</u-divider>
 				<view>
-					<u-radio-group v-model="selectEquip" @change="radioGroupChange" wrap size="40">
-						<u-radio @change="radioChange" v-for="(item, index) in filterEquipList" :key="index" :name="item.name"
+					<u-radio-group v-model="selectEquip" wrap size="40">
+						<u-radio v-for="(item, index) in filterEquipList" :key="index" :name="item.value"
 							:disabled="item.disabled" class="u-m-t-40" label-size="36">
 							<view class="u-m-l-30">{{item.name}}</view>
 						</u-radio>
@@ -170,23 +113,24 @@
 				<u-divider>录制方向</u-divider>
 				<!-- 分类 start -->
 				<view>
-					<u-radio-group v-model="value" @change="radioGroupChange" wrap size="40">
-						<u-radio @change="radioChange" v-for="(item, index) in translate" :key="index" :name="item.name"
+					<u-radio-group v-model="cameraType" wrap size="40">
+						<u-radio v-for="(item, index) in translate" :key="index" :name="item.value"
 							:disabled="item.disabled" class="u-m-t-40" label-size="36">
 							<view class="u-m-l-30">{{item.name}}</view>
 						</u-radio>
 					</u-radio-group>
 				</view>
 				<!-- 分类 end -->
+				<u-divider>录制日期</u-divider>
 				<!-- 日历筛选 start -->
 				<view class="u-m-t-40">
 					<u-input placeholder="请选择时间段" disabled border @click="calendarShow = true"
-						v-model="calendarValue" />
+						v-model="calendarValue" :closeable="true" />
 				</view>
 				<!-- 日历筛选 end -->
 				<view class="u-flex screenWrap__btn">
 					<u-button shape="circle" @click="resetting">重置</u-button>
-					<u-button type="primary" shape="circle">确定</u-button>
+					<u-button type="primary" @click="loadCloundVideo()" shape="circle">确定</u-button>
 				</view>
 			</view>
 		</u-popup>
@@ -248,58 +192,6 @@
 				dateList: [],
 				cloudList: [],
 				cloundFirst: {},
-				// 内容仅为模拟数据，实际使用请更换数据
-				// cloudList: [{
-				// 		time: "2024-3-22",
-				// 		body: [{
-				// 			image: '/static/cover_video.png',
-				// 			name: '云端视频1',
-				// 			minute: '1分钟'
-				// 		}, {
-				// 			image: '/static/cover_video.png',
-				// 			name: '云端视频2',
-				// 			minute: '2分钟'
-				// 		}, {
-				// 			image: '/static/cover_video.png',
-				// 			name: '云端视频3',
-				// 			minute: '3分钟'
-				// 		}]
-				// 	},
-				// 	{
-				// 		time: "2024-3-21",
-				// 		body: [{
-				// 			image: '/static/cover_video.png',
-				// 			name: '云端视频1',
-				// 			minute: '1分钟'
-				// 		}, {
-				// 			image: '/static/cover_video.png',
-				// 			name: '云端视频2',
-				// 			minute: '2分钟'
-				// 		}, {
-				// 			image: '/static/cover_video.png',
-				// 			name: '云端视频3',
-				// 			minute: '3分钟'
-				// 		}]
-				// 	},
-				// 	{
-				// 		time: "2024-3-20",
-				// 		body: [{
-				// 			image: '/static/cover_video.png',
-				// 			name: '云端视频1',
-				// 			minute: '1分钟'
-				// 		}, {
-				// 			image: '/static/cover_video.png',
-				// 			name: '云端视频2',
-				// 			minute: '2分钟'
-				// 		}]
-				// 	}
-				// ],
-				// vieoList: [{
-				// 	id: 1,
-				// 	thumbUrl: '/static/cover_video.png',
-				// 	name: '本地视频',
-				// 	title: '5:20'
-				// }],
 				vieoList: [],
 				list: [{
 					name: '云端'
@@ -308,12 +200,9 @@
 				}],
 				current: 0,
 				swiperCurrent: 0,
-				// list2: [{
-				// 	name: '前录'
-				// }, {
-				// 	name: '后录'
-				// }],
 				current2: 0,
+				// 视频名称搜索
+				videoName: '',
 				// 筛选弹出层
 				screenShow: false,
 				// 设备
@@ -321,22 +210,27 @@
 				selectEquip: '',
 				// 分类
 				translate: [{
+						value: '',
 						name: '全部',
 						disabled: false
 					},
 					{
+						value: '0',
 						name: '前录',
 						disabled: false
 					},
 					{
+						value: '1',
 						name: '后录',
 						disabled: false
 					}
 				],
-				value: '',
+				cameraType: '',
 				// 日历筛选
 				calendarShow: false,
 				calendarValue: '',
+				startDate: '',
+				endDate: '',
 				// 上传进度条
 				uploadShow: false,
 				localChannel: ''
@@ -406,12 +300,19 @@
 			// 日历选择触发 start
 			calendarChange(param) {
 				this.calendarValue = param.startDate + ' - ' + param.endDate
+				this.startDate = param.startDate
+				this.endDate = param.endDate
 			},
 			// 日历选择触发 end
 			// 重置 start
 			resetting() {
-				this.value = '';
+				this.selectEquip = '';
+				this.cameraType = '';
 				this.calendarValue = '';
+				this.startDate = '';
+				this.endDate = '';
+				this.loadCloundVideo();
+				this.screenShow = false;
 			},
 			tabsChange(index) {
 				this.current = index;
@@ -438,7 +339,7 @@
 					.then(res => {
 						if (res.code === 0) {
 							this.filterEquipList = res.data.map(d => {
-								return { name: d.abbreviation, disabled: false }
+								return { value: d.sn, name: d.abbreviation, disabled: false }
 							})
 						}
 					})
@@ -455,11 +356,10 @@
 				}
 			},
 			loadCloundVideo() {
-				const devSN = getApp().globalData.devSN
-				this.$u.api.getCloundVideoList({ page: 1, size: 999, devSN: devSN })
+				this.screenShow = false;
+				this.$u.api.getCloundVideoList({ page: 1, size: 999, name: this.videoName, devSN: this.selectEquip, cameraType: this.cameraType, startDate: this.startDate, endDate: this.endDate })
 					.then(res => {
 						if (res.code === 0) {
-							console.log(res)
 							if (res.data.length > 0) {
 								this.cloundFirst = res.data[0]
 								const data = res.data.slice(1)
@@ -471,7 +371,6 @@
 									} else {
 										result.push({ time: datekey, body: [curren] })
 									}
-									console.log(result)
 									return result
 								}, [])
 							}
@@ -527,7 +426,7 @@
 			},
 			videoDetailClound(item) {
 				uni.navigateTo({
-					url: `/pages/home/home-videodetail?type=1&id=${item.id}&name=${item.name}&playUrl=${item.path}&size=${byteToMb(item.size)}&duration=${item.totalTime}`,
+					url: `/pages/home/home-videodetail?type=1&id=${item.id}&name=${item.name}&playUrl=${item.path}&size=${byteToMb(item.size)}&duration=${item.totalTime}&devSN=${item.devSN}`,
 				})
 			}
 		}

@@ -31,6 +31,8 @@ const install = (Vue, vm) => {
 	let sendDevInfo = (params = {}) => vm.$u.post(requestUrl + '/api/dev/info', params);
 	// 查询云端视频列表
 	let getCloundVideoList = (params = {}) => vm.$u.get(requestUrl + '/api/video/get', params);
+	// 删除云端视频
+	let delteCloundVideo = (params = {}) => vm.$u.delete(requestUrl + '/api/video/delete', params);
 	// 获取app最新版本信息
 	let getLastPackage = (params = {}) => vm.$u.get(requestUrl + '/api/apppackage/lastpackage', params);
 	// 获取设备列表信息
