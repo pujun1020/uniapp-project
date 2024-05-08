@@ -42,8 +42,10 @@
 					</view>
 				</view>
 			</view>
-			<view v-show="!otanew" style="text-align: center; margin-top: 30px;">已是最近版本</view>
+			<!-- <u-button style="width: 60%; margin-top: 50px;" @click="verifyWifiToggle" type="primary">点击切换网络</u-button> -->
 			<u-button v-show="otanew" style="width: 60%; margin-top: 50px;" @click="onOtaUpgrad" type="primary">OTA升级</u-button>
+			<view v-show="!otanew" style="text-align: center; margin-top: 30px;">已是最近版本</view>
+			
 		</view>
 		<!-- 下载进度弹出层 start -->
 		<u-popup v-model="uploadShow" mode="center" width="500" height="500" border-radius="14" :mask-close-able="false">
@@ -97,11 +99,23 @@ import {connectWifi,getConnectedSSID,removeWifiBySSID} from '../../common/cx-wif
 		onLoad(option) {
 			_self = this;
 			this.equip = getApp().globalData.equip
-			this.otanew = false
-			this.loadData()
+			if(!this.equip){
+				uni.navigateBack(0);
+				return;
+			}
+			console.log('this.equip ',this.equip )
+			//每次进来做一次上报判断，如果缓存中有上报值，那就要做一次上报
+			var otaUpgradeReport = uni.getStorageSync('otaUpgradeReport');
+			if(otaUpgradeReport==1){
+				this.reportVer();
+				
+			}else{
+				this.loadData();
+			}
 		},
 		methods: {
 			loadData() {
+				this.otanew = false
 				// ota升级
 				this.$u.api.getMcuPackage({ mcuprojectsn: this.equip.mcuVersion })
 					.then(res => {
@@ -131,7 +145,7 @@ import {connectWifi,getConnectedSSID,removeWifiBySSID} from '../../common/cx-wif
 				}
 				uni.showModal({
 					title: '提示',
-					content: '可升级OTA固件,请确定车机已连接',
+					content: 'OTA固件升级,确认车机是否进入OTA升级界面？',
 					success: (res) => {
 						if (res.confirm) {
 							this.otaDownLoad()
@@ -175,7 +189,7 @@ import {connectWifi,getConnectedSSID,removeWifiBySSID} from '../../common/cx-wif
 											this.progressVal = 20
 											if(tcpStatus){
 												this.fileBytes=bytes;
-												var bytesLength=bytes.length;
+												var bytesLength=bytes.byteLength;
 												this.fileSize = bytesLength;
 												const otaData =bytes;// new Uint8Array(e.target.result)
 												// 获取字节中第12个字节开始向后4个字节，以小端模式转换为int，此字段为crc校验位
@@ -188,8 +202,8 @@ import {connectWifi,getConnectedSSID,removeWifiBySSID} from '../../common/cx-wif
 												this.position=0;
 												this.otaUpgraStatus=1;
 												this.crcVal = 0xFFFFFFFF;
+												console.log(sendStr);
 												this.$socket.send(_self.channel, sendStr);
-												
 											}
 										},3000)
 									}else{
@@ -225,7 +239,7 @@ import {connectWifi,getConnectedSSID,removeWifiBySSID} from '../../common/cx-wif
 			connectTCP() {
 				return new Promise((resolve, reject) => {
 					this.$socket.init(_self.channel, _self.ip, _self.port);
-					this.$socket.receivedStatus = function(channel, status) {
+					this.$socket.receivedStatus = (channel, status)=> {
 						//服务器返回状态
 						console.log(channel, status);
 						if (status == '0') {
@@ -235,7 +249,8 @@ import {connectWifi,getConnectedSSID,removeWifiBySSID} from '../../common/cx-wif
 						} else if (status == '1') {
 							//TCP断开连接
 							console.log('通道:' + channel + '断开连接');
-							resolve(false);
+							
+							// resolve(false);
 						}
 					};
 					
@@ -250,6 +265,7 @@ import {connectWifi,getConnectedSSID,removeWifiBySSID} from '../../common/cx-wif
 								title:'已是最新版本',
 								icon:'none'
 							})
+							this.otanew = false;
 							setTimeout(()=>{
 								this.verifyWifiToggle();
 							},2000)
@@ -258,21 +274,21 @@ import {connectWifi,getConnectedSSID,removeWifiBySSID} from '../../common/cx-wif
 						//服务器返回字符串
 						if(this.otaUpgraStatus==1){
 							if(receivedMsg.indexOf('ok')>-1){
-								console.log('1,',receivedMsg);
+								// console.log('1,',receivedMsg);
 
 								var buf = this.scoketPkg(this.position);
-								console.log('2',buf.length);
+								// console.log('2',buf.length);
 								var deepCopy = [];
 								for (var i = 0; i < buf.length; i++) {
 									deepCopy[i]=buf[i];
 								}
-								console.log('3',deepCopy.length);
+								// console.log('3',deepCopy.length);
 								deepCopy[12] = 0;//# file crc is 0
 								deepCopy[13] = 0;
 								deepCopy[14] = 0;
 								deepCopy[15] = 0;
 								this.crcVal = this.xcrc32(deepCopy,this.crcVal);
-								console.log('4',this.crcVal);
+								// console.log('4',this.crcVal);
 								var sendStr="continue,"+this.position.toString(16)+","+buf.length.toString(16)+","+this.crcVal.toString(16)+",";
 								this.otaUpgraStatus=2;
 								this.$socket.send(_self.channel, sendStr);
@@ -312,13 +328,19 @@ import {connectWifi,getConnectedSSID,removeWifiBySSID} from '../../common/cx-wif
 									this.progressTxt = ''
 									this.progressVal = 100
 									this.uploadShow = false
+									//包发送完成以后，因为当前网络是车机网络，无法做上报到云端，所以这里先记录这个升级的状态。
+									//并且把页面改成已是最新版本状态
+									//然后在首页跟当前页面都做个判断，在有网络的情况下，进行上报升级
+									uni.setStorageSync('otaUpgradeReport',1);
+									this.otanew = false;
 									uni.showModal({
 										title:'温馨提示',
-										content:'恭喜您，升级包传输完成，等待设备自动升级。设备会自动重启，重启成功即升级成功！',
-										showCancel:false,
-										success(res) {
+										content:'恭喜您，升级包传输完成，等待设备自动升级。设备会自动重启，重启成功即升级成功,是否需要切换到正常网络？',
+										success:(res)=> {
 											if(res.confirm){
-												
+												setTimeout(()=>{
+													this.verifyWifiToggle();
+												},2000);
 											}
 										}
 									})
@@ -370,18 +392,23 @@ import {connectWifi,getConnectedSSID,removeWifiBySSID} from '../../common/cx-wif
 					uni.showModal({
 						title:'温馨提示',
 						content:'当前连接的网络是车机设备局域网络，是否切换？',
-						success(res) {
+						success:(res)=> {
 							if(res.confirm){
 								removeWifiBySSID(ssid);
 								setTimeout(() => {
-									this.reportVer()
-								}, 2000)
+									this.reportVer();//等待几秒再上报
+								}, 3000)
 							}
 						}
 					})
 				}
 			},
 			reportVer() {
+				var otaUpgradeReport = uni.getStorageSync('otaUpgradeReport');
+				if(!otaUpgradeReport||otaUpgradeReport==undefined){
+					return;
+				}
+				
 				// 上报设备信息到云端
 				const params = {
 					devSN: this.equip.sn,
@@ -394,7 +421,15 @@ import {connectWifi,getConnectedSSID,removeWifiBySSID} from '../../common/cx-wif
 					apWebsocket: this.equip.apWebsocket,
 					devName: this.equip.abbreviation,
 				}
+				if(!params.channel){
+					params.devOSAppVersion='HB-JL318-JL-318.01JL-0.0-231205-10.1';
+					params.devMCUVersion='BR160-15-00-231205';
+					params.devName="金浪318";
+					params.channel = '1';
+				}
+				console.log('提交上报！',params);
 				this.$u.api.sendDevInfo(params).then(res => {
+					uni.removeStorageSync('otaUpgradeReport');
 					if(res.code!==0){
 						uni.showToast({
 							title:res.message,
@@ -424,22 +459,52 @@ import {connectWifi,getConnectedSSID,removeWifiBySSID} from '../../common/cx-wif
 				return new Promise((resolve, reject) => {
 					const ssid = this.equip.apSN;// uni.getStorageSync('ssid')
 					const password =this.equip.apPassword;//  uni.getStorageSync('wifipwd')
+					var getCurSSIDOld=getConnectedSSID();//在切换之前获取当前连接的wifi,如果有连接其他的先移除掉，再去连接当前wifi
+					uni.showLoading({
+						title:'WIFI切换中...'
+					})
+					console.log('之前连接的wifi',getCurSSIDOld.replace('"','').replace('"',''))
+					removeWifiBySSID(getCurSSIDOld.replace('"','').replace('"',''));
+					
+					//
 					console.log(ssid,password)
-					connectWifi(ssid,password);
-					var index=0;
-					var interval = setInterval(()=>{
-						var getCurSSID=getConnectedSSID();
-						if(index>20){
-							clearInterval(interval);
-							resolve(false);
-						}
-						if(`"${ssid}"`==getCurSSID){
-							clearInterval(interval);
-							resolve(true);
-						}else{
-							index++;
-						}
-					},1000)
+					setTimeout(()=>{
+						
+						connectWifi(ssid,password);
+						var index=0;
+						var interval = setInterval(()=>{
+							var getCurSSID=getConnectedSSID();
+							if(index>20){
+								clearInterval(interval);
+								uni.hideLoading();
+								uni.showModal({
+									title:'温馨提示',
+									content:'WIFI切换失败！请手动点击连接车机WIFI，然后确认继续升级',
+									success:(res)=> {
+										if(res.confirm){
+											// removeWifiBySSID(getCurSSIDOld);
+											this.connectStartWifi();
+										}else{
+											resolve(false);
+										}
+									}
+								})
+								
+							}
+							if(`"${ssid}"`==getCurSSID){
+								clearInterval(interval);
+								uni.hideLoading();
+								uni.showToast({
+									title:'网络切换成功，正在连接车机服务！',
+									icon:'none'
+								})
+								resolve(true);
+							}else{
+								index++;
+							}
+						},1000)
+					},2000)
+					
 				});
 			},
 		}
