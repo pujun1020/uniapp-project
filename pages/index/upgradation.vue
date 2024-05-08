@@ -122,6 +122,8 @@ import {connectWifi,getConnectedSSID,removeWifiBySSID} from '../../common/cx-wif
 						console.log('getMcuPackage',res)
 						if (res.code === 0 && res.data) {
 							const data = res.data
+							console.log(data)
+							console.log(this.equip)
 							this.newMcuVersion = data.mcuProjectSN.replace(this.equip.mcuOTCSN, data.vercode) // 该字段为最新版本号，用户升级成功后上报到服务器
 							this.otanew = Number(data.vercode) - Number(this.equip.mcuOTCSN) > 0
 							if (this.otanew) {
