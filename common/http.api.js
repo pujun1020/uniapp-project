@@ -43,8 +43,10 @@ const install = (Vue, vm) => {
 	let getMcuPackage = (params = {}) => vm.$u.get(requestUrl + '/api/mcupackage/lastpackage', params);
 	// 获取OSAPP最新版本信息（用于OSAPP升级）
 	let getOsAppPackage = (params = {}) => vm.$u.get(requestUrl + '/api/osapppackage/lastpackage', params);
+	//用户头像上传地址
+	let uploadpic= (params = {}) => requestUrl + '/api/user/uploadpic';
 	// 将各个定义的接口名称，统一放进对象挂载到vm.$u.api(因为vm就是this，也即this.$u.api)下
-	vm.$u.api = {getCloud, setRequestUrl, register, login, getUser, setUser, modifypwd, getConfig, setConfig, feedback, sendDevInfo, getCloundVideoList, getLastPackage, getEquipList, delteEquip, getMcuPackage, getOsAppPackage};
+	vm.$u.api = {getCloud, setRequestUrl, register, login, getUser, setUser, modifypwd, getConfig, setConfig, feedback, sendDevInfo, getCloundVideoList, getLastPackage, getEquipList, delteEquip, getMcuPackage, getOsAppPackage,uploadpic};
 }
 
 export default {

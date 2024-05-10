@@ -2,8 +2,9 @@
 	<view class="wrap">
 		<!-- list -->
 		<u-cell-group :border="false">
-			<u-cell-item title="头像" hover-class="none" :arrow="false">
-				<u-avatar src="/static/tabbar/menu_my_active.png" size="mini"></u-avatar>
+			<u-cell-item @click="coolImage()" title="头像" hover-class="none">
+				<u-avatar v-if="!user.photo" src="/static/tabbar/menu_my_active.png" size="mini"></u-avatar>
+				<u-avatar v-else :src="user.photo" size="mini"></u-avatar>
 			</u-cell-item>
 			<u-cell-item title="姓名" hover-class="none" :value="user.nickName" @click="showName = true"></u-cell-item>
 			<u-cell-item title="手机号码" hover-class="none" :value="user.mobile" @click="showMobile = true"></u-cell-item>
@@ -83,15 +84,38 @@
 				showPwd: false
 			}
 		},
-		onLoad() {
+		onShow() {
+			var userAvatar=uni.getStorageSync('userAvatar');
+			if(userAvatar){
+				getApp().globalData.user.photo=userAvatar;
+			}
 			this.user = getApp().globalData.user
 		},
+		onLoad() {
+			
+		},
 		methods: {
+			coolImage(){
+				console.log('选择文件')
+				uni.chooseImage({
+					count: 1, //默认9
+					sizeType: ['original', 'compressed'], //可以指定是原图还是压缩图，默认二者都有
+					sourceType: ['album'], //从相册选择
+					success: function (res) {
+						console.log(res.tempFilePaths[0])
+						const tempFilePath = res.tempFilePaths[0]; // 假设只选择了一张图片 
+						uni.navigateTo({
+							url: './upload?src=' + tempFilePath
+						})
+					}
+				});
+			},
 			closeName() {
 				this.showName = false
 				this.nickName = ''
 			},
 			updateName() {
+				console.log(getApp().globalData.user.id,this.nickName)
 				this.$u.api.setUser({ id: getApp().globalData.user.id, nickName: this.nickName })
 					.then(res => {
 						console.log(res)
@@ -101,6 +125,10 @@
 								icon: 'none'
 							})
 							this.user.nickName = this.nickName
+							var user = getApp().globalData.user;
+							user.nickName=this.nickName;
+							uni.setStorageSync('user',user);
+							
 							getApp().globalData.user.nickName = this.nickName
 							this.closeName()
 						} else {
@@ -110,6 +138,10 @@
 							})
 						}
 					})
+					.catch(err=>{
+						console.log(err);
+					})
+					
 			},
 			closeMobile() {
 				this.showMobile = false
@@ -124,6 +156,9 @@
 								icon: 'none'
 							})
 							this.user.mobile = this.mobile
+							var user = getApp().globalData.user;
+							user.mobile=this.mobile;
+							uni.setStorageSync('user',user);
 							getApp().globalData.user.mobile = this.mobile
 							this.closeMobile()
 						} else {
@@ -147,6 +182,9 @@
 								icon: 'none'
 							})
 							this.user.email = this.email
+							var user = getApp().globalData.user;
+							user.email=this.email;
+							uni.setStorageSync('user',user);
 							getApp().globalData.user.email = this.email
 							this.closeEmail()
 						} else {

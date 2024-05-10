@@ -296,14 +296,14 @@
 								//如果当前版本等于服务器版本返回0;
 								var val = this.compareVersions(curVersion,vercode);
 								console.log(curVersion,vercode);
-								if(val==-1){
-									uni.setStorageSync('appAPK',res.data);
-									console.log('app版本发生变化');
-									uni.navigateTo({
-									    url: '/uni_modules/rt-uni-update/components/rt-uni-update/rt-uni-update'
-									})
+								// if(val==-1){
+								// 	uni.setStorageSync('appAPK',res.data);
+								// 	console.log('app版本发生变化');
+								// 	uni.navigateTo({
+								// 	    url: '/uni_modules/rt-uni-update/components/rt-uni-update/rt-uni-update'
+								// 	})
 									
-								}
+								// }
 							})
 							
 							
