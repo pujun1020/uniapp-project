@@ -357,7 +357,7 @@
 			},
 			loadCloundVideo() {
 				this.screenShow = false;
-				this.$u.api.getCloundVideoList({ page: 1, size: 999, name: this.videoName, devSN: this.selectEquip, cameraType: this.cameraType, startDate: this.startDate, endDate: this.endDate })
+				this.$u.api.getCloundVideoList({ page: 1, size: 999, name: this.videoName, devSN: this.selectEquip, cameraType: this.cameraType, sdate: this.startDate, edate: this.endDate })
 					.then(res => {
 						if (res.code === 0) {
 							if (res.data.length > 0) {

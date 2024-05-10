@@ -81,6 +81,8 @@
 </template>
 
 <script>
+	import { connectStartWifi, openWebSocket } from '../../../common/wifi-tcp.js'
+	
 	export default {
 		data() {
 			return {
@@ -149,6 +151,9 @@
 				this.loadStatus = 'loadmore'
 			}
 		},
+		onLoad() {
+			this.loadData()
+		},
 		methods: {
 			// 长按事件 start
 			longpress(item) {
@@ -204,10 +209,12 @@
 				this.value = '';
 				this.calendarValue = '';
 			},
-			loadData() {
-				const socketTask = getApp().globalData.socketTask
+			async loadData() {
+				let socketTask = getApp().globalData.socketTask
 				if (!socketTask) {
-					return
+					if (await connectStartWifi()) {
+						socketTask = await openWebSocket()
+					}
 				}
 				socketTask.send({
 					data: '{ "METHOD": "VIDEO.DATE", "previewType": "all" }'

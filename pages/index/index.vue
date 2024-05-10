@@ -106,7 +106,6 @@
 		},
 		onLoad() {
 			this.loadData()
-			
 		},
 		methods: {
 			loadData() {
@@ -250,6 +249,7 @@
 				}
 			},
 			openWebSocket(url) {
+				console.log('正在打开socket', url)
 				this.socketStatus = '连接中'
 			  const ws = uni.connectSocket({
 			    url: url,
@@ -270,6 +270,9 @@
 					this.socketStatus = '已连接'
 					getApp().globalData.socketTask = ws
 			  });
+				ws.onClose(() => {
+					getApp().globalData.socketTask = null
+				})
 			  // ws.onMessage((res) => {
 			  //   console.log('收到服务器内容：' + res.data);
 			  //   // this.msg = res.data;
@@ -287,26 +290,11 @@
 			upgradeInfo() {
 				this.$u.api.getLastPackage({ appsoftsn: 'App-20240422153752' })
 					.then(res => {
-						if (res.code === 0 ) {
-							var data=res.data;
-							var vercode=data.vercode;
-							plus.runtime.getProperty(plus.runtime.appid,(inf) => {
-								var curVersion=inf.version;
-								//如果当前版本小于服务器版本返回-1;
-								//如果当前版本等于服务器版本返回0;
-								var val = this.compareVersions(curVersion,vercode);
-								console.log(curVersion,vercode);
-								if(val==-1){
-									uni.setStorageSync('appAPK',res.data);
-									console.log('app版本发生变化');
-									uni.navigateTo({
-									    url: '/uni_modules/rt-uni-update/components/rt-uni-update/rt-uni-update'
-									})
-									
-								}
+						console.log(res)
+						if (res.code === 0 && res.data.length === 1) {
+							uni.navigateTo({
+							    url: '/uni_modules/rt-uni-update/components/rt-uni-update/rt-uni-update'
 							})
-							
-							
 						}
 					})
 			},
@@ -315,22 +303,6 @@
 				uni.navigateTo({
 					url: "/pages/index/myEquipList"
 				})
-			},
-			compareVersions(version1,version2){
-				const v1Parts = version1.split('.').map(Number);
-				const v2Parts = version2.split('.').map(Number);
-			
-				for (let i = 0; i < Math.max(v1Parts.length, v2Parts.length); i++) {
-					const v1Part = v1Parts[i] || 0;
-					const v2Part = v2Parts[i] || 0;
-			
-					if (v1Part > v2Part) {
-						return 1;
-					} else if (v1Part < v2Part) {
-						return -1;
-					}
-				}
-				return 0; // 如果所有部分都相等，则认为版本号相同
 			}
 		},
 	}
