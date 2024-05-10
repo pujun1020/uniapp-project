@@ -47,8 +47,10 @@ const install = (Vue, vm) => {
 	let sendCarInfo = (params = {}) => vm.$u.post(requestUrl + '/api/dev/car', params);
 	// 上报设备配置信息到云端
 	let sendCarConfig = (params = {}) => vm.$u.post(requestUrl + '/api/dev/car', params);
+	//用户头像上传地址
+	let uploadpic= (params = {}) => requestUrl + '/api/user/uploadpic';
 	// 将各个定义的接口名称，统一放进对象挂载到vm.$u.api(因为vm就是this，也即this.$u.api)下
-	vm.$u.api = { getCloud, setRequestUrl, register, login, getUser, setUser, modifypwd, getConfig, setConfig, feedback, sendDevInfo, getCloundVideoList, getLastPackage, getEquipList, delteEquip, getMcuPackage, getOsAppPackage, sendCarInfo, sendCarConfig };
+	vm.$u.api = { getCloud, setRequestUrl, register, login, getUser, setUser, modifypwd, getConfig, setConfig, feedback, sendDevInfo, getCloundVideoList, getLastPackage, getEquipList, delteEquip, getMcuPackage, getOsAppPackage, sendCarInfo, sendCarConfig, uploadpic };
 }
 
 export default {

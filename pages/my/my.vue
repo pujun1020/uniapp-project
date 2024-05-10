@@ -3,7 +3,8 @@
 		<u-navbar :is-back="false" :background="background" :border-bottom="false"></u-navbar>
 		<!-- header -->
 		<view class="wrap__header">
-			<u-avatar src="/static/tabbar/menu_my_active.png" size="100"></u-avatar>
+			<u-avatar v-if="!user.photo" src="/static/tabbar/menu_my_active.png" size="100"></u-avatar>
+			<u-avatar v-else :src="user.photo" size="mini"></u-avatar>
 			<view class="u-flex-col u-m-l-30">
 				<text class="u-font-30 u-font-weight">{{ user.nickName}}</text>
 				<text class="u-m-t-20 u-type-info u-font-24">{{ user.userName }}</text>
@@ -56,6 +57,9 @@
 				tabCurrent: 2,
 				user: {}
 			}
+		},
+		onShow() {
+		
 		},
 		onLoad() {
 			this.user = getApp().globalData.user

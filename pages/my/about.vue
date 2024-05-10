@@ -1,11 +1,11 @@
 <template>
 	<view class="wrap">
 		<u-image src="/static/tabbar/menu_my_active.png" width="120" height="120"></u-image>
-		<view class="u-m-t-40">当前版本：v1.0.1</view>
+		<view class="u-m-t-40">当前版本：v{{version}}</view>
 		<view class="u-m-t-700 u-flex-col u-col-center">
 			<view class="newVersion">
 				<!-- <view class="newVersion__new">new</view> -->
-				新版本：v1.0.1
+				新版本：v{{version}}
 			</view>
 			<view>
 				当前已是最新版本
@@ -18,8 +18,13 @@
 	export default {
 		data() {
 			return {
-
+				version:'1.0.0'
 			}
+		},
+		onLoad:function(){
+			plus.runtime.getProperty(plus.runtime.appid,(inf) => {
+				this.version = inf.version;
+			})
 		},
 		methods: {
 

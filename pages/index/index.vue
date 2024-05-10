@@ -290,11 +290,26 @@
 			upgradeInfo() {
 				this.$u.api.getLastPackage({ appsoftsn: 'App-20240422153752' })
 					.then(res => {
-						console.log(res)
-						if (res.code === 0 && res.data.length === 1) {
-							uni.navigateTo({
-							    url: '/uni_modules/rt-uni-update/components/rt-uni-update/rt-uni-update'
+						if (res.code === 0 ) {
+							var data=res.data;
+							var vercode=data.vercode;
+							plus.runtime.getProperty(plus.runtime.appid,(inf) => {
+								var curVersion=inf.version;
+								//如果当前版本小于服务器版本返回-1;
+								//如果当前版本等于服务器版本返回0;
+								var val = this.compareVersions(curVersion,vercode);
+								console.log(curVersion,vercode);
+								// if(val==-1){
+								// 	uni.setStorageSync('appAPK',res.data);
+								// 	console.log('app版本发生变化');
+								// 	uni.navigateTo({
+								// 	    url: '/uni_modules/rt-uni-update/components/rt-uni-update/rt-uni-update'
+								// 	})
+									
+								// }
 							})
+							
+							
 						}
 					})
 			},

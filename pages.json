@@ -47,6 +47,14 @@
 			}
 		},
 		{
+			"path": "pages/my/upload",
+			"style": {
+				"navigationBarTitleText": "上传头像",
+				"enablePullDownRefresh": false,
+				"navigationBarBackgroundColor": "#EDEDED"
+			}
+		},
+		{
 			"path": "pages/my/feedback",
 			"style": {
 				"navigationBarTitleText": "用户反馈",
