@@ -7,7 +7,7 @@
 				<u-image src="/static/index/ota/cloud.png" width="327rpx" height="233.82rpx" mode="aspectFit"></u-image>
 			</view>
 			<view class="info">
-				当前设备信息
+				{{$getLang('当前设备信息')}}
 			</view>
 			<view class="info-box">
 				<view class="u-p-t-34 u-p-b-34 u-p-r-24 u-p-l-34 u-flex u-row-between">
@@ -19,7 +19,7 @@
 				</view>
 				<view class="u-border-bottom"></view>
 				<view class="u-p-t-34 u-p-b-34 u-p-r-24 u-p-l-34 u-flex u-row-between">
-					<view class="u-foont-24">当前版本</view>
+					<view class="u-foont-24">{{$getLang('当前版本')}}</view>
 					<view class="u-flex">
 						<view class="u-font-22 u-type-info">{{ equip.mcuOTCSN }}</view>
 						<!-- <view v-show="otanew" class="dot u-m-l-12"></view> -->
@@ -27,7 +27,7 @@
 				</view>
 				<view class="u-border-bottom"  v-show="otanew"></view>
 				<view  v-show="otanew" class="u-p-t-34 u-p-b-34 u-p-r-24 u-p-l-34 u-flex u-row-between">
-					<view class="u-foont-24">最新版本</view>
+					<view class="u-foont-24">{{$getLang('最新版本')}}</view>
 					<view class="u-flex">
 						<view class="u-font-22 u-type-info">{{ otaNewVer }}</view>
 						<view class="dot u-m-l-12"></view>
@@ -35,7 +35,7 @@
 				</view>
 				<view v-show="otanew" class="u-border-bottom"></view>
 				<view v-show="otanew" class="u-p-t-34 u-p-b-34 u-p-r-24 u-p-l-34 u-flex u-row-between">
-					<view class="u-foont-24">最新版本描述</view>
+					<view class="u-foont-24">{{$getLang('最新版本描述')}}</view>
 					<view class="u-flex" style="max-width: 70%;">
 						<view class="u-font-22 u-type-info">{{ otaDesc }}</view>
 						<view class="dot u-m-l-12"></view>
@@ -44,14 +44,14 @@
 			</view>
 			<!-- <u-button style="width: 60%; margin-top: 50px;" @click="verifyWifiToggle" type="primary">点击切换网络</u-button> -->
 			<u-button v-show="otanew" style="width: 60%; margin-top: 50px;" @click="onOtaUpgrad" type="primary">OTA升级</u-button>
-			<view v-show="!otanew" style="text-align: center; margin-top: 30px;">已是最近版本</view>
+			<view v-show="!otanew" style="text-align: center; margin-top: 30px;">{{$getLang('已是最新版本')}}</view>
 			
 		</view>
 		<!-- 下载进度弹出层 start -->
 		<u-popup v-model="uploadShow" mode="center" width="500" height="500" border-radius="14" :mask-close-able="false">
 			<view class="u-m-l-30 u-m-r-30 u-m-t-25 u-m-b-30">
 				<view class="u-text-center">
-					<view class="u-font-34 u-font-weight">{{ progressTitle }}OTA升级包</view>
+					<view class="u-font-34 u-font-weight">{{ progressTitle }}{{$getLang('OTA升级包')}}</view>
 					<view class="u-type-info u-font-24 u-m-t-30">{{ progressTxt }}</view>
 				</view>
 				
@@ -129,7 +129,7 @@ import {connectWifi,getConnectedSSID,removeWifiBySSID} from '../../common/cx-wif
 							if (this.otanew) {
 								setTimeout(()=>{
 									uni.showToast({
-										title:'发现新版本！'
+										title:this.$getLang('发现新版本')
 									})
 								},1500);
 								this.otaNewVer=data.vercode;
@@ -144,8 +144,10 @@ import {connectWifi,getConnectedSSID,removeWifiBySSID} from '../../common/cx-wif
 					return
 				}
 				uni.showModal({
-					title: '提示',
-					content: 'OTA固件升级,确认车机是否进入OTA升级界面？',
+					title: this.$getLang('提示'),
+					content:  this.$getLang('OTA固件升级,确认车机是否进入OTA升级界面'),
+					cancelText:this.$getLang('取消'),
+					confirmText:this.$getLang('确定'),
 					success: (res) => {
 						if (res.confirm) {
 							this.otaDownLoad()
@@ -157,14 +159,14 @@ import {connectWifi,getConnectedSSID,removeWifiBySSID} from '../../common/cx-wif
 			},
 			otaDownLoad() {
 				this.uploadShow = true
-				this.progressTitle = '正在下载所需升级包'
+				this.progressTitle = this.$getLang('正在下载所需升级包')
 				const downloadTask = uni.downloadFile({
 					url: this.otaDownUrl,
 					success: (res) => {
 						console.log(res.tempFilePath)
 						plus.io.resolveLocalFileSystemURL(res.tempFilePath, (entry) => {
 							entry.file((file) => {
-								this.progressTitle = '开始检查升级包'
+								this.progressTitle = this.$getLang('开始检查升级包')
 								this.progressTxt = ''
 								this.progressVal = 0
 								var reader = new plus.io.FileReader();
@@ -177,14 +179,14 @@ import {connectWifi,getConnectedSSID,removeWifiBySSID} from '../../common/cx-wif
 									for (var i = 0; i < binaryData.length; i++) {
 										bytes[i] = binaryData.charCodeAt(i);
 									}
-									this.progressTitle = '升级包检查成功, 请求连接车机中'
+									this.progressTitle = this.$getLang('升级包检查成功, 请求连接车机中')
 									this.progressTxt = ''
 									this.progressVal = 10
 									var flag =await this.connectStartWifi();
 									if(flag){
 										setTimeout(async()=>{
 											var tcpStatus= await this.connectTCP();
-											this.progressTitle = '车机连接成功，开始传输升级包'
+											this.progressTitle = this.$getLang('车机连接成功，开始传输升级包')
 											this.progressTxt = ''
 											this.progressVal = 20
 											if(tcpStatus){
@@ -208,7 +210,7 @@ import {connectWifi,getConnectedSSID,removeWifiBySSID} from '../../common/cx-wif
 										},3000)
 									}else{
 										uni.showToast({
-											title:'wifi连接失败，请使用手动连接',
+											title:this.$getLang('wifi连接失败，请使用手动连接'),
 											icon:'none'
 										})
 									}
@@ -217,7 +219,7 @@ import {connectWifi,getConnectedSSID,removeWifiBySSID} from '../../common/cx-wif
 									console.log('读取文件失败：');
 									console.log(e);
 									uni.showToast({
-										title:'读取文件失败',
+										title:this.$getLang('读取文件失败'),
 										icon:'none'
 									})
 								}
@@ -256,13 +258,13 @@ import {connectWifi,getConnectedSSID,removeWifiBySSID} from '../../common/cx-wif
 					
 					this.$socket.receivedMsgCallBack = (channel, receivedMsg)=> {
 						if(receivedMsg.indexOf('same checksum')>-1){
-							this.progressTitle = '升级包传输完成，等待设备升级'
+							this.progressTitle = this.$getLang('升级包传输完成，等待设备升级')
 							this.progressTxt = ''
 							this.progressVal = 0
 							this.uploadShow = false
 							this.otaUpgraStatus=0;
 							uni.showToast({
-								title:'已是最新版本',
+								title:this.$getLang('已是最新版本'),
 								icon:'none'
 							})
 							this.otanew = false;
@@ -296,7 +298,7 @@ import {connectWifi,getConnectedSSID,removeWifiBySSID} from '../../common/cx-wif
 							}else if(receivedMsg.indexOf('same checksum')>-1){
 								this.otaUpgraStatus=0;
 								uni.showToast({
-									title:'车机已是最新版本, 请重新扫描车机二维码更新信息',
+									title:this.$getLang('车机已是最新版本, 请重新扫描车机二维码更新信息'),
 									icon:'none'
 								})
 							}
@@ -305,7 +307,7 @@ import {connectWifi,getConnectedSSID,removeWifiBySSID} from '../../common/cx-wif
 							var resultMsg="continue,"+this.position.toString(16).toUpperCase()+",ok";
 							if(receivedMsg.indexOf(resultMsg)>-1){
 								console.log('自定义结果：',resultMsg);
-								this.progressTitle = '正在传输升级包'
+								this.progressTitle = this.$getLang('正在传输升级包')
 								this.progressTxt = ''
 								this.progressVal = Math.floor((this.position / this.fileSize) * 80) + 20
 								var buf = this.scoketPkg(this.position);
@@ -324,7 +326,7 @@ import {connectWifi,getConnectedSSID,removeWifiBySSID} from '../../common/cx-wif
 								this.position+=0x10000;
 								var buf = this.scoketPkg(this.position);
 								if(buf.length==0){
-									this.progressTitle = '升级包传输完成，等待设备升级'
+									this.progressTitle = this.$getLang('升级包传输完成，等待设备升级')
 									this.progressTxt = ''
 									this.progressVal = 100
 									this.uploadShow = false
@@ -334,8 +336,10 @@ import {connectWifi,getConnectedSSID,removeWifiBySSID} from '../../common/cx-wif
 									uni.setStorageSync('otaUpgradeReport',1);
 									this.otanew = false;
 									uni.showModal({
-										title:'温馨提示',
-										content:'恭喜您，升级包传输完成，等待设备自动升级。设备会自动重启，重启成功即升级成功,是否需要切换到正常网络？',
+										title: this.$getLang('提示'),
+										content:this.$getLang('恭喜您，升级包传输完成，等待设备自动升级。设备会自动重启，重启成功即升级成功,是否需要切换到正常网络'),
+										cancelText:this.$getLang('取消'),
+										confirmText:this.$getLang('确定'),
 										success:(res)=> {
 											if(res.confirm){
 												setTimeout(()=>{
@@ -390,8 +394,10 @@ import {connectWifi,getConnectedSSID,removeWifiBySSID} from '../../common/cx-wif
 				const ssid = this.equip.apSN;//设备绑定的wifi
 				if(`"${ssid}"`==getCurSSID){
 					uni.showModal({
-						title:'温馨提示',
-						content:'当前连接的网络是车机设备局域网络，是否切换？',
+						title: this.$getLang('提示'),
+						content:this.$getLang('当前连接的网络是车机设备局域网络，是否切换'),
+						cancelText:this.$getLang('取消'),
+						confirmText:this.$getLang('确定'),
 						success:(res)=> {
 							if(res.confirm){
 								removeWifiBySSID(ssid);
@@ -461,7 +467,7 @@ import {connectWifi,getConnectedSSID,removeWifiBySSID} from '../../common/cx-wif
 					const password =this.equip.apPassword;//  uni.getStorageSync('wifipwd')
 					var getCurSSIDOld=getConnectedSSID();//在切换之前获取当前连接的wifi,如果有连接其他的先移除掉，再去连接当前wifi
 					uni.showLoading({
-						title:'WIFI切换中...'
+						title:this.$getLang('WIFI切换中...')
 					})
 					console.log('之前连接的wifi',getCurSSIDOld.replace('"','').replace('"',''))
 					removeWifiBySSID(getCurSSIDOld.replace('"','').replace('"',''));
@@ -478,8 +484,10 @@ import {connectWifi,getConnectedSSID,removeWifiBySSID} from '../../common/cx-wif
 								clearInterval(interval);
 								uni.hideLoading();
 								uni.showModal({
-									title:'温馨提示',
-									content:'WIFI切换失败！请手动点击连接车机WIFI，然后确认继续升级',
+									title: this.$getLang('提示'),
+									content:this.$getLang('WIFI切换失败！请手动点击连接车机WIFI，然后确认继续升级'),
+									cancelText:this.$getLang('取消'),
+									confirmText:this.$getLang('确定'),
 									success:(res)=> {
 										if(res.confirm){
 											// removeWifiBySSID(getCurSSIDOld);
@@ -495,7 +503,7 @@ import {connectWifi,getConnectedSSID,removeWifiBySSID} from '../../common/cx-wif
 								clearInterval(interval);
 								uni.hideLoading();
 								uni.showToast({
-									title:'网络切换成功，正在连接车机服务！',
+									title:this.$getLang('网络切换成功，正在连接车机服务'),
 									icon:'none'
 								})
 								resolve(true);

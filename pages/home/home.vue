@@ -11,7 +11,7 @@
 
 		<!-- 搜索框 start -->
 		<view class="u-m-l-30 u-m-r-30 u-m-t-30 u-flex">
-			<u-search placeholder="视频名称" :show-action='false' v-model="videoName" @search="loadCloundVideo()" @clear="loadCloundVideo()" bg-color="#fff"></u-search>
+			<u-search :placeholder="$getLang('视频名称')" :show-action='false' v-model="videoName" @search="loadCloundVideo()" @clear="loadCloundVideo()" bg-color="#fff"></u-search>
 			<u-icon name="/static/index/bg-screen.png" size='40' class="u-m-l-30" @click="screen"></u-icon>
 		</view>
 		<!-- 搜索框 end -->
@@ -60,7 +60,7 @@
 				style="margin-top: 50px"
 				v-if="localChannel != '1' || (!cloundFirst.id)"
 				mode="data"
-				text="无数据"
+				:text="$getLang('无数据')"
 			>
 			</u-empty>
 		</view>
@@ -99,9 +99,9 @@
 		<u-popup v-model="screenShow" mode="right" width="600">
 			<view class="screenWrap">
 				<!-- 标题 start -->
-				<view class="u-font-34 u-font-weight">筛选内容</view>
+				<view class="u-font-34 u-font-weight">{{$getLang('筛选内容')}}</view>
 				<!-- 标题 end -->
-				<u-divider>设备筛选</u-divider>
+				<u-divider>{{$getLang('设备筛选')}}</u-divider>
 				<view>
 					<u-radio-group v-model="selectEquip" wrap size="40">
 						<u-radio v-for="(item, index) in filterEquipList" :key="index" :name="item.value"
@@ -110,7 +110,7 @@
 						</u-radio>
 					</u-radio-group>
 				</view>
-				<u-divider>录制方向</u-divider>
+				<u-divider>{{$getLang('录制方向')}}</u-divider>
 				<!-- 分类 start -->
 				<view>
 					<u-radio-group v-model="cameraType" wrap size="40">
@@ -121,16 +121,16 @@
 					</u-radio-group>
 				</view>
 				<!-- 分类 end -->
-				<u-divider>录制日期</u-divider>
+				<u-divider>{{$getLang('录制日期')}}</u-divider>
 				<!-- 日历筛选 start -->
 				<view class="u-m-t-40">
-					<u-input placeholder="请选择时间段" disabled border @click="calendarShow = true"
+					<u-input :placeholder="$getLang('请选择时间段')" disabled border @click="calendarShow = true"
 						v-model="calendarValue" :closeable="true" />
 				</view>
 				<!-- 日历筛选 end -->
 				<view class="u-flex screenWrap__btn">
-					<u-button shape="circle" @click="resetting">重置</u-button>
-					<u-button type="primary" @click="loadCloundVideo()" shape="circle">确定</u-button>
+					<u-button shape="circle" @click="resetting">{{$getLang('重置')}}</u-button>
+					<u-button type="primary" @click="loadCloundVideo()" shape="circle">{{$getLang('确定')}}</u-button>
 				</view>
 			</view>
 		</u-popup>
@@ -141,8 +141,8 @@
 		<u-popup v-model="uploadShow" mode="center" width="500" height="500" border-radius="14" :mask-close-able="false" closeable>
 			<view class="u-m-l-30 u-m-r-30 u-m-t-25 u-m-b-30">
 				<view class="u-text-center">
-					<view class="u-font-34 u-font-weight">视频名称</view>
-					<view class="u-type-info u-font-24 u-m-t-10">2024-3-22 17:15:00</view>
+					<view class="u-font-34 u-font-weight">{{$getLang('视频名称')}}</view>
+					<!-- <view class="u-type-info u-font-24 u-m-t-10">2024-3-22 17:15:00</view> -->
 				</view>
 				
 				<view style="margin-top: 30%;">
@@ -166,7 +166,7 @@
 				tablist: [{
 						iconPath: "/static/tabbar/menu_ls.png",
 						selectedIconPath: "/static/tabbar/menu_ls_active.png",
-						text: '在路上',
+						text: this.$getLang('在路上'),
 						customIcon: false
 					},
 					{
@@ -179,7 +179,7 @@
 					{
 						iconPath: "/static/tabbar/menu_my.png",
 						selectedIconPath: "/static/tabbar/menu_my_active.png",
-						text: '我的',
+						text: this.$getLang('我的'),
 						customIcon: false,
 					}
 				],
@@ -194,9 +194,9 @@
 				cloundFirst: {},
 				vieoList: [],
 				list: [{
-					name: '云端'
+					name: this.$getLang('云端')
 				}, {
-					name: '本地'
+					name: this.$getLang('本地')
 				}],
 				current: 0,
 				swiperCurrent: 0,
@@ -211,17 +211,17 @@
 				// 分类
 				translate: [{
 						value: '',
-						name: '全部',
+						name:this.$getLang('全部'),
 						disabled: false
 					},
 					{
 						value: '0',
-						name: '前录',
+						name: this.$getLang('前录'),
 						disabled: false
 					},
 					{
 						value: '1',
-						name: '后录',
+						name:  this.$getLang('后录'),
 						disabled: false
 					}
 				],
@@ -237,10 +237,17 @@
 			}
 		},
 		onLoad() {
-			this.loadData()
+			this.loadEquipList();
 			this.addRandomData();
-			this.localChannel = getApp().globalData.equip.channel
-			this.loadEquipList()
+			
+			if(getApp().globalData.equip){
+				console.log(getApp().globalData.equip)
+				this.localChannel = getApp().globalData.equip.channel
+				this.selectEquip=getApp().globalData.equip.sn
+				this.loadData();
+				
+			}
+			
 		},
 		onReachBottom() {
 			this.loadStatus = 'loading';
@@ -257,18 +264,18 @@
 			// 长按事件 start
 			longpress(item) {
 				uni.showActionSheet({
-					itemList: ['上传', '删除'],
+					itemList: [this.$getLang('上传') , this.$getLang('删除')],
 					success: (res) => {
 						if (res.tapIndex == 0) {
 							this.uploadShow = true;
 						} else {
 							uni.showModal({
-								title: '删除提示',
-								content: '确认要删除当前视频吗？',
+								title:  this.$getLang('提示'),
+								content:  this.$getLang('确认要删除当前视频吗'),
 								success: (res) => {
 									if (res.confirm) {
 										uni.showToast({
-											title: '删除成功',
+											title:  this.$getLang('删除成功'),
 											icon: 'none'
 										})
 									}
@@ -426,7 +433,7 @@
 			},
 			videoDetailClound(item) {
 				uni.navigateTo({
-					url: `/pages/home/home-videodetail?type=1&id=${item.id}&name=${item.name}&playUrl=${item.path}&size=${byteToMb(item.size)}&duration=${item.totalTime}&devSN=${item.devSN}`,
+					url: `/pages/home/home-videodetail?type=2&id=${item.id}&name=${item.name}&playUrl=${item.path}&size=${byteToMb(item.size)}&duration=${item.totalTime}&devSN=${item.devSN}`,
 				})
 			}
 		}

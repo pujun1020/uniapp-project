@@ -2,16 +2,16 @@
 	<view class="wrap">
 		<u-gap height="88" bg-color="#EBF5FF"></u-gap>
 		<view class="wrap__head">
-			<u-tabs v-show="localChannel == '1'" :list="list" :is-scroll="false" :current="current" @change="change" bg-color="#EBF5FF"
+			<u-tabs v-if="localChannel == '1'" :list="list" :is-scroll="false" :current="current" @change="change" bg-color="#EBF5FF"
 				font-size="32" active-color="#1F252A" bar-width="67"></u-tabs>
-				<zb-popover placement="bottom-end"
-					theme="dark"
-					:options="actions"
-					ref="Popover1"
-					@select="onPlusDialog"
-					class="item-popover">
-					 <u-icon name="plus" color="#1F252A" size="40" class="wrap__head__plus"></u-icon>
-				</zb-popover>
+			<zb-popover placement="bottom-end"
+				theme="dark"
+				:options="actions"
+				ref="Popover1"
+				@select="onPlusDialog"
+				class="item-popover">
+				 <u-icon name="plus" color="#1F252A" size="40" class="wrap__head__plus"></u-icon>
+			</zb-popover>
 		</view>
 		<!-- bg -->
 		<view v-show="current === 0">
@@ -21,29 +21,36 @@
 					<view class="u-flex-col u-col-center">
 						<view class="bg__name" v-show="localChannel == '1'">金浪318</view>
 						<view class="bg__name" v-show="localChannel == '0'">恒勃智联</view>
-						<view class="bg__status" :style="{ color: socketStatus === '已连接' ? 'green' : '#7D818C' }">{{ socketStatus }} | BT</view>
+						<!-- <view class="bg__status" :style="{ color: socketStatus === '已连接' ? 'green' : '#7D818C' }">{{ socketStatus }} | BT</view> -->
 					</view>
 				</view>
 			</view>
 			<view class="u-flex u-row-center u-m-l-30 u-m-r-30 map">
 				<u-image src="/static/index/map.png" width="100%" height="140rpx" mode="aspectFit"></u-image>
-				<view class="map__btn">导航寻车</view>
+				<view class="map__btn">{{$getLang('导航寻车')}}</view>
 			</view>
-			<view class="device">
-				<view class="device__title">设备信息</view>
-				<view class="u-m-t-10 u-font-26">设备：{{ equipInfo ? equipInfo.osAppProjectName : '' }}</view>
+			<view class="device" v-if="equipInfo">
+				<view class="device__title">{{$getLang('设备信息')}}</view>
+				<view class="u-m-t-10 u-font-26">{{$getLang('设备')}}：{{ equipInfo ? equipInfo.osAppProjectName : '' }}</view>
 				<view class="u-m-t-10 u-font-26">MCU：{{ equipInfo ? equipInfo.mcuVersion : '' }}</view>
-				<view class="u-m-t-10 u-font-26">系统：{{ equipInfo ? equipInfo.osAppProjectSN : '' }}</view>
+				<view class="u-m-t-10 u-font-26">{{$getLang('系统')}}：{{ equipInfo ? equipInfo.osAppProjectSN : '' }}</view>
+			</view>
+			<view v-else>
+				<view class="u-m-t-100" style="width: 460rpx;height: 150rpx;margin:50rpx auto;text-align: center;">
+					<text style="line-height: 50rpx;color: #ccc;font-size: 32rpx;">{{$getLang('您当前还未绑定任何设备哦')}}~</text>
+					<button @tap="onPlusDialog({value:'sanc'})" 
+					style="background-color:#087DFF;color: #fff;margin-top: 30rpx;width: 310rpx;">{{$getLang('立即扫码绑定')}}</button>
+				</view>
 			</view>
 			<view class="u-m-l-30 u-m-r-30 u-flex wrap__bottom u-row-between">
-				<view  v-show="localChannel == '1'" class="wrap__bottom__view" @click="carinfo(0)">
+				<!-- <view  v-show="localChannel == '1'" class="wrap__bottom__view" @click="carinfo(0)">
 					<u-icon name="/static/index/menu-1.png" size="64"></u-icon>
-					<view class="u-font-26 u-type-info">车辆信息</view>
+					<view class="u-font-26 u-type-info">{{$getLang('车辆信息')}}</view>
 				</view>
 				<view  v-show="localChannel == '1'" class="wrap__bottom__view" @click="carinfo(1)">
 					<u-icon name="/static/index/menu-2.png" size="64"></u-icon>
-					<view class="u-font-26 u-type-info">仪表设置</view>
-				</view>
+					<view class="u-font-26 u-type-info">{{$getLang('仪表设置')}}</view>
+				</view> -->
 				<view v-show="localChannel == '0'" class="wrap__bottom__view" @click="upgradation">
 					<u-icon name="/static/index/menu-3.png" size="64"></u-icon>
 					<view class="u-font-26 u-type-info">OTA</view>
@@ -68,7 +75,7 @@
 				tablist: [{
 						iconPath: "/static/tabbar/menu_ls.png",
 						selectedIconPath: "/static/tabbar/menu_ls_active.png",
-						text: '在路上',
+						text: this.$getLang('在路上'),
 						customIcon: false
 					},
 					{
@@ -81,22 +88,22 @@
 					{
 						iconPath: "/static/tabbar/menu_my.png",
 						selectedIconPath: "/static/tabbar/menu_my_active.png",
-						text: '我的',
+						text: this.$getLang('我的'),
 						customIcon: false,
 					}
 				],
 				tabCurrent: 1,
 				list: [{
-					name: '设备'
+					name: this.$getLang('设备')
 				}, {
 					name: 'DVR'
 				}],
 				current: 0,
 				actions: [{
-					text: '扫一扫',
+					text: this.$getLang('扫一扫'),
 					value: 'sanc'
 				}],
-				socketStatus: '未连接',
+				socketStatus: this.$getLang('未连接'),
 				equipInfo: {},
 				localChannel: '',
 				osAppProjectSN: '',
@@ -199,7 +206,7 @@
 							console.log(result)
 							if (result.length !== 8) {
 								uni.showToast({
-									title: '仪表版本非最新，请检查',
+									title:this.$getLang('仪表版本非最新，请检查') ,
 									icon: 'none'
 								});
 							}
@@ -219,17 +226,18 @@
 									channel = '1'
 								}
 								const conf = result[7] ? result[7].split('=')[1] : ''
-								uni.setStorageSync('devsn', devsn)
+								
 								this.localChannel = channel
 								// 上报设备信息到云端
 								const params = { devSN: devsn, devOSAppVersion: osver, devMCUVersion: mcuver, channel, conf,
 									apSN:ssid,apPassword:password,apWebsocket:url,devName:devName
 								}
+								console.log('params',params);
 								this.$u.api.sendDevInfo(params).then(res => {
 									console.log('sendDevInfo:',res);
 									if(res.code!==0){
 										uni.showToast({
-											title:res.message,
+											title:this.$getLang(res.code) ,
 											icon:'none'
 										})
 									}else{
@@ -239,6 +247,7 @@
 											connectWifi(ssid,password);
 											this.openWebSocket(url);
 										}
+										uni.setStorageSync('devsn', devsn)
 									}
 								})
 							} catch(e) {
@@ -250,7 +259,7 @@
 			},
 			openWebSocket(url) {
 				console.log('正在打开socket', url)
-				this.socketStatus = '连接中'
+				this.socketStatus = this.$getLang('连接中');
 			  const ws = uni.connectSocket({
 			    url: url,
 					protocols: ['dvr-server'],
@@ -258,16 +267,16 @@
 						// getApp().globalData.socketTask = ws
 					},
 					fail: err => {
-						this.socketStatus = '连接失败'
+						this.socketStatus = this.$getLang('连接失败'); 
 						console.error(err)
 						uni.showToast({
-							title: 'socket连接失败' + err,
+							title: 'socket'+this.$getLang('连接失败') + err,
 							icon: 'none'
 						});
 					},
 			  });
 			  ws.onOpen(() => {
-					this.socketStatus = '已连接'
+					this.socketStatus = this.$getLang('已连接'); 
 					getApp().globalData.socketTask = ws
 			  });
 				ws.onClose(() => {
@@ -278,40 +287,59 @@
 			  //   // this.msg = res.data;
 			  // });
 			  ws.onError((err) => {
-					this.socketStatus = '未连接'
-					uni.showToast({
-						title: '连接失败',
-						icon: 'none'
-					});
-			    console.log('WebSocket连接打开失败，请检查！');
+					this.socketStatus = this.$getLang('未连接');
+					// uni.showToast({
+					// 	title:this.$getLang('连接失败'),
+					// 	icon: 'none'
+					// });
+					console.log('WebSocket连接打开失败，请检查！');
 			  });
 			},
 			// 获取是否需要升级
 			upgradeInfo() {
 				this.$u.api.getLastPackage({ appsoftsn: 'App-20240422153752' })
 					.then(res => {
+						console.log(res)
 						if (res.code === 0 ) {
 							var data=res.data;
 							var vercode=data.vercode;
+							// console.log(vercode)
 							plus.runtime.getProperty(plus.runtime.appid,(inf) => {
 								var curVersion=inf.version;
+								// console.log(curVersion)
 								//如果当前版本小于服务器版本返回-1;
 								//如果当前版本等于服务器版本返回0;
 								var val = this.compareVersions(curVersion,vercode);
 								console.log(curVersion,vercode);
-								// if(val==-1){
-								// 	uni.setStorageSync('appAPK',res.data);
-								// 	console.log('app版本发生变化');
-								// 	uni.navigateTo({
-								// 	    url: '/uni_modules/rt-uni-update/components/rt-uni-update/rt-uni-update'
-								// 	})
+								if(val==-1){
+									uni.setStorageSync('appAPK',res.data);
+									// console.log('app版本发生变化');
+									uni.navigateTo({
+									    url: '/uni_modules/rt-uni-update/components/rt-uni-update/rt-uni-update'
+									})
 									
-								// }
+								}
 							})
 							
 							
 						}
 					})
+			},
+			compareVersions(version1,version2){
+				const v1Parts = version1.split('.').map(Number);
+				const v2Parts = version2.split('.').map(Number);
+			
+				for (let i = 0; i < Math.max(v1Parts.length, v2Parts.length); i++) {
+					const v1Part = v1Parts[i] || 0;
+					const v2Part = v2Parts[i] || 0;
+			
+					if (v1Part > v2Part) {
+						return 1;
+					} else if (v1Part < v2Part) {
+						return -1;
+					}
+				}
+				return 0; // 如果所有部分都相等，则认为版本号相同
 			},
 			// 设备列表选择
 			toEquipList() {

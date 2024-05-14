@@ -1,6 +1,6 @@
 <template>
 	<view class="wrap">
-		<view>此处显示隐私说明文本</view>
+		<view>{{$getLang('此处显示隐私说明文本')}}</view>
 	</view>
 </template>
 
@@ -10,6 +10,9 @@
 			return {
 
 			}
+		},
+		onLoad:function(){
+			uni.setNavigationBarTitle({title:this.$getLang('隐私协议')});
 		},
 		methods: {
 

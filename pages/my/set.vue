@@ -41,6 +41,7 @@
 			}
 		},
 		onLoad() {
+			uni.setNavigationBarTitle({title:this.$getLang('设置')});
 			this.$u.api.getConfig({ userId: getApp().globalData.user.id })
 				.then(res => {
 					if (res.code === 0) {
@@ -68,7 +69,7 @@
 					.then(res => {
 						if (res.code === 0) {
 							uni.showToast({
-								title: this.$getLang('修改提示成功！'),
+								title: this.$getLang('修改提示成功'),
 								icon: 'none'
 							})
 						} else {
@@ -84,7 +85,7 @@
 					.then(res => {
 						if (res.code === 0) {
 							uni.showToast({
-								title: this.$getLang('修改地区成功！'),
+								title: this.$getLang('修改地区成功'),
 								icon: 'none'
 							})
 							this.area = e[0].label
@@ -99,18 +100,22 @@
 			onConfirmLanguage(e) {
 				var langIndex =e[0].value; 
 				uni.setStorageSync('language',e[0].value);
-				return;
+				
 				this.$u.api.setConfig({ id: this.id, language: e[0].value })
 					.then(res => {
 						if (res.code === 0) {
 							uni.showToast({
-								title: this.$getLang('修改语言成功！'),
+								title: this.$getLang('语言切换成功'),
 								icon: 'none'
 							})
+							this.areaList=[{ value: '0', label:this.$getLang('中国') }, { value: '1', label: this.$getLang('美国') }];
+							this.languageList=[{ value: '0', label: this.$getLang('中文') }, { value: '1', label: this.$getLang('英文') }];
+							this.area=this.$getLang(this.area);
 							this.language = e[0].label
+							
 						} else {
 							uni.showToast({
-								title: res.message,
+								title: this.$getLang(res.code),
 								icon: 'none'
 							})
 						}

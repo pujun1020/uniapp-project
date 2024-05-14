@@ -18,7 +18,7 @@
 				</view>
 				<view class="u-flex u-row-center">
 					<u-image src="/static/index/info/menu-3.png" width="28rpx" height="28rpx"></u-image>
-					<text class="u-font-24 u-type-info">剩余电量</text>
+					<text class="u-font-24 u-type-info">{{$getLang('剩余电量')}}</text>
 				</view>
 				<view class="u-font-34 u-font-weight u-text-center u-m-t-370">金浪318</view>
 			</view>
@@ -34,9 +34,9 @@
 			</u-grid>
 			<view class="cell">
 				<u-cell-group :border="false">
-					<u-cell-item icon-size="40" icon="/static/index/info/menu-1.png" title="电压（V）" :value="voltage + 'V'"
+					<u-cell-item icon-size="40" icon="/static/index/info/menu-1.png" :title="$getLang('电压')+'（V）'" :value="voltage + 'V'"
 						:arrow="false" :title-style="titleStyle" :value-style="valueStyle"></u-cell-item>
-					<u-cell-item icon-size="40" icon="/static/index/info/menu-2.png" title="油量" :value="oilmass + '%'"
+					<u-cell-item icon-size="40" icon="/static/index/info/menu-2.png" :title="$getLang('油量')" :value="oilmass + '%'"
 						:arrow="false" :title-style="titleStyle" :value-style="valueStyle"></u-cell-item>
 				</u-cell-group>
 			</view>
@@ -48,16 +48,16 @@
 			</view>
 			<view class="cell">
 				<u-cell-group :border="false">
-					<u-cell-item icon-size="40" icon="/static/index/set/menu-1.png" title="主题" :value="themeText"
+					<u-cell-item icon-size="40" icon="/static/index/set/menu-1.png" :title="$getLang('主题')" :value="themeText"
 						:title-style="titleStyle" :value-style="valueStyle" hover-class="none"
 						@click="show1 = true"></u-cell-item>
-					<u-cell-item icon-size="40" icon="/static/index/set/menu-2.png" title="背光" :value="backlightText"
+					<u-cell-item icon-size="40" icon="/static/index/set/menu-2.png" :title="$getLang('背光')" :value="backlightText"
 						:title-style="titleStyle" :value-style="valueStyle" hover-class="none"
 						@click="show2 = true"></u-cell-item>
-					<u-cell-item icon-size="40" icon="/static/index/set/menu-3.png" title="语言" :value="languageText"
+					<u-cell-item icon-size="40" icon="/static/index/set/menu-3.png" :title="$getLang('语言')" :value="languageText"
 						:title-style="titleStyle" :value-style="valueStyle" hover-class="none"
 						@click="show3 = true"></u-cell-item>
-					<u-cell-item icon-size="40" icon="/static/index/set/menu-4.png" title="单位" :value="unitText"
+					<u-cell-item icon-size="40" icon="/static/index/set/menu-4.png" :title="$getLang('单位')" :value="unitText"
 						:title-style="titleStyle" :value-style="valueStyle" hover-class="none"
 						@click="show4 = true"></u-cell-item>
 				</u-cell-group>
@@ -94,45 +94,45 @@
 				show1: false,
 				list1: [{
 						value: 0,
-						label: '自动'
+						label: this.$getLang('自动')
 					}, {
 						value: 1,
-						label: '白天'
+						label: this.$getLang('白天')
 					}, {
 						value: 2,
-						label: '黑夜'
+						label: this.$getLang('黑夜')
 					}
 				],
 				show2: false,
 				list2: [{
 						value: '0',
-						label: '自动'
+						label: this.$getLang('自动')
 					}
 				],
 				show3: false,
 				list3: [{
 						value: 0,
-						label: '中文'
+						label: this.$getLang('中文')
 					},
 					{
 						value: 1,
-						label: '英文'
+						label: this.$getLang('英文')
 					}
 				],
 				show4: false,
 				list4: [{
 						value: 0,
-						label: '公里'
+						label: this.$getLang('公里')
 					},
 					{
 						value: 1,
-						label: '英里'
+						label: this.$getLang('英里')
 					}
 				],
 				list: [{
-					name: '车辆信息'
+					name:  this.$getLang('车辆信息')
 				}, {
-					name: '仪表设置'
+					name: this.$getLang('仪表设置')
 				}],
 				current: 0,
 				customStyle: {
@@ -220,10 +220,10 @@
 						this.unit = data.unit
 						this.language = data.language
 						this.backlight = data.backlight
-						this.themeText = this.theme === 0 ? '自动' : (this.theme === 1 ? '黑夜' : '白天')
-						this.unitText = this.unit === 0 ? '公里' : '英里'
-						this.languageText = this.language === 0 ? '中文' : '英文'
-						this.backlightText = '自动'
+						this.themeText = this.theme === 0 ? this.$getLang('自动') : (this.theme === 1 ? this.$getLang('黑夜') : this.$getLang('白天'))
+						this.unitText = this.unit === 0 ? this.$getLang('公里'): this.$getLang('英里')
+						this.languageText = this.language === 0 ?  this.$getLang('中文') :  this.$getLang('英文')
+						this.backlightText = this.$getLang('自动')
 					}
 				})
 			},

@@ -12,8 +12,8 @@
 			></canvas>
 		</view>
 		<view class="cropper-buttons">
-			<view class="upload" @tap="uploadTap">重新选择</view>
-			<view class="getCropperImage" @tap="getCropperImage">确定</view>
+			<view class="upload" @tap="uploadTap">{{$getLang('重新选择')}}</view>
+			<view class="getCropperImage" @tap="getCropperImage">{{$getLang('确定')}}</view>
 		</view>
 	</view>
 </template>
@@ -84,12 +84,6 @@ export default {
 							var data=JSON.parse(res.data) ;
 							if(data.code==0){
 								var url=data.data;
-								console.log(url);
-								// uni.showToast({
-								// 	title:'上传成功！',
-								// 	icon: 'none',
-								// 	duration: 1000
-								// });
 								var datas={ id: getApp().globalData.user.id, photo: url }
 								console.log(datas)
 								this.$u.api.setUser(datas)
@@ -97,7 +91,7 @@ export default {
 									if (res.code === 0) {
 										uni.setStorageSync('userAvatar',url);
 										uni.showToast({
-											title: '上传成功！',
+											title:_this.$getLang('上传成功'),
 											icon: 'success'
 										})
 										var user = getApp().globalData.user;
@@ -108,14 +102,14 @@ export default {
 										},1500)
 									} else {
 										uni.showToast({
-											title: res.message,
+											title:_this.$getLang(res.code),
 											icon: 'none'
 										})
 									}
 								});
 							}else{
 								uni.showToast({
-									title:'上传失败！',
+									title:_this.$getLang('上传失败'),
 									icon: 'none',
 									duration: 1000
 								});
@@ -156,6 +150,8 @@ export default {
 		}
 	},
 	onLoad(option) {
+		var that=this;
+		uni.setNavigationBarTitle({title:this.$getLang('上传头像')});
 		// do something
 		const cropperOpt = this.cropperOpt;
 		const src = option.src;
@@ -168,7 +164,7 @@ export default {
 				.on('ready', function(ctx) {})
 				.on('beforeImageLoad', ctx => {
 					uni.showToast({
-						title: '上传中',
+						title:that.$getLang('上传中'),
 						icon: 'loading',
 						duration: 3000
 					});

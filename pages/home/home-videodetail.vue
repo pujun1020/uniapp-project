@@ -5,7 +5,7 @@
 			<!-- time -->
 			<view class="u-m-t-30">{{ params.name }}</view>
 			<!-- name -->
-			<view>{{ params.angle ? (params.angle === 'front' ? '前录' : '后录') : '' }}</view>
+			<view>{{ params.angle ? (params.angle === 'front' ? $getLang('前录') : $getLang('后录')) : '' }}</view>
 			<!-- size -->
 			<view>{{ params.size }}</view>
 			<view>{{ videoTime }}</view>
@@ -24,15 +24,15 @@
 			<u-grid :col="3">
 				<u-grid-item @click="onDelete" bg-color="#fff">
 					<u-icon name="trash" :size="46"></u-icon>
-					<view class="grid-text">删除</view>
+					<view class="grid-text">{{$getLang('删除')}}</view>
 				</u-grid-item>
 				<u-grid-item bg-color="#fff" @click="onUpload" v-show="params.type === '1'">
 					<u-icon name="arrow-upward" :size="46"></u-icon>
-					<view class="grid-text">上传</view>
+					<view class="grid-text">{{$getLang('上传')}}</view>
 				</u-grid-item>
 				<u-grid-item bg-color="#fff" @click="onDownLoad" v-show="params.type === '0'">
 					<u-icon name="download" :size="46"></u-icon>
-					<view class="grid-text">下载</view>
+					<view class="grid-text">{{$getLang('下载')}}</view>
 				</u-grid-item>
 			</u-grid>
 		</view>
@@ -71,14 +71,21 @@
 		onLoad(option) {
 			if (option) {
 				this.params = option
-				const sec = Math.floor(Number(this.params.duration) / 1000)
-				this.videoTime = `${ Math.floor(sec/60) }分${Math.floor(sec%60)}秒`
+				if(option.type==2){
+					this.videoTime=this.params.duration;
+				}else{
+					console.log(option)
+					const sec = Math.floor(Number(this.params.duration) / 1000)
+					this.videoTime = `${ Math.floor(sec/60) }分${Math.floor(sec%60)}秒`
+				}
+				
+				
 			}
 		},
 		methods: {
 			onDownLoad() {
 				this.uploadShow = true
-				this.uploadOrDownload = '正在下载'
+				this.uploadOrDownload =this.$getLang('正在下载') 
 				const downloadTask = uni.downloadFile({
 					url: this.params.playUrl,
 					success: (res) => {
@@ -87,7 +94,7 @@
 							success: (fileRes) => {
 								uni.setStorageSync(fileRes.savedFilePath, this.params)
 								uni.showToast({
-									title: '下载完成！',
+									title:this.$getLang('下载完成！') ,
 									icon: 'none'
 								})
 								this.uploadShow = false
@@ -111,7 +118,7 @@
 				const nameArr = this.params.name.split('-')
 				const videoDate = `${nameArr[1].replace('_', '-').replace('_', '-')} ${nameArr[2].replace('_', ':').replace('_', ':')}`
 				this.uploadShow = true
-				this.uploadOrDownload = '正在上传'
+				this.uploadOrDownload =this.$getLang('正在上传') 
 				const uploadTask = uni.uploadFile({
           url: getApp().globalData.uploadUrl + '/api/video', // 你的上传API地址
           filePath: this.params.playUrl,
@@ -136,7 +143,7 @@
 							const data = JSON.parse(uploadRes.data)
 							if (data.code === 0) {
 								uni.showToast({
-									title: '上传完成！',
+									title:this.$getLang('上传完成！') ,
 									icon: 'none'
 								})
 							} else {
@@ -148,7 +155,7 @@
 							
 						} else {
 							uni.showToast({
-								title: '上传服务错误，请稍后重试！',
+								title:this.$getLang('上传服务错误，请稍后重试'),
 								icon: 'none'
 							})
 						}
@@ -193,8 +200,10 @@
 			},
 			onDelete() {
 				uni.showModal({
-					title: '提示',
-					content: '确认要删除该视频吗？',
+					title: this.$getLang('提示'),
+					content: this.$getLang('确认要删除当前视频吗'),
+					cancelText:this.$getLang('取消'),
+					confirmText:this.$getLang('确定'),
 					success: (res) => {
 						if (res.confirm) {
 							this.$u.api.delteCloundVideo({ devSN: this.params.devSN, id: this.params.id })

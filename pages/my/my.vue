@@ -13,11 +13,11 @@
 		<!-- list -->
 		<view class="wrap__list">
 			<u-cell-group :border="false">
-				<u-cell-item icon="man-add" title="用户信息" @click="menu(1)" hover-class="none"></u-cell-item>
-				<u-cell-item icon="kefu-ermai" title="用户反馈" @click="menu(2)" hover-class="none"></u-cell-item>
-				<u-cell-item icon="setting" title="设置信息" @click="menu(3)" hover-class="none"></u-cell-item>
-				<u-cell-item icon="file-text" title="隐私协议" @click="menu(4)" hover-class="none"></u-cell-item>
-				<u-cell-item icon="man-delete" title="退出登陆" style="color: #dd6161" @click="login" hover-class="none"></u-cell-item>
+				<u-cell-item icon="man-add" :title="$getLang('用户信息')" @click="menu(1)" hover-class="none"></u-cell-item>
+				<u-cell-item icon="kefu-ermai" :title="$getLang('用户反馈')" @click="menu(2)" hover-class="none"></u-cell-item>
+				<u-cell-item icon="setting" :title="$getLang('设置信息')" @click="menu(3)" hover-class="none"></u-cell-item>
+				<u-cell-item icon="file-text" :title="$getLang('隐私协议')" @click="menu(4)" hover-class="none"></u-cell-item>
+				<u-cell-item icon="man-delete" :title="$getLang('退出登陆')" style="color: #dd6161" @click="login" hover-class="none"></u-cell-item>
 				<!-- <u-cell-item icon="file-text" title="scoket测试" @click="test()" hover-class="none"></u-cell-item> -->
 			</u-cell-group>
 		</view>
@@ -37,7 +37,7 @@
 				tablist: [{
 						iconPath: "/static/tabbar/menu_ls.png",
 						selectedIconPath: "/static/tabbar/menu_ls_active.png",
-						text: '在路上',
+						text: this.$getLang('在路上'),
 						customIcon: false
 					},
 					{
@@ -50,7 +50,7 @@
 					{
 						iconPath: "/static/tabbar/menu_my.png",
 						selectedIconPath: "/static/tabbar/menu_my_active.png",
-						text: '我的',
+						text: this.$getLang('我的'),
 						customIcon: false,
 					}
 				],
@@ -91,8 +91,10 @@
 			},
 			login() {
 				uni.showModal({
-					title: '提示',
-					content: '确认要退出登陆吗？',
+					title: this.$getLang('提示'),
+					content:this.$getLang('确认要退出登陆吗') ,
+					cancelText:this.$getLang('取消'),
+					confirmText:this.$getLang('确认'),
 					success: (res) => {
 						if (res.confirm) {
 							uni.navigateTo({

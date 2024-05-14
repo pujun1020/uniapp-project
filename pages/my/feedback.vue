@@ -1,8 +1,8 @@
 <template>
 	<view class="wrap">
-		<u-input v-model="value" type="textarea" placeholder="请在此处输入反馈信息" height="400" :custom-style="customStyle" />
+		<u-input v-model="value" type="textarea" :placeholder="$getLang('请在此处输入反馈信息')" height="400" :custom-style="customStyle" />
 		<view class="u-m-t-180">
-			<u-button @click="submit" type="primary">提交反馈</u-button>
+			<u-button @click="submit" type="primary">{{$getLang('提交反馈')}} </u-button>
 		</view>
 	</view>
 </template>
@@ -19,13 +19,16 @@
 				}
 			}
 		},
+		onLoad:function(){
+			uni.setNavigationBarTitle({title:this.$getLang('用户反馈')});
+		},
 		methods: {
 			submit() {
 				this.$u.api.feedback({ content: this.value })
 					.then(res => {
 						if (res.code === 0) {
 							uni.showToast({
-								title: '提交用户反馈成功！',
+								title:this.$getLang('提交用户反馈成功'),
 								icon: 'none'
 							})
 							uni.navigateTo({
@@ -34,7 +37,7 @@
 							})
 						} else {
 							uni.showToast({
-								title: res.message,
+								title: this.$getLang(res.code),
 								icon: 'none'
 							})
 						}

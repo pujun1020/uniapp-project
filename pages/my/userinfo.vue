@@ -2,63 +2,63 @@
 	<view class="wrap">
 		<!-- list -->
 		<u-cell-group :border="false">
-			<u-cell-item @click="coolImage()" title="头像" hover-class="none">
+			<u-cell-item @click="coolImage()" :title="$getLang('头像')" hover-class="none">
 				<u-avatar v-if="!user.photo" src="/static/tabbar/menu_my_active.png" size="mini"></u-avatar>
 				<u-avatar v-else :src="user.photo" size="mini"></u-avatar>
 			</u-cell-item>
-			<u-cell-item title="姓名" hover-class="none" :value="user.nickName" @click="showName = true"></u-cell-item>
-			<u-cell-item title="手机号码" hover-class="none" :value="user.mobile" @click="showMobile = true"></u-cell-item>
-			<u-cell-item title="邮箱" hover-class="none" :value="user.email" @click="showEmail = true"></u-cell-item>
-			<u-cell-item title="密码" hover-class="none" value="***********" @click="showPwd = true"></u-cell-item>
+			<u-cell-item :title="$getLang('姓名')" hover-class="none" :value="user.nickName" @click="showName = true"></u-cell-item>
+			<u-cell-item :title="$getLang('手机号')" hover-class="none" :value="user.mobile" @click="showMobile = true"></u-cell-item>
+			<u-cell-item :title="$getLang('邮箱')" hover-class="none" :value="user.email" @click="showEmail = true"></u-cell-item>
+			<u-cell-item :title="$getLang('密码')" hover-class="none" value="***********" @click="showPwd = true"></u-cell-item>
 		</u-cell-group>
 		
 		<u-popup v-model="showName" mode="bottom" height="30%">
 			<view class="popupBox">
 				<u-form>
-					<u-form-item label="姓名"><u-input v-model="nickName" placeholder="请输入新姓名" /></u-form-item>
+					<u-form-item :label="$getLang('姓名')"><u-input v-model="nickName" :placeholder="$getLang('请输入新姓名')" /></u-form-item>
 				</u-form>
 				<view class="u-flex u-row-around u-m-t-80">
-					<u-button @click="closeName()" type="info">取消</u-button>
-					<u-button @click="updateName()" type="primary">确定</u-button>
+					<u-button @click="closeName()" type="info">{{$getLang('取消')}}</u-button>
+					<u-button @click="updateName()" type="primary">{{$getLang('确定')}}</u-button>
 				</view>
 			</view>
 		</u-popup>
 		<u-popup v-model="showMobile" mode="bottom" height="30%">
 			<view class="popupBox">
 				<u-form>
-					<u-form-item label="新号码"><u-input v-model="mobile" placeholder="请输入新号码" /></u-form-item>
+					<u-form-item :label="$getLang('新号码')"><u-input v-model="mobile" :placeholder="$getLang('请输入新号码')" /></u-form-item>
 				</u-form>
 				<view class="u-flex u-row-around u-m-t-80">
-					<u-button @click="closeMobile()" type="info">取消</u-button>
-					<u-button @click="updateMobile()" type="primary">确定</u-button>
+					<u-button @click="closeMobile()" type="info">{{$getLang('取消')}}</u-button>
+					<u-button @click="updateMobile()" type="primary">{{$getLang('确定')}}</u-button>
 				</view>
 			</view>
 		</u-popup>
 		<u-popup v-model="showEmail" mode="bottom" height="30%">
 			<view class="popupBox">
 				<u-form>
-					<u-form-item label="新邮箱"><u-input v-model="email" placeholder="请输入新邮箱" /></u-form-item>
+					<u-form-item :label="$getLang('新邮箱')"><u-input v-model="email" :placeholder="$getLang('请输入新邮箱')" /></u-form-item>
 				</u-form>
 				<view class="u-flex u-row-around u-m-t-80">
-					<u-button @click="closeEmail()" type="info">取消</u-button>
-					<u-button @click="updateEmail()" type="primary">确定</u-button>
+					<u-button @click="closeEmail()" type="info">{{$getLang('取消')}}</u-button>
+					<u-button @click="updateEmail()" type="primary">{{$getLang('确定')}}</u-button>
 				</view>
 			</view>
 		</u-popup>
 		<u-popup v-model="showPwd" mode="bottom" height="45%">
 			<view class="popupBox">
 				<u-form>
-					<u-form-item label="原密码"><u-input type="password" v-model="oldPassword" placeholder="请输入原密码" /></u-form-item>
+					<u-form-item :label="$getLang('原密码')"><u-input type="password" v-model="oldPassword" :placeholder="$getLang('请输入原密码')" /></u-form-item>
 				</u-form>
 				<u-form>
-					<u-form-item label="新密码"><u-input type="password" v-model="newPassword" placeholder="请输入新密码" /></u-form-item>
+					<u-form-item :label="$getLang('新密码')"><u-input type="password" v-model="newPassword" :placeholder="$getLang('请输入新密码')" /></u-form-item>
 				</u-form>
 				<u-form>
-					<u-form-item label="确认新密码"><u-input type="password" v-model="newPassword2" placeholder="请输入确认新密码" /></u-form-item>
+					<u-form-item :label="$getLang('确认新密码')"><u-input type="password" v-model="newPassword2" :placeholder="$getLang('请输入确认新密码')" /></u-form-item>
 				</u-form>
 				<view class="u-flex u-row-around u-m-t-80">
-					<u-button @click="closePassword()" type="info">取消</u-button>
-					<u-button @click="updatePassword()" type="primary">确定</u-button>
+					<u-button @click="closePassword()" type="info">{{$getLang('取消')}}</u-button>
+					<u-button @click="updatePassword()" type="primary">{{$getLang('确定')}}</u-button>
 				</view>
 			</view>
 		</u-popup>
@@ -92,11 +92,11 @@
 			this.user = getApp().globalData.user
 		},
 		onLoad() {
-			
+			uni.setNavigationBarTitle({title:this.$getLang('用户信息')});
 		},
 		methods: {
 			coolImage(){
-				console.log('选择文件')
+				// console.log('选择文件')
 				uni.chooseImage({
 					count: 1, //默认9
 					sizeType: ['original', 'compressed'], //可以指定是原图还是压缩图，默认二者都有
@@ -121,7 +121,7 @@
 						console.log(res)
 						if (res.code === 0) {
 							uni.showToast({
-								title: '修改姓名成功！',
+								title:this.$getLang('修改姓名成功'),
 								icon: 'none'
 							})
 							this.user.nickName = this.nickName
@@ -133,7 +133,7 @@
 							this.closeName()
 						} else {
 							uni.showToast({
-								title: res.message,
+								title: this.$getLang(res.code),
 								icon: 'none'
 							})
 						}
@@ -152,7 +152,7 @@
 					.then(res => {
 						if (res.code === 0) {
 							uni.showToast({
-								title: '修改手机号成功！',
+								title: this.$getLang('修改手机号成功'),
 								icon: 'none'
 							})
 							this.user.mobile = this.mobile
@@ -163,7 +163,7 @@
 							this.closeMobile()
 						} else {
 							uni.showToast({
-								title: res.message,
+								title: this.$getLang(res.code),
 								icon: 'none'
 							})
 						}
@@ -178,7 +178,7 @@
 					.then(res => {
 						if (res.code === 0) {
 							uni.showToast({
-								title: '修改邮箱成功！',
+								title: this.$getLang('修改邮箱成功'),
 								icon: 'none'
 							})
 							this.user.email = this.email
@@ -189,7 +189,7 @@
 							this.closeEmail()
 						} else {
 							uni.showToast({
-								title: res.message,
+								title: this.$getLang(res.code),
 								icon: 'none'
 							})
 						}
@@ -204,7 +204,7 @@
 			updatePassword() {
 				if (this.newPassword !== this.newPassword2) {
 					uni.showToast({
-						title: '两次密码输入不一致！',
+						title: this.$getLang('两次密码输入不一致'),
 						icon: 'none'
 					})
 					return
@@ -213,7 +213,7 @@
 					.then(res => {
 						if (res.code === 0) {
 							uni.showToast({
-								title: '修改密码成功！',
+								title:  this.$getLang('修改密码成功'),
 								icon: 'none'
 							})
 							this.closePassword()
@@ -222,7 +222,7 @@
 							})
 						} else {
 								uni.showToast({
-									title: res.message,
+									title: this.$getLang(res.code),
 									icon: 'none'
 								})
 							}

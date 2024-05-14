@@ -10,7 +10,7 @@
 		<view>
 			<view class="local-list">
 				<!-- 模拟数据 start -->
-				<view class="player" v-for="item in vieoList" :key="item.id" @longpress="longpress(item)"
+				<view class="player" v-for="(item,index) in vieoList" :key="index" @longpress="longpress(item)"
 					@click="videoDetail(item)">
 					<u-image class="video" :src="item.thumbUrl" width="100%" height="250"></u-image>
 					<view class="tips">
@@ -26,9 +26,9 @@
 		<u-popup v-model="screenShow" mode="right" width="600">
 			<view class="screenWrap">
 				<!-- 标题 start -->
-				<view class="u-font-34 u-font-weight">筛选内容</view>
+				<view class="u-font-34 u-font-weight">{{$getLang('筛选内容')}}</view>
 				<!-- 标题 end -->
-				<u-divider>设备筛选</u-divider>
+				<u-divider>{{$getLang('设备筛选')}}</u-divider>
 				<view>
 					<u-radio-group v-model="selectEquip" @change="radioGroupChange" wrap size="40">
 						<u-radio @change="radioChange" v-for="(item, index) in filterEquipList" :key="index" :name="item.name"
@@ -37,7 +37,7 @@
 						</u-radio>
 					</u-radio-group>
 				</view>
-				<u-divider>录制方向</u-divider>
+				<u-divider>{{$getLang('录制方向')}}</u-divider>
 				<!-- 分类 start -->
 				<view>
 					<u-radio-group v-model="value" @change="radioGroupChange" wrap size="40">
@@ -50,13 +50,13 @@
 				<!-- 分类 end -->
 				<!-- 日历筛选 start -->
 				<view class="u-m-t-40">
-					<u-input placeholder="请选择时间段" disabled border @click="calendarShow = true"
+					<u-input :placeholder="$getLang('请选择时间段')" disabled border @click="calendarShow = true"
 						v-model="calendarValue" />
 				</view>
 				<!-- 日历筛选 end -->
 				<view class="u-flex screenWrap__btn">
-					<u-button shape="circle" @click="resetting">重置</u-button>
-					<u-button type="primary" shape="circle">确定</u-button>
+					<u-button shape="circle" @click="resetting">{{$getLang('重置')}}</u-button>
+					<u-button type="primary" shape="circle">{{$getLang('确定')}}</u-button>
 				</view>
 			</view>
 		</u-popup>
@@ -67,8 +67,8 @@
 		<u-popup v-model="uploadShow" mode="center" width="500" height="500" border-radius="14" :mask-close-able="false" closeable>
 			<view class="u-m-l-30 u-m-r-30 u-m-t-25 u-m-b-30">
 				<view class="u-text-center">
-					<view class="u-font-34 u-font-weight">视频名称</view>
-					<view class="u-type-info u-font-24 u-m-t-10">2024-3-22 17:15:00</view>
+					<view class="u-font-34 u-font-weight">{{$getLang('视频名称')}}</view>
+					<!-- <view class="u-type-info u-font-24 u-m-t-10">2024-3-22 17:15:00</view> -->
 				</view>
 				
 				<view style="margin-top: 30%;">
@@ -120,15 +120,15 @@
 				selectEquip: '',
 				// 分类
 				translate: [{
-						name: '全部',
+						name: this.$getLang('全部'),
 						disabled: false
 					},
 					{
-						name: '前录',
+						name: this.$getLang('前录'),
 						disabled: false
 					},
 					{
-						name: '后录',
+						name: this.$getLang('后录'),
 						disabled: false
 					}
 				],
@@ -158,19 +158,21 @@
 			// 长按事件 start
 			longpress(item) {
 				uni.showActionSheet({
-					itemList: ['上传', '删除'],
+					itemList: [this.$getLang('上传'), this.$getLang('删除')],
 					success: (res) => {
 						console.log(item)
 						if (res.tapIndex == 0) {
 							this.uploadShow = true;
 						} else {
 							uni.showModal({
-								title: '删除提示',
-								content: '确认要删除当前视频吗？',
+								title: this.$getLang('提示'),
+								content: this.$getLang('确认要删除当前视频吗'),
+								cancelText:this.$getLang('取消'),
+								confirmText:this.$getLang('确定'),
 								success: (res) => {
 									if (res.confirm) {
 										uni.showToast({
-											title: '删除成功',
+											title: this.$getLang('删除成功'),
 											icon: 'none'
 										})
 									}

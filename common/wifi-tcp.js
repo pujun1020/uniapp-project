@@ -4,6 +4,7 @@ export function connectStartWifi() {
 	return new Promise((resolve, reject) => {
 		const ssid = getApp().globalData.equip.apSN
 		const password = getApp().globalData.equip.apPassword
+		console.log(ssid,password)
 		connectWifi(ssid, password)
 		let index = 0
 		const interval = setInterval(() => {
@@ -18,7 +19,7 @@ export function connectStartWifi() {
 				clearInterval(interval)
 				resolve(true)
 			} else {
-				console.log('尝试等待wifi连接', index)
+				// console.log('尝试等待wifi连接', index)
 				index++
 			}
 		}, 1000)

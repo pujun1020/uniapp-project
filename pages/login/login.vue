@@ -3,31 +3,31 @@
 	<view>
 		<view class="img-a">
 			<view class="t-b">
-				您好，
+				{{$getLang('您好')}}，
 				<br />
-				欢迎使用恒勃DVR
+				{{$getLang('欢迎使用')}}恒勃智联
 			</view>
 		</view>
 		<view class="login-view" style="">
 			<view class="t-login">
 				<form class="cl">
 					<view class="t-a">
-						<text class="txt">账号</text>
-						<u-input type="text" placeholder="请输入账号" v-model="username" />
+						<text class="txt">{{$getLang('账号')}}</text>
+						<u-input type="text" :placeholder="$getLang('请输入账号')" v-model="username" />
 					</view>
 					<view class="t-a">
-						<text class="txt">密码</text>
-						<u-input type="password" placeholder="请输入密码" v-model="password" />
+						<text class="txt">{{$getLang('密码')}}</text>
+						<u-input type="password" :placeholder="$getLang('请输入密码')" v-model="password" />
 					</view>
 					<view class="u-flex u-col-center">
 						<u-checkbox-group>
 							<u-checkbox v-model="remPassword"></u-checkbox>
 						</u-checkbox-group>
-						记住账号和密码
+						{{$getLang('记住账号和密码')}}
 					</view>
 					<view class="u-m-t-100">
-						<button @tap="login()">登 录</button>
-						<view class="u-text-center u-type-primary u-font-24 u-m-t-40" @click="reg">还没有账号？点击注册</view>
+						<button @tap="login()">{{$getLang('登 录')}}</button>
+						<view class="u-text-center u-type-primary u-font-24 u-m-t-40" @click="reg">{{$getLang('还没有账号？点击注册')}}</view>
 					</view>
 				</form>
 			</view>
@@ -46,6 +46,7 @@
 			};
 		},
 		onLoad() {
+			uni.setNavigationBarTitle({title:this.$getLang('登录')});
 			if (uni.getStorageSync('remPassword')) {
 				this.username = uni.getStorageSync('username') || ''
 				this.password = uni.getStorageSync('password') || ''
@@ -58,7 +59,7 @@
 				var that = this;
 				if (!that.username) {
 					uni.showToast({
-						title: '请输入您的账号',
+						title:this.$getLang('请输入您的账号'),
 						icon: 'none'
 					});
 					return;
@@ -72,7 +73,7 @@
 				// }
 				if (!that.password) {
 					uni.showToast({
-						title: '请输入您的密码',
+						title:this.$getLang('请输入您的密码'),
 						icon: 'none'
 					});
 					return;
@@ -89,8 +90,8 @@
 								uni.setStorageSync('remPassword', false)
 							}
 							uni.showToast({
-								title: '登录成功！',
-								icon: 'none'
+								title:this.$getLang('登录成功'),
+								icon: 'success'
 							});
 							getApp().globalData.apitoken = res.token
 							getApp().globalData.user = res.user
@@ -108,7 +109,7 @@
 					}).catch(e => {
 						console.log(e)
 						uni.showToast({
-							title: '账号密码错误！',
+							title:this.$getLang('账号密码错误'),
 							icon: 'none'
 						});
 					})

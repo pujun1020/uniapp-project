@@ -7,15 +7,15 @@
 				<view class="gui-card-desc">
 					<view class="gui-flex gui-rows gui-nowrap gui-align-items-center">
 						<text class="gui-card-name">{{ item.abbreviation }}</text>
-						<text v-show="item.sn === equipSn" class="gui-text-small gui-color-blue">当前设备</text>
+						<text v-show="item.sn === equipSn" class="gui-text-small gui-color-blue">{{$getLang('当前设备')}}</text>
 					</view>
 					<view class="gui-card-text gui-block-text" style="margin-top:10rpx;">{{ item.mcuVersion }}</view> 
 					<view class="gui-card-text gui-block-text">{{ item.createTime }}</view>
 				</view>
 			</view>
 			<view class="gui-card-footer gui-flex gui-rows gui-nowrap gui-space-between gui-align-items-center">
-				<text @click="onDel(item)" class="gui-icons gui-card-footer-item gui-border-r" :style="{ color: item.sn === equipSn ? '#626675' : 'red' }">删除</text>
-				<text @click="onSelected(item)" class="gui-icons gui-card-footer-item" :style="{ color: item.sn === equipSn ? '#626675' : '#2B9DF3' }">切换设备</text>
+				<text @click="onDel(item)" class="gui-icons gui-card-footer-item gui-border-r" :style="{ color: item.sn === equipSn ? '#626675' : 'red' }">{{$getLang('删除')}}</text>
+				<text @click="onSelected(item)" class="gui-icons gui-card-footer-item" :style="{ color: item.sn === equipSn ? '#626675' : '#2B9DF3' }">{{$getLang('切换设备')}}</text>
 			</view>
 		</view>
 	</view>
@@ -30,6 +30,7 @@
 			}
 		},
 		onLoad() {
+			uni.setNavigationBarTitle({title:this.$getLang('设备列表')});
 			this.equipSn = getApp().globalData.equip.sn
 			this.loadEquipList()
 		},
@@ -46,8 +47,10 @@
 			onDel(equip) {
 				if (equip.sn === this.equipSn) return
 				uni.showModal({
-					title: '提示',
-					content: '确认要解绑该设备吗？',
+					title:this.$getLang('提示') ,
+					content:this.$getLang('确认要解绑该设备吗'),
+					cancelText:this.$getLang('取消'),
+					confirmText:this.$getLang('确定'),
 					success: (res) => {
 						if (res.confirm) {
 							this.$u.api.delteEquip([equip.id])
@@ -56,7 +59,7 @@
 										this.loadEquipList()
 									} else {
 										uni.showToast({
-											title: res.message,
+											title: this.$getLang(res.code),
 											icon: 'none'
 										})
 									}
@@ -68,8 +71,10 @@
 			onSelected(equip) {
 				if (equip.sn === this.equipSn) return
 				uni.showModal({
-					title: '提示',
-					content: '确认要切换到该设备吗？',
+					title: this.$getLang('提示'),
+					content: this.$getLang('确认要切换到该设备吗？'),
+					cancelText:this.$getLang('取消'),
+					confirmText:this.$getLang('确定'),
 					success: (res) => {
 						if (res.confirm) {
 							getApp().globalData.equip = equip
