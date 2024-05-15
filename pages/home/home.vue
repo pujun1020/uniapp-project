@@ -4,11 +4,22 @@
 		<u-gap height="88" bg-color="#EBF5FF"></u-gap>
 
 		<view v-show="localChannel == '1'" class="wrap__head">
-			<u-tabs :list="list" :is-scroll="false" :current="current" @change="tabsChange" bg-color="#EBF5FF"
-				font-size="32" active-color="#1F252A" bar-width="67"></u-tabs>
-			<!-- <u-icon name="plus" color="#1F252A" size="40" class="wrap__head__plus"></u-icon> -->
+		<!-- 	<u-tabs :list="list" :is-scroll="false" :current="current" @change="tabsChange" bg-color="#EBF5FF"
+				font-size="32" active-color="#1F252A" bar-width="67"></u-tabs> -->
+			<view class="tabs">
+					<view class="tabs-body">
+						<view @tap="tabsChange(0)" class="tabs-item " :class="current==0?'tabs-active':''" style="margin-right:100rpx;">
+							{{this.$getLang('云端')}}
+							<view v-if="current==0" class="tabs-bar"></view>
+						</view>
+						<view @tap="tabsChange(1)" class="tabs-item " :class="current==1?'tabs-active':''">
+							{{this.$getLang('本地')}}
+							<view v-if="current==1" class="tabs-bar"></view>
+						</view>
+					</view>
+			</view>
 		</view>
-
+		
 		<!-- 搜索框 start -->
 		<view class="u-m-l-30 u-m-r-30 u-m-t-30 u-flex">
 			<u-search :placeholder="$getLang('视频名称')" :show-action='false' v-model="videoName" @search="loadCloundVideo()" @clear="loadCloundVideo()" bg-color="#fff"></u-search>
@@ -16,82 +27,101 @@
 		</view>
 		<!-- 搜索框 end -->
 
-		<view v-show="current === 0">
-			<!-- <view class="clound-top">
-				<u-subsection class="subsection" :list="list2" active-color="#087DFF" mode="subsection" :current="current2" @change="sectionChange"></u-subsection> -->
-			<!-- <u-icon name="search" color="#82848a" size="48"></u-icon> -->
-			<!-- </view> -->
-			<view v-show="cloundFirst.id" class="clound-swiper" @click="videoDetailClound(cloundFirst)">
-				<u-image class="video" src="/static/cover_video.png" width="100%" height="400"></u-image>
-				<view class="tips">
-					<view class="name">{{ cloundFirst.name }}</view>
-					<view class="timelong">{{ cloundFirst.totalTime }}</view>
-					<view class="size">{{ byteToMb(cloundFirst.size) }}</view>
-					<view class="date">{{ cloundFirst.date }}</view>
-				</view>
-			</view>
-
-			<view class="u-m-l-30 u-m-r-30">
-				<u-collapse :arrow="false">
-					<u-collapse-item :title="item.time" v-for="(item, index) in cloudList" :key="index"
-						:open="index == 0 ? true : false">
-						<!-- <view class="clound-list"> -->
-						<view class="list_item">
-							<view v-for="(e,i) in cloudList[index].body" :key="i" @longpress="longpress">
-								<!-- <view class="title">
-									<view class="left">2024-02-27</view>
-									<view class="right">展开</view>
-								</view> -->
-								<view class="player" @click="videoDetailClound(e)">
-									<u-image class="video" src="/static/cover_video.png" width="100%" height="250"></u-image>
-									<view class="tips">
-										<view class="name">{{e.name}}</view>
-										<view class="timelong">{{e.totalTime}}</view>
-									</view>
-								</view>
+		<swiper :current="current" @change="swiperChange"  :style="{'height':winHeight+'px'}">
+			<swiper-item class="swiper-item">
+				<scroll-view scroll-y style="width: 100%;" :style="{'height':winHeight+'px'}">
+					<view v-show="current === 0">
+						<view v-show="cloundFirst.id" class="clound-swiper" @click="videoDetailClound(cloundFirst)">
+							<u-image class="video" src="/static/cover_video.png" width="100%" height="400"></u-image>
+							<view class="tips">
+								<view class="name">{{ cloundFirst.name }}</view>
+								<view class="timelong">{{ cloundFirst.totalTime }}</view>
+								<view class="size">{{ byteToMb(cloundFirst.size) }}</view>
+								<view class="date">{{ cloundFirst.date }}</view>
 							</view>
 						</view>
-						<!-- </view> -->
-					</u-collapse-item>
-				</u-collapse>
-			</view>
-			<!-- <u-loadmore bg-color="rgb(240, 240, 240)" :status="loadStatus" @loadmore="addRandomData"></u-loadmore> -->
-			<u-empty
-				style="margin-top: 50px"
-				v-if="localChannel != '1' || (!cloundFirst.id)"
-				mode="data"
-				:text="$getLang('无数据')"
-			>
-			</u-empty>
-		</view>
+					
+						<view class="u-m-l-30 u-m-r-30">
+							<u-collapse :arrow="false">
+								<u-collapse-item :title="item.time" v-for="(item, index) in cloudList" :key="index"
+									:open="index == 0 ? true : false">
+									<!-- <view class="clound-list"> -->
+									<view class="list_item">
+										<view v-for="(e,i) in cloudList[index].body" :key="i" @longpress="longpress">
+											<!-- <view class="title">
+												<view class="left">2024-02-27</view>
+												<view class="right">展开</view>
+											</view> -->
+											<view class="player" @click="videoDetailClound(e)">
+												<u-image class="video" src="/static/cover_video.png" width="100%" height="250"></u-image>
+												<view class="tips">
+													<view class="name">{{e.name}}</view>
+													<view class="timelong">{{e.totalTime}}</view>
+												</view>
+											</view>
+										</view>
+										
+										<view v-for="(e,i) in cloudList[index].body" :key="i" @longpress="longpress">
 
-		<view v-show="current === 1">
-			<view class="local-list">
-				<!-- <view class="player" v-for="item in vieoList" :key="item.id">
-					<video class="video" :src="item.playUrl" />
-					<view class="tips">
-						<view class="name">{{ item.name }}</view>
-						<view class="timelong">{{ item.title }}</view>
+											<view class="player" @click="videoDetailClound(e)">
+												<u-image class="video" src="/static/cover_video.png" width="100%" height="250"></u-image>
+												<view class="tips">
+													<view class="name">{{e.name}}</view>
+													<view class="timelong">{{e.totalTime}}</view>
+												</view>
+											</view>
+										</view>
+										
+									</view>
+									<!-- </view> -->
+								</u-collapse-item>
+							</u-collapse>
+						</view>
+						<!-- <u-loadmore bg-color="rgb(240, 240, 240)" :status="loadStatus" @loadmore="addRandomData"></u-loadmore> -->
+						<u-empty
+							style="margin-top: 50px"
+							v-if="localChannel != '1' || (!cloundFirst.id)"
+							mode="data"
+							:text="$getLang('无数据')"
+						>
+						</u-empty>
 					</view>
-					<view class="action">
-						<u-button class="btn" @click="onUpload()" type="primary" size="mini" :hair-line="false" plain ripple>上传</u-button>
-						<u-button class="btn" type="error" size="mini" :hair-line="false" plain ripple>删除</u-button>
+					
+				</scroll-view>
+			</swiper-item>
+			<swiper-item class="swiper-item">
+				<scroll-view scroll-y style="width: 100%;" :style="{'height':winHeight+'px'}">
+					<view v-if="vieoList.length>0" style="margin-top: 30rpx; display: flex;flex-direction: column;text-align: center;background-color: #EBF5FF;line-height:50rpx;">
+						<text style="color: #ccc;">您可以点击查看视频，或长按更多操作~</text>
+						<button @tap="delAllVideoList()"
+						style="background-color:#087DFF;color: #fff;margin-top: 30rpx;width: 310rpx;font-size: 28rpx;">{{$getLang('一键清空缓存')}}</button>
 					</view>
-				</view> -->
+					<view v-show="current === 1">
+						<view class="local-list">
+							<!-- 模拟数据 start -->
+							<view class="player" v-for="(item,index) in vieoList" :key="index" @longpress="longpress(item)"
+								@click="videoDetail(item)">
+								<u-image class="video" :src="item.thumbUrl" width="100%" height="250"></u-image>
+								<view class="tips">
+									<view class="name">{{ item.name }}</view>
+									<!-- <view class="timelong">{{ item.date }}</view> -->
+								</view>
+							</view>
+							<!-- 模拟数据 end -->
+						</view>
+					</view>
+					<u-empty
+						v-if="vieoList.length==0"
+						mode="data"
+						:text="$getLang('无本地视频')"
+					>
+					</u-empty>
+				</scroll-view>
+			</swiper-item>
+		</swiper>
 
-				<!-- 模拟数据 start -->
-				<view class="player" v-for="item in vieoList" :key="item.id" @longpress="longpress(item)"
-					@click="videoDetail(item)">
-					<u-image class="video" :src="item.thumbUrl" width="100%" height="250"></u-image>
-					<view class="tips">
-						<view class="name">{{ item.name }}</view>
-						<view class="timelong">{{ item.date }}</view>
-					</view>
-				</view>
-				<!-- 模拟数据 end -->
-			</view>
-		</view>
-
+		
+		
 		<u-tabbar v-model="tabCurrent" :list="tablist" :mid-button="true" :border-top="false" active-color="#087DFF"
 			@change="changes" mid-button-size="140" icon-size="50"></u-tabbar>
 
@@ -106,7 +136,7 @@
 					<u-radio-group v-model="selectEquip" wrap size="40">
 						<u-radio v-for="(item, index) in filterEquipList" :key="index" :name="item.value"
 							:disabled="item.disabled" class="u-m-t-40" label-size="36">
-							<view class="u-m-l-30">{{item.name}}</view>
+							<view class="u-m-l-30">{{item.name}}({{item.value}})</view>
 						</u-radio>
 					</u-radio-group>
 				</view>
@@ -233,10 +263,21 @@
 				endDate: '',
 				// 上传进度条
 				uploadShow: false,
-				localChannel: ''
+				localChannel: '',
+				
+				winHeight:860,
 			}
 		},
 		onLoad() {
+			uni.getSystemInfo({
+			  success: function(res) {
+			    console.log('屏幕高度:', res.screenHeight);
+			    console.log('窗口高度:', res.windowHeight);
+				this.winHeight=res.windowHeight-300;
+				console.log(this.winHeight)
+			  }
+			});
+			
 			this.loadEquipList();
 			this.addRandomData();
 			
@@ -245,22 +286,66 @@
 				this.localChannel = getApp().globalData.equip.channel
 				this.selectEquip=getApp().globalData.equip.sn
 				this.loadData();
-				
 			}
+			
+			
+			uni.getSavedFileList({
+			  success: function(res) {
+			    const videoFiles = res.fileList.filter(file => {
+			      // 假设视频文件以.mp4结尾，根据实际情况调整
+			      return file.filePath.endsWith('.mp4');
+			    });
+				console.log('videoFiles',videoFiles);
+				
+			    // 接下来可以遍历videoFiles进行删除操作
+			  }
+			});
 			
 		},
 		onReachBottom() {
-			this.loadStatus = 'loading';
+			// this.loadStatus = 'loading';
 			// 模拟数据加载
-			this.dateList = this.allDate().slice(0, this.pageIndex * this.pageSize)
-			if (this.pageIndex * this.pageSize > this.allDate.length) {
-				this.pageIndex++
-				this.loadStatus = 'nomore'
-			} else {
-				this.loadStatus = 'loadmore'
-			}
+			// this.dateList = this.allDate().slice(0, this.pageIndex * this.pageSize)
+			// if (this.pageIndex * this.pageSize > this.allDate.length) {
+			// 	this.pageIndex++
+			// 	this.loadStatus = 'nomore'
+			// } else {
+			// 	this.loadStatus = 'loadmore'
+			// }
 		},
 		methods: {
+			swiperChange(e){
+				this.tabsChange(e.target.current);
+			},
+			delAllVideoList:function(){
+				uni.showModal({
+					title:  this.$getLang('提示'),
+					content:  this.$getLang('确认要删除当前视频吗？一旦删除将无法找回，请谨慎操作~'),
+					cancelText:'取消',
+					confirmText:'确定删除',
+					success: (res) => {
+						if (res.confirm) {
+							uni.getSavedFileList({
+							  success:(res)=> {
+							    const videoFiles = res.fileList.filter(file => {
+							      // 假设视频文件以.mp4结尾，根据实际情况调整
+							      return file.filePath.endsWith('.mp4');
+							    });
+								videoFiles.filter((item)=>{
+									uni.removeStorageSync(item.filePath);
+									return true;
+								})
+								console.log('videoFiles',videoFiles);
+								this.vieoList =[];
+								uni.showToast({
+									title:'清理完成！'
+								})
+							  }
+							});
+						}
+					}
+				});
+			},
 			// 长按事件 start
 			longpress(item) {
 				uni.showActionSheet({
@@ -274,6 +359,26 @@
 								content:  this.$getLang('确认要删除当前视频吗'),
 								success: (res) => {
 									if (res.confirm) {
+										var fileUrl=item.playUrl;
+										uni.removeSavedFile({
+											filePath: fileUrl,
+											success: ()=> {
+											  uni.showToast({
+											  	title:'删除成功！'
+											  })
+											  this.vieoList =this.vieoList.filter((vieo)=>{
+												  return vieo.id!=item.id;
+											  });
+											  uni.removeStorageSync(fileUrl);
+											},
+											fail:()=> {
+												uni.showToast({
+													title:'删除失败！',
+													icon:'none'
+												})
+											}
+										});
+										
 										uni.showToast({
 											title:  this.$getLang('删除成功'),
 											icon: 'none'
@@ -345,6 +450,7 @@
 				this.$u.api.getEquipList({ userId: getApp().globalData.user.id })
 					.then(res => {
 						if (res.code === 0) {
+							console.log('filterEquipList',res.data)
 							this.filterEquipList = res.data.map(d => {
 								return { value: d.sn, name: d.abbreviation, disabled: false }
 							})
@@ -357,6 +463,7 @@
 					this.vieoList = uni.getStorageInfoSync().keys.filter(k => k.includes('/uniapp_save/')).map(k => {
 						return { ...uni.getStorageSync(k), playUrl: k }
 					})
+					console.log('本地视频列表',this.vieoList)
 				} else {
 					// 云端视频
 					this.loadCloundVideo()
@@ -368,6 +475,7 @@
 					.then(res => {
 						if (res.code === 0) {
 							if (res.data.length > 0) {
+								console.log('getCloundVideoList',res.data)
 								this.cloundFirst = res.data[0]
 								const data = res.data.slice(1)
 								this.cloudList = data.reduce((result, curren) => {
@@ -429,6 +537,14 @@
 			videoDetail(item) {
 				uni.navigateTo({
 					url: `/pages/home/home-videodetail?type=1&angle=${item.angle}&duration=${item.duration}&exigency=${item.exigency}&id=${item.id}&name=${item.name}&playUrl=${item.playUrl}&recordTime=${item.recordTime}&size=${item.size}&title=${item.title}&thumbUrl=${item.thumbUrl}`,
+					events:{
+						//获取下级页面传递回来的参数
+						sonPageData:data=>{
+							this.vieoList =this.vieoList.filter((vieo)=>{
+								return vieo.id!=data.id;
+							});
+						}
+					}
 				})
 			},
 			videoDetailClound(item) {
@@ -649,5 +765,23 @@
 				width: 40%;
 			}
 		}
+	}
+</style>
+<style>
+	.tabs{
+		background-color: #EBF5FF;width: 100%;height: 60rpx;
+	}
+	.tabs-body{
+		width: 300rpx;height:50rpx; margin: auto;display: flex;flex-direction:row;
+	}
+	.tabs-item{
+		width: 100rpx;text-align: center;position: relative;line-height: 50rpx;font-size: 32rpx;
+	}
+	.tabs-active{
+		color: #1F252A;font-weight: bold;
+		
+	}
+	.tabs-bar{
+		position: absolute;bottom: -6rpxrpx;left: 23rpx; width:54rpx;height: 6rpx;background-color: #1F252A;border-radius: 2rpx;
 	}
 </style>

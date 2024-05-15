@@ -1,5 +1,9 @@
 <template>
 	<view class="wrap">
+		<view v-if="equip" style="display: flex;flex-direction: column;text-align: center;background-color: #EBF5FF;line-height:50rpx;">
+			<text style="color: green;font-size: 28rpx;">当前已连接设备：【{{equip.apSN}}】</text>
+			<text style="color: #ccc;">您可以点击查看视频，或长按更多操作~</text>
+		</view>
 		<!-- 搜索框 start -->
 		<!-- <view class="u-m-l-30 u-m-r-30 u-p-t-30 u-flex bgb">
 			<u-search placeholder="视频名称" :show-action='false' bg-color="#fff"></u-search>
@@ -8,10 +12,22 @@
 		<!-- 搜索框 end -->
 
 		<view>
-			<view class="local-list">
+			<view class="local-list" style="padding-top: 20rpx;" v-for="(video,inx) in vieoListNew">
+				<view style="font-size: 32rpx;font-weight: bold;color: #000;width: 100%;padding:0rpx 26rpx;text-align: center;position: relative;">
+					日期：{{video.date}}
+				</view>
 				<!-- 模拟数据 start -->
-				<view class="player" v-for="(item,index) in vieoList" :key="index" @longpress="longpress(item)"
-					@click="videoDetail(item)">
+				<view class="player" style="position: relative;" v-for="(item,index) in video.vieoList" :key="index" @longpress="longpress(item)"
+					@click="videoDetail(item,index,inx)">
+					<view v-show="item.locDownLoad" style="position: absolute;top:20rpx;left: 0; width:150rpx;height: 50rpx;line-height: 50rpx;background:green;text-align: center;
+					font-size:24rpx;padding:2rpx 8rpx;z-index: 99;color: #fff;">本地已下载
+					</view>
+					<view  v-show="isBachtStatus" style="position: absolute;top: 20rpx;right: 0;width: 46rpx;height: 46rpx;z-index: 99;">
+						<view style="border-radius: 50%;width: 46rpx;height: 46rpx;
+						border:1px #087DFF solid;background-color: #fff;">
+							<view v-show="item.checked" style="width: 40rpx;height: 40rpx;background-color: #087DFF;margin:3rpx auto;border-radius: 50%;"></view>
+						</view>
+					</view>
 					<u-image class="video" :src="item.thumbUrl" width="100%" height="250"></u-image>
 					<view class="tips">
 						<view class="name">{{ item.name }}</view>
@@ -20,8 +36,13 @@
 				</view>
 				<!-- 模拟数据 end -->
 			</view>
+			
+			<view style="margin-top: 20%;">
+				<u-empty v-if="!wifiConnectionState" text="未连接设备WIFI" mode="wifi"></u-empty>
+			</view>
+			
 		</view>
-
+		
 		<!-- 筛选弹出层 start -->
 		<u-popup v-model="screenShow" mode="right" width="600">
 			<view class="screenWrap">
@@ -77,12 +98,79 @@
 			</view>
 		</u-popup>
 		<!-- 上传进度弹出层 end -->
+		
+		<!-- 批量删除弹层 start -->
+		<view class="button" v-show="isBachtStatus" style="position: fixed;bottom: 0;left: 0;width: 100%;z-index: 9999;">
+			<u-grid :col="2">
+				
+				<u-grid-item bg-color="#fff" @tap="delCancel()">
+					<view class="grid-text">{{$getLang('取消')}}</view>
+				</u-grid-item>
+				<u-grid-item bg-color="#fff" @tap="delBacht()">
+					<view class="grid-text" style="color: red;">{{$getLang('批量删除')}}</view>
+				</u-grid-item>
+				<!-- <u-grid-item bg-color="#fff" @tap="delBacht()">
+					<view class="grid-text" style="color: #ccc;">{{$getLang('全部删除')}}</view>
+				</u-grid-item> -->
+			</u-grid>
+		</view>
+		<!-- button end -->
+		
+		<!-- 下载进度弹出层 start -->
+		<u-popup v-model="uploadShow" mode="center" width="500" height="500" border-radius="14" :mask-close-able="false">
+			<view class="u-m-l-30 u-m-r-30 u-m-t-25 u-m-b-30">
+				<view class="u-text-center">
+					<view class="u-font-34 u-font-weight">{{ uploadOrDownload }}</view>
+					<view class="u-type-info u-font-24 u-m-t-10">{{ payUrlName }}</view>
+					<view class="u-type-info u-font-24 u-m-t-30">{{ progressTxt }}</view>
+				</view>
+				
+				<view style="margin-top: 30%;">
+					<u-line-progress active-color="#2979ff" :percent="progressVal"></u-line-progress>
+				</view>
+			</view>
+		</u-popup>
+		<!-- button end -->
+		
+		<u-popup v-model="showWIFIConnOpt" mode="bottom" height="1280" border-radius="14" :mask-close-able="false">
+			<view style="font-size: 30rpx;font-weight: bold;text-align: center;line-height: 80rpx;">
+				设备连接步骤
+			</view>
+			
+			<view style="font-size:26rpx;text-align: center;line-height: 80rpx;width: 90%;margin: auto;">
+				如果您是首次连接或自动连接失败，请根据以下步骤操作！
+			</view>
+			<view v-show="showStep==1" style="width: 90%;margin:15rpx auto;min-height:300rpx;overflow:auto">
+				<view>
+					<view style="line-height: 44rpx;">第一步、打开仪表设备，将设备调节到以下苹果手机投屏界面</view>
+					<image src="../../../static/yindao-1.png" mode="widthFix" style="width: 80%;margin: 20rpx 10%;"></image>
+				</view>
+			</view>
+			<view v-show="showStep==2" style="width: 90%;margin:15rpx auto;min-height:300rpx;overflow:auto">
+				<view>
+					<view style="line-height: 44rpx;">第二步、进入手机WIFI列表界面，找到：<br>
+					WIFI【{{ssid}}】  密码：【{{password}}】<br>
+					进行手动连接。连接成功以后回到当前页面，点击下一步。如下图：</view>
+					<image src="../../../static/yindao-2.png" mode="widthFix" style="width: 90%;margin-left: 5%;margin-top: 15rpx;"></image>
+				</view>
+			</view>
+			<view style="width: 90%;margin: auto;text-align: center;" v-show="showStep==1">
+				<u-button style="width: 310rpx;background-color:#087DFF;color: #fff;" @tap="showStepFun(1)">下一步</u-button>
+			</view>
+			<view style="width: 90%;margin: auto;text-align: center;" v-show="showStep==2">
+				<u-button v-if="showStepNotUse" style="width: 310rpx;background-color:#087DFF;color: #fff;" @tap="showStepFun(2)">下一步</u-button>
+			</view>
+			
+			<view style="width: 90%;margin:40rpx auto;text-align: center;">
+				<u-button v-if="showStepNotUse" style="width: 310rpx;" @tap="showStepFun(3)">取消</u-button>
+			</view>
+		</u-popup>
 	</view>
 </template>
 
 <script>
 	import { connectStartWifi, openWebSocket } from '../../../common/wifi-tcp.js'
-	
+	import {connectWifi,getConnectedSSID,removeWifi,removeWifiBySSID} from '../../../common/cx-wifi/cx-wifi.js'
 	export default {
 		data() {
 			return {
@@ -96,6 +184,8 @@
 				allDate: [],
 				dateList: [],
 				vieoList: [],
+				vieoListNew:[],//按照时间排序分组
+				
 				
 				// 筛选弹出层
 				screenShow: false,
@@ -137,7 +227,22 @@
 				calendarShow: false,
 				calendarValue: '',
 				// 上传进度条
-				uploadShow: false
+				uploadShow: false,
+				uploadOrDownload: '',
+				progressVal: 0,
+				progressTxt: '',
+				payUrlName:'',
+				
+				equip:null,
+				isBachtStatus:false,
+				
+				showWIFIConnOpt:false,
+				showStep:1,
+				showStepNotUse:true,
+				ssid:'',
+				password:'',
+				
+				wifiConnectionState:false,
 			}
 		},
 		onReachBottom() {
@@ -152,32 +257,154 @@
 			}
 		},
 		onLoad() {
-			this.loadData()
+		
+			uni.showLoading({
+				title:'加载中...'
+			})
+			this.loadData();
+			
+			
 		},
 		methods: {
+			async showStepFun(index){
+				if(index==1){
+					this.showStep=2;
+				}
+				if(index==2){
+					var getCurSSID=getConnectedSSID();//当前的网络wifi
+					const ssid = getApp().globalData.equip.apSN;//设备绑定的wifi
+					const password = getApp().globalData.equip.apPassword
+					//表示当前连接的WIFI是设备指定的WIFI
+					if(`"${ssid}"`==getCurSSID){
+						let socketTask = getApp().globalData.socketTask
+						if (!socketTask) {
+							socketTask = await openWebSocket()
+						}
+						if(socketTask){
+							uni.showLoading({
+								title:'加载视频中...'
+							})
+							this.loadVideoFun(socketTask);
+							this.showWIFIConnOpt=false;
+						}else{
+							uni.showModal({
+								title:'提示',
+								content:'与设备服务连接时失败，检查是否将设备调节到以下苹果手机投屏界面',
+								showCancel:false,
+								confirmText:'确定',
+								success:(res)=>{
+									if(res.confirm){
+										
+									}
+								}
+								
+							})
+						}
+					}else{
+						uni.showModal({
+							title:'提示',
+							content:'您当前连接的WIFI不正确，请切换为设备WIFI【'+ssid+'】,密码：【'+password+'】',
+							showCancel:false,
+							confirmText:'确定',
+							success:(res)=>{
+								if(res.confirm){
+									
+								}
+							}
+							
+						})
+					}
+				}
+				if(index==3){
+					
+					this.showWIFIConnOpt=false;
+				}
+			},
 			// 长按事件 start
 			longpress(item) {
 				uni.showActionSheet({
-					itemList: [this.$getLang('上传'), this.$getLang('删除')],
+					itemList: [this.$getLang('下载'), this.$getLang('删除'), this.$getLang('批量删除')],
 					success: (res) => {
 						console.log(item)
 						if (res.tapIndex == 0) {
 							this.uploadShow = true;
-						} else {
-							uni.showModal({
-								title: this.$getLang('提示'),
-								content: this.$getLang('确认要删除当前视频吗'),
-								cancelText:this.$getLang('取消'),
-								confirmText:this.$getLang('确定'),
+							this.uploadOrDownload =this.$getLang('正在下载')
+							this.payUrlName=item.name;
+							const downloadTask = uni.downloadFile({
+								url: item.playUrl,
 								success: (res) => {
-									if (res.confirm) {
-										uni.showToast({
-											title: this.$getLang('删除成功'),
-											icon: 'none'
-										})
-									}
+									uni.saveFile({
+										tempFilePath: res.tempFilePath,
+										success: (fileRes) => {
+											item.devSN=getApp().globalData.equip.sn;
+											item.date=new Date();
+											uni.setStorageSync(fileRes.savedFilePath, item)
+											uni.showToast({
+												title:this.$getLang('下载完成！') 
+											})
+											this.refreshVideoList(2,item.id);
+											this.uploadShow = false
+											
+										},
+										fail: (err) => {
+											console.log('保存失败', err)
+										}
+									})
 								}
 							})
+							downloadTask.onProgressUpdate(res => {
+								this.progressVal = res.progress
+								this.progressTxt = `${res.totalBytesWritten}/${res.totalBytesExpectedToWrite}`
+							})
+							
+						} else if(res.tapIndex==1){
+							let socketTask = getApp().globalData.socketTask
+							if (socketTask) {
+								uni.showModal({
+									title: this.$getLang('提示'),
+									content: this.$getLang('确认要删除当前视频吗'),
+									cancelText:this.$getLang('取消'),
+									confirmText:this.$getLang('确定'),
+									success: (res) => {
+										if (res.confirm) {
+											var playUrlList=[item.playUrl];
+											socketTask.send({
+												data: '{ "METHOD":"FILE.DELETE", "exigency":true, "playUrlList":'+JSON.stringify(playUrlList)+'}'
+											})
+											socketTask.onMessage((res) => {
+												var list=this.vieoListNew;
+												
+												var tempsList=[];
+												for(var i=0;i<list.length;i++){
+													var item1=list[i];
+													var temp1=[];
+													for(var k=0;k<item1.vieoList.length;k++){
+														var item2=item1.vieoList[k];
+														if(item2.id!=item.id){
+															temp1.push(item2);
+														}
+													}
+													item1.vieoList=temp1;
+													if(item1.vieoList.length>0){
+														tempsList.push(item1);
+													}
+												}
+												this.vieoListNew=tempsList;
+												uni.showToast({
+													title: this.$getLang('删除成功'),
+													icon: 'none'
+												})
+											});
+										}
+									}
+								})
+							}
+						}else if(res.tapIndex==2){
+							uni.showToast({
+								title:'请选择要删除的视频文件',
+								icon:'none'
+							});
+							this.isBachtStatus=true;
 						}
 					},
 					fail: function(res) {
@@ -211,13 +438,75 @@
 				this.value = '';
 				this.calendarValue = '';
 			},
+			//批量删除取消
+			delCancel(){
+				this.isBachtStatus=false;
+			},
 			async loadData() {
+				uni.getSavedFileList({
+				  success: function(res) {
+				    const videoFiles = res.fileList.filter(file => {
+				      // 假设视频文件以.mp4结尾，根据实际情况调整
+				      return file.filePath.endsWith('.mp4');
+				    });
+					console.log('videoFiles',videoFiles);
+					
+				    // 接下来可以遍历videoFiles进行删除操作
+				  }
+				});
+				
+				this.showStep=1;
+				this.wifiConnectionState=false;
+				
+				uni.showLoading({
+					title:'连接中...'
+				})
 				let socketTask = getApp().globalData.socketTask
 				if (!socketTask) {
+					this.ssid = getApp().globalData.equip.apSN;//设备绑定的wifi
+					this.password = getApp().globalData.equip.apPassword;
+					
 					if (await connectStartWifi()) {
-						socketTask = await openWebSocket()
+						this.equip=getApp().globalData.equip
+						uni.showToast({
+							title:'WIFI已连接!',
+							icon:'success'
+						})
+						uni.showLoading({
+							title:'加载视频中...'
+						})
+						setTimeout(async()=>{
+							socketTask = await openWebSocket()
+							if(socketTask){
+								this.loadVideoFun(socketTask);
+							}
+						},3000)
+					}else{
+						//如果连接失败，弹出指引如何连接设备
+						uni.hideLoading();
+						uni.showToast({
+							title:'WIFI自动连接失败！',
+							icon:'none'
+						});
+						this.showWIFIConnOpt=true;
 					}
+				}else{
+					this.loadVideoFun(socketTask);
 				}
+				
+			},
+			loadVideoFun(socketTask){
+				this.wifiConnectionState=true;
+				
+				// console.log('uni.getStorageInfoSync()',uni.getStorageInfoSync());
+				// 本地视频
+				var locVieoList = uni.getStorageInfoSync().keys.filter(k => k.includes('/uniapp_save/')).map(k => {
+					return { ...uni.getStorageSync(k), playUrl: k }
+				});
+				// console.log('本地视频',locVieoList);
+				
+				this.vieoList=[];//清空数组
+				this.vieoListNew=[];//清空数组
 				socketTask.send({
 					data: '{ "METHOD": "VIDEO.DATE", "previewType": "all" }'
 				})
@@ -231,12 +520,30 @@
 						this.dateList = allDate.slice(0, this.pageIndex * this.pageSize)
 						this.loadVideo()
 					} else if (data.METHOD === 'VIDEO.INFO.LIST' && data.code === 0) {
-						data.videoBeanList.forEach(video => {
-							this.vieoList.push(video)
-						})
+						if(data.videoBeanList.length>0){
+							for(var i=0;i<data.videoBeanList.length;i++){
+								data.videoBeanList[i].checked=false; 
+								data.videoBeanList[i].locDownLoad=false;
+								if(locVieoList.length>0){
+									for(var k=0;k<locVieoList.length;k++){
+										var loc=locVieoList[k];
+										if(loc.id==data.videoBeanList[i].id){
+											data.videoBeanList[i].locDownLoad=true;
+										}
+									}
+								}
+							}
+							var playUrl=data.videoBeanList[0].playUrl;
+							var date=playUrl.split('-')[1].replace(/_/g, "-");
+							var objVideo={date:date,vieoList:data.videoBeanList};
+							this.vieoListNew.push(objVideo);
+							// console.log(this.vieoListNew)
+						}
+						
 					} else {
 						console.error(data)
 					}
+					uni.hideLoading();
 				})
 			},
 			loadVideo() {
@@ -251,10 +558,123 @@
 			// 	console.log('点击了上传')
 			// },
 			// 视频详情
-			videoDetail(item) {
-				uni.navigateTo({
-					url: `/pages/home/home-videodetail?type=0&angle=${item.angle}&duration=${item.duration}&exigency=${item.exigency}&id=${item.id}&name=${item.name}&playUrl=${item.playUrl}&recordTime=${item.recordTime}&size=${item.size}&title=${item.title}&thumbUrl=${item.thumbUrl}`,
-				})
+			videoDetail(item,index,inx) {
+				if(this.isBachtStatus==true){
+					this.$set(this.vieoListNew[inx].vieoList[index], 'checked', !item.checked);
+				}else{
+					
+					uni.navigateTo({
+						url: `/pages/home/home-videodetail?type=0&angle=${item.angle}&duration=${item.duration}&exigency=${item.exigency}&id=${item.id}&name=${item.name}&playUrl=${item.playUrl}&recordTime=${item.recordTime}&size=${item.size}&title=${item.title}&thumbUrl=${item.thumbUrl}`,
+						events:{
+							//获取下级页面传递回来的参数
+							sonPageData:data=>{
+								console.log('接收返回的数据',data);
+								var list=this.vieoListNew;
+								var tempsList=[];
+								for(var i=0;i<list.length;i++){
+									var item1=list[i];
+									var temp1=[];
+									for(var k=0;k<item1.vieoList.length;k++){
+										var item2=item1.vieoList[k];
+										if(item2.id!=data.id){
+											temp1.push(item2);
+										}
+									}
+									item1.vieoList=temp1;
+									if(item1.vieoList.length>0){
+										tempsList.push(item1);
+									}
+								}
+								this.vieoListNew=tempsList;
+							}
+						}
+
+					})
+				}
+				
+			},
+			delBacht(){
+				var list=this.vieoListNew;
+				var temps=[];
+				var ids=[];
+				var newList=[];
+				for(var i=0;i<list.length;i++){
+					var item1=list[i];
+					for(var k=0;k<item1.vieoList.length;k++){
+						var item2=item1.vieoList[k];
+						if(item2.checked){
+							temps.push(item2.playUrl);
+							ids.push(item2.id);
+						}
+					}
+				}
+				if(ids.length==0){
+					uni.showToast({
+						title:'请选择视频！',
+						icon:'none'
+					})
+					return;
+				}
+				let socketTask = getApp().globalData.socketTask
+				if (socketTask) {
+					uni.showModal({
+						title: this.$getLang('提示'),
+						content: "是否确认把选中的视频批量删除，一旦删除将无法恢复哦？",
+						cancelText:this.$getLang('取消'),
+						confirmText:this.$getLang('确定'),
+						success: (res) => {
+							if (res.confirm) {
+								// var playUrlList=[item.playUrl];
+								socketTask.send({
+									data: '{ "METHOD":"FILE.DELETE", "exigency":true, "playUrlList":'+JSON.stringify(temps)+'}'
+								})
+								socketTask.onMessage((res) => {
+									for(var i=0;i<list.length;i++){
+										var item1=list[i];
+										var temp1=[];
+										for(var k=0;k<item1.vieoList.length;k++){
+											var item2=item1.vieoList[k];
+											if(!item2.checked){
+												temp1.push(item2);
+											}
+										}
+										item1.vieoList=temp1;
+										if(item1.vieoList.length>0){
+											newList.push(item1);
+										}
+									}
+									this.vieoListNew=newList;
+									uni.showToast({
+										title: this.$getLang('删除成功'),
+										icon: 'none'
+									})
+									this.isBachtStatus=false;
+								});
+							}
+						}
+					})
+				}
+			},
+			refreshVideoList(type,id){
+				var list=this.vieoListNew;
+				var newList=[];
+				for(var i=0;i<list.length;i++){
+					var item1=list[i];
+					var temp1=[];
+					for(var k=0;k<item1.vieoList.length;k++){
+						var item2=item1.vieoList[k];
+						//type==2当这两个id相等时，表示需要设置为已下载
+						if(type==2 && item2.id==id){
+							item2.locDownLoad=true;
+						}
+						temp1.push(item2);
+					}
+					item1.vieoList=temp1;
+					if(item1.vieoList.length>0){
+						newList.push(item1);
+					}
+				}
+				this.vieoListNew=newList;
 			}
 		}
 	}

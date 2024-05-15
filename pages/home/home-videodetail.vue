@@ -56,7 +56,7 @@
 
 <script>
 	import { socketLogin, socket2001, socket2003 } from '@/common/upload.js'
-	
+	import { connectStartWifi, openWebSocket } from '../../common/wifi-tcp.js'
 	export default {
 		data() {
 			return {
@@ -69,12 +69,12 @@
 			}
 		},
 		onLoad(option) {
+			// console.log(getApp().globalData)
 			if (option) {
 				this.params = option
 				if(option.type==2){
 					this.videoTime=this.params.duration;
 				}else{
-					console.log(option)
 					const sec = Math.floor(Number(this.params.duration) / 1000)
 					this.videoTime = `${ Math.floor(sec/60) }分${Math.floor(sec%60)}秒`
 				}
@@ -92,6 +92,11 @@
 						uni.saveFile({
 							tempFilePath: res.tempFilePath,
 							success: (fileRes) => {
+								this.params.devSN=getApp().globalData.equip.sn;
+								this.params.date=new Date();
+								this.params.playUrl=fileRes.savedFilePath;
+								console.log(fileRes)
+								console.log(this.params)
 								uni.setStorageSync(fileRes.savedFilePath, this.params)
 								uni.showToast({
 									title:this.$getLang('下载完成！') ,
@@ -119,33 +124,45 @@
 				const videoDate = `${nameArr[1].replace('_', '-').replace('_', '-')} ${nameArr[2].replace('_', ':').replace('_', ':')}`
 				this.uploadShow = true
 				this.uploadOrDownload =this.$getLang('正在上传') 
+				// console.log('请求token', getApp().globalData.uploadtoken);
+				var formData={
+					'devSN':getApp().globalData.equip.sn,
+					'videoName': nameArr[0],
+					'videoDate': videoDate,
+					'videoFileName': this.params.name,
+					'videoTotalTime': this.videoTime,
+					'videoCameraType': this.params.angle === 'front' ? '0' : '1',
+					'videoSize': size
+				};
+				// console.log(formData)
 				const uploadTask = uni.uploadFile({
-          url: getApp().globalData.uploadUrl + '/api/video', // 你的上传API地址
-          filePath: this.params.playUrl,
-          name: 'video', // 文件对应的 key , 开发者在服务器端通过这个 key 可以获取到文件二进制内容
-					header: {
-						'content-type': 'multipart/form-data',
-						'Authorization': getApp().globalData.uploadtoken,
-					},
-          formData: {
-            'devSN': getApp().globalData.devSN,
-						'videoName': nameArr[0],
-						'videoDate': videoDate,
-						'videoFileName': this.params.name,
-						'videoTotalTime': this.videoTime,
-						'videoCameraType': this.params.angle === 'front' ? '0' : '1',
-						'videoSize': size
-          },
+					url: getApp().globalData.uploadUrl + '/api/video', // 你的上传API地址
+					filePath: this.params.playUrl,
+					name: 'video', // 文件对应的 key , 开发者在服务器端通过这个 key 可以获取到文件二进制内容
+								header: {
+									'content-type': 'multipart/form-data',
+									'Authorization': getApp().globalData.uploadtoken,
+								},
+					formData: formData,
 					fileSize: 200 * 1024 * 1024,
 					success: uploadRes => {
 						this.uploadShow = false
 						if (uploadRes.statusCode === 200) {
 							const data = JSON.parse(uploadRes.data)
 							if (data.code === 0) {
-								uni.showToast({
-									title:this.$getLang('上传完成！') ,
-									icon: 'none'
+								uni.showModal({
+									title: this.$getLang('提示'),
+									content:'恭喜您，当前视频已上传到云端，在云端列表可查看！',
+									showCancel:false,
+									confirmText:this.$getLang('确定'),
+									success:()=>{
+										
+									}
 								})
+								// uni.showToast({
+								// 	title:this.$getLang('上传完成！') ,
+								// 	icon: 'none'
+								// })
 							} else {
 								uni.showToast({
 									title: data.message,
@@ -187,6 +204,7 @@
 				return new Promise((resove, reject) => {
 					this.$u.upload.login({ username: getApp().globalData.user.userName, password: getApp().globalData.user.password })
 						.then(res => {
+							console.log(res)
 							if (res.code === 0) {
 								getApp().globalData.uploadtoken = res.token
 								resove(true)
@@ -204,21 +222,67 @@
 					content: this.$getLang('确认要删除当前视频吗'),
 					cancelText:this.$getLang('取消'),
 					confirmText:this.$getLang('确定'),
-					success: (res) => {
+					success: async(res) => {
 						if (res.confirm) {
-							this.$u.api.delteCloundVideo({ devSN: this.params.devSN, id: this.params.id })
-								.then(res => {
-									if (res.code === 0) {
-										uni.navigateTo({
-											url:"/pages/home/home"
-										})
-									} else {
+							if(this.params.type==0){
+								console.log(this.params)
+								let socketTask = getApp().globalData.socketTask;
+								console.log('socketTask',socketTask)
+								if(socketTask){
+									var temps=[this.params.playUrl];
+									socketTask.send({
+										data: '{ "METHOD":"FILE.DELETE", "exigency":true, "playUrlList":'+JSON.stringify(temps)+'}'
+									})
+									socketTask.onMessage((res) => {
+										this.getOpenerEventChannel().emit('sonPageData',this.params)
+										uni.navigateBack();
+									});
+								}
+							}else if(this.params.type==1){
+								var fileUrl=this.params.playUrl;
+								uni.removeSavedFile({
+									filePath: fileUrl,
+									success: ()=> {
+									  uni.showToast({
+									  	title:'删除成功！'
+									  })
+									  uni.removeStorageSync(fileUrl);
+									  setTimeout(()=>{
+										  this.getOpenerEventChannel().emit('sonPageData',this.params)
+										  uni.navigateBack();
+									  },2000)
+									 
+									},
+									fail:()=> {
 										uni.showToast({
-											title: res.message,
-											icon: 'none'
+											title:'删除失败！',
+											icon:'none'
 										})
 									}
-								})
+								});
+							}else{
+								// console.log(this.params)
+								var datas={ devSN: this.params.devSN, id:Number(this.params.id) };
+								// console.log('datas',datas)
+								this.$u.api.delteCloundVideo(datas)
+									.then(res => {
+										// console.log(res)
+										if (res.code === 0) {
+											uni.navigateTo({
+												url:"/pages/home/home"
+											})
+										} else {
+											uni.showToast({
+												title: res.message,
+												icon: 'none'
+											})
+										}
+									})
+									.catch((err)=>{
+										console.log(err)
+									})
+							}
+							
 						}
 					}
 				})

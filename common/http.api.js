@@ -10,47 +10,49 @@ const install = (Vue, vm) => {
 	// 此处没有使用传入的params参数
 	let getCloud = (params = {}) => vm.$u.get(hotUrl, {});
 	// 设置请求url和登录负载均衡
-	let setRequestUrl = (url, username, password) => requestUrl = url
+	let setRequestUrl = (url, username, password) => uni.setStorageSync('requestUrl', url)
 	// 注册
-	let register = (params = {}) => vm.$u.post(requestUrl + '/api/user/regist', params, { 'content-type': 'application/x-www-form-urlencoded' });
+	let register = (params = {}) => vm.$u.post(   uni.getStorageSync('requestUrl') + '/api/user/regist', params, { 'content-type': 'application/x-www-form-urlencoded' });
 	// 登录
-	let login = (params = {}) => vm.$u.get(requestUrl + '/api/login', params);
+	let login = (params = {}) => vm.$u.get(   uni.getStorageSync('requestUrl') + '/api/login', params);
 	// 获取用户信息
-	let getUser = (params = {}) => vm.$u.get(requestUrl + '/api/user', params);
+	let getUser = (params = {}) => vm.$u.get(   uni.getStorageSync('requestUrl') + '/api/user', params);
 	// 设置用户信息
-	let setUser = (params = {}) => vm.$u.put(requestUrl + '/api/user', params, { 'content-type': 'application/x-www-form-urlencoded' });
+	let setUser = (params = {}) => vm.$u.put(   uni.getStorageSync('requestUrl') + '/api/user', params, { 'content-type': 'application/x-www-form-urlencoded' });
 	// 修改账户密码
-	let modifypwd = (params = {}) => vm.$u.put(requestUrl + '/api/user/modifypwd', params);
+	let modifypwd = (params = {}) => vm.$u.put(   uni.getStorageSync('requestUrl') + '/api/user/modifypwd', params);
 	// 获取配置信息
-	let getConfig = (params = {}) => vm.$u.get(requestUrl + '/api/userconfig', params);
+	let getConfig = (params = {}) => vm.$u.get(   uni.getStorageSync('requestUrl') + '/api/userconfig', params);
 	// 修改配置信息
-	let setConfig = (params = {}) => vm.$u.put(requestUrl + '/api/userconfig', params);
+	let setConfig = (params = {}) => vm.$u.put(   uni.getStorageSync('requestUrl') + '/api/userconfig', params);
 	// 提交用户反馈
-	let feedback = (params = {}) => vm.$u.post(requestUrl + '/api/userfeedback', params);
+	let feedback = (params = {}) => vm.$u.post(   uni.getStorageSync('requestUrl') + '/api/userfeedback', params);
 	// 上报设备信息到云端
-	let sendDevInfo = (params = {}) => vm.$u.post(requestUrl + '/api/dev/info', params);
+	let sendDevInfo = (params = {}) => vm.$u.post(   uni.getStorageSync('requestUrl') + '/api/dev/info', params);
 	// 查询云端视频列表
-	let getCloundVideoList = (params = {}) => vm.$u.get(requestUrl + '/api/video/get', params);
+	let getCloundVideoList = (params = {}) => vm.$u.get(   uni.getStorageSync('requestUrl') + '/api/video/get', params);
 	// 删除云端视频
-	let delteCloundVideo = (params = {}) => vm.$u.delete(requestUrl + '/api/video/delete', params);
+	let delteCloundVideo = (params = {}) => vm.$u.delete(   uni.getStorageSync('requestUrl') + '/api/video/delete', params);
 	// 获取app最新版本信息
-	let getLastPackage = (params = {}) => vm.$u.get(requestUrl + '/api/apppackage/lastpackage', params);
+	let getLastPackage = (params = {}) => vm.$u.get(   uni.getStorageSync('requestUrl') + '/api/apppackage/lastpackage', params);
 	// 获取设备列表信息
-	let getEquipList = (params = {}) => vm.$u.get(requestUrl + '/api/dev', params);
+	let getEquipList = (params = {}) => vm.$u.get(   uni.getStorageSync('requestUrl') + '/api/dev', params);
 	// 删除设备信息
-	let delteEquip = (params = {}) => vm.$u.delete(requestUrl + '/api/dev', params);
+	let delteEquip = (params = {}) => vm.$u.delete(   uni.getStorageSync('requestUrl') + '/api/dev', params);
 	// 获取MCU最新版本信息（用于MCU升级）
-	let getMcuPackage = (params = {}) => vm.$u.get(requestUrl + '/api/mcupackage/lastpackage', params);
+	let getMcuPackage = (params = {}) => vm.$u.get(   uni.getStorageSync('requestUrl') + '/api/mcupackage/lastpackage', params);
 	// 获取OSAPP最新版本信息（用于OSAPP升级）
-	let getOsAppPackage = (params = {}) => vm.$u.get(requestUrl + '/api/osapppackage/lastpackage', params);
+	let getOsAppPackage = (params = {}) => vm.$u.get(   uni.getStorageSync('requestUrl') + '/api/osapppackage/lastpackage', params);
 	// 上报设备车辆信息到云端
-	let sendCarInfo = (params = {}) => vm.$u.post(requestUrl + '/api/dev/car', params);
+	let sendCarInfo = (params = {}) => vm.$u.post(   uni.getStorageSync('requestUrl') + '/api/dev/car', params);
 	// 上报设备配置信息到云端
-	let sendCarConfig = (params = {}) => vm.$u.post(requestUrl + '/api/dev/car', params);
+	let sendCarConfig = (params = {}) => vm.$u.post(   uni.getStorageSync('requestUrl') + '/api/dev/car', params);
 	//用户头像上传地址
-	let uploadpic= (params = {}) => requestUrl + '/api/user/uploadpic';
+	let uploadpic= (params = {}) =>    uni.getStorageSync('requestUrl') + '/api/user/uploadpic';
 	// 将各个定义的接口名称，统一放进对象挂载到vm.$u.api(因为vm就是this，也即this.$u.api)下
-	vm.$u.api = { getCloud, setRequestUrl, register, login, getUser, setUser, modifypwd, getConfig, setConfig, feedback, sendDevInfo, getCloundVideoList, getLastPackage, getEquipList, delteEquip, getMcuPackage, getOsAppPackage, sendCarInfo, sendCarConfig, uploadpic };
+	vm.$u.api = { getCloud, setRequestUrl, register, login, getUser, setUser, modifypwd, getConfig, setConfig, feedback, 
+	sendDevInfo, getCloundVideoList, getLastPackage, getEquipList, delteEquip, getMcuPackage, getOsAppPackage, sendCarInfo, 
+	sendCarConfig, uploadpic,delteCloundVideo };
 }
 
 export default {

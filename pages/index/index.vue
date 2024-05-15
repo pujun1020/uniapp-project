@@ -1,66 +1,92 @@
 <template>
 	<view class="wrap">
 		<u-gap height="88" bg-color="#EBF5FF"></u-gap>
-		<view class="wrap__head">
-			<u-tabs v-if="localChannel == '1'" :list="list" :is-scroll="false" :current="current" @change="change" bg-color="#EBF5FF"
-				font-size="32" active-color="#1F252A" bar-width="67"></u-tabs>
-			<zb-popover placement="bottom-end"
-				theme="dark"
-				:options="actions"
-				ref="Popover1"
-				@select="onPlusDialog"
-				class="item-popover">
-				 <u-icon name="plus" color="#1F252A" size="40" class="wrap__head__plus"></u-icon>
-			</zb-popover>
+		 <!-- style="position:sticky;top: 0;background-color: #EBF5FF;z-index: 9999;"  v-show="localChannel == '1'" -->
+		<view  class="wrap__head"> 
+			<view class="tabs" v-show="localChannel == '1'">
+			<!-- 	<u-tabs v-if="isPageLoaded" :list="list" :is-scroll="false" :current="current" @change="change" bg-color="#EBF5FF"
+					font-size="32" active-color="#1F252A" bar-width="67"></u-tabs> -->
+					<view class="tabs-body">
+						<view @tap="change(0)" class="tabs-item " :class="current==0?'tabs-active':''" style="margin-right:100rpx;">
+							{{this.$getLang('设备')}}
+							<view v-if="current==0" class="tabs-bar"></view>
+						</view>
+						<view @tap="change(1)" class="tabs-item " :class="current==1?'tabs-active':''">
+							DVR
+							<view v-if="current==1" class="tabs-bar"></view>
+						</view>
+					</view>
+			</view>
+				<zb-popover placement="bottom-end"
+					theme="dark"
+					:options="actions"
+					ref="Popover1"
+					@select="onPlusDialog"
+					class="item-popover">
+					 <u-icon name="plus" color="#1F252A" size="40" class="wrap__head__plus"></u-icon>
+				</zb-popover>
 		</view>
 		<!-- bg -->
-		<view v-show="current === 0">
-			<view class="bg">
-				<view class="u-flex-col u-col-center u-p-t-38">
-					<u-image @click="toEquipList" src="/static/index/car.png" width="602rpx" height="448rpx" mode="aspectFit"></u-image>
-					<view class="u-flex-col u-col-center">
-						<view class="bg__name" v-show="localChannel == '1'">金浪318</view>
-						<view class="bg__name" v-show="localChannel == '0'">恒勃智联</view>
-						<!-- <view class="bg__status" :style="{ color: socketStatus === '已连接' ? 'green' : '#7D818C' }">{{ socketStatus }} | BT</view> -->
+		
+		<swiper :current="current" @change="swiperChange"  :style="{'height':winHeight+'px'}">
+			<swiper-item class="swiper-item">
+				<scroll-view scroll-y style="width: 100%;" :style="{'height':winHeight+'px'}">
+					<view class="bg">
+						<view class="u-flex-col u-col-center u-p-t-38">
+							<!-- <u-image @click="toEquipList" src="../../static/banner1.png" width="602rpx" height="448rpx" mode="aspectFit"></u-image> -->
+							<image @click="toEquipList" src="../../static/banner1.png" mode="widthFix" style="width: 100%;"></image>
+							<view class="u-flex-col u-col-center" style="margin-top: -130rpx;z-index: 999;">
+								<view class="bg__name" v-show="localChannel == '1'">金浪318</view>
+								<view class="bg__name" v-show="localChannel == '0'">恒勃智联</view>
+								<!-- <view class="bg__status" :style="{ color: socketStatus === '已连接' ? 'green' : '#7D818C' }">{{ socketStatus }} | BT</view> -->
+							</view>
+						</view>
 					</view>
-				</view>
-			</view>
-			<view class="u-flex u-row-center u-m-l-30 u-m-r-30 map">
-				<u-image src="/static/index/map.png" width="100%" height="140rpx" mode="aspectFit"></u-image>
-				<view class="map__btn">{{$getLang('导航寻车')}}</view>
-			</view>
-			<view class="device" v-if="equipInfo">
-				<view class="device__title">{{$getLang('设备信息')}}</view>
-				<view class="u-m-t-10 u-font-26">{{$getLang('设备')}}：{{ equipInfo ? equipInfo.osAppProjectName : '' }}</view>
-				<view class="u-m-t-10 u-font-26">MCU：{{ equipInfo ? equipInfo.mcuVersion : '' }}</view>
-				<view class="u-m-t-10 u-font-26">{{$getLang('系统')}}：{{ equipInfo ? equipInfo.osAppProjectSN : '' }}</view>
-			</view>
-			<view v-else>
-				<view class="u-m-t-100" style="width: 460rpx;height: 150rpx;margin:50rpx auto;text-align: center;">
-					<text style="line-height: 50rpx;color: #ccc;font-size: 32rpx;">{{$getLang('您当前还未绑定任何设备哦')}}~</text>
-					<button @tap="onPlusDialog({value:'sanc'})" 
-					style="background-color:#087DFF;color: #fff;margin-top: 30rpx;width: 310rpx;">{{$getLang('立即扫码绑定')}}</button>
-				</view>
-			</view>
-			<view class="u-m-l-30 u-m-r-30 u-flex wrap__bottom u-row-between">
-				<!-- <view  v-show="localChannel == '1'" class="wrap__bottom__view" @click="carinfo(0)">
-					<u-icon name="/static/index/menu-1.png" size="64"></u-icon>
-					<view class="u-font-26 u-type-info">{{$getLang('车辆信息')}}</view>
-				</view>
-				<view  v-show="localChannel == '1'" class="wrap__bottom__view" @click="carinfo(1)">
-					<u-icon name="/static/index/menu-2.png" size="64"></u-icon>
-					<view class="u-font-26 u-type-info">{{$getLang('仪表设置')}}</view>
-				</view> -->
-				<view v-show="localChannel == '0'" class="wrap__bottom__view" @click="upgradation">
-					<u-icon name="/static/index/menu-3.png" size="64"></u-icon>
-					<view class="u-font-26 u-type-info">OTA</view>
-				</view>
-			</view>
-		</view>
-		<view v-show="current === 1">
-			<DvrList ref="dvrlist" />
-		</view>
-		<u-tabbar v-model="tabCurrent" :list="tablist" :mid-button="true" :border-top="false" active-color="#087DFF"
+				<!-- 	<view class="u-flex u-row-center u-m-l-30 u-m-r-30 map">
+						<u-image src="/static/index/map.png" width="100%" height="140rpx" mode="aspectFit"></u-image>
+						<view class="map__btn">{{$getLang('导航寻车')}}</view>
+					</view> -->
+					<view class="device" v-if="equipInfo">
+						<view class="device__title">{{$getLang('设备信息')}}</view>
+						<view class="u-m-t-10 u-font-26">{{$getLang('设备')}}：{{ equipInfo ? equipInfo.osAppProjectName : '' }}</view>
+						<view class="u-m-t-10 u-font-26">MCU：{{ equipInfo ? equipInfo.mcuVersion : '' }}</view>
+						<view class="u-m-t-10 u-font-26">{{$getLang('系统')}}：{{ equipInfo ? equipInfo.osAppProjectSN : '' }}</view>
+					</view>
+					<view v-else>
+						<view class="u-m-t-100" style="width: 460rpx;height: 150rpx;margin:50rpx auto;text-align: center;">
+							<text style="line-height: 50rpx;color: #ccc;font-size: 32rpx;">{{$getLang('您当前还未绑定任何设备哦')}}~</text>
+							<button @tap="onPlusDialog({value:'sanc'})" 
+							style="background-color:#087DFF;color: #fff;margin-top: 30rpx;width: 310rpx;">{{$getLang('立即扫码绑定')}}</button>
+						</view>
+					</view>
+					<!-- <view v-show="localChannel == '1'" class="u-m-l-30 u-m-r-30 u-flex wrap__bottom u-row-between">
+						<view  v-show="localChannel == '1'" class="wrap__bottom__view" @click="carinfo(0)">
+							<u-icon name="/static/index/menu-1.png" size="64"></u-icon>
+							<view class="u-font-26 u-type-info">{{$getLang('车辆信息')}}</view>
+						</view>
+						<view  v-show="localChannel == '1'" class="wrap__bottom__view" @click="carinfo(1)">
+							<u-icon name="/static/index/menu-2.png" size="64"></u-icon>
+							<view class="u-font-26 u-type-info">{{$getLang('仪表设置')}}</view>
+						</view>
+						
+					</view> -->
+					<view v-show="localChannel == '0'" class="u-m-l-30 u-m-r-30 u-flex wrap__bottom u-row-between">
+						<view v-show="localChannel == '0'" class="wrap__bottom__view" @click="upgradation">
+							<u-icon name="/static/index/menu-3.png" size="64"></u-icon>
+							<view class="u-font-26 u-type-info">OTA</view>
+						</view>
+					</view>
+				</scroll-view>
+			</swiper-item>
+			<swiper-item class="swiper-item">
+				<scroll-view scroll-y style="width: 100%;" :style="{'height':winHeight+'px'}">
+					<DvrList ref="dvrlist" />
+				</scroll-view>
+			</swiper-item>
+		</swiper>
+		
+		
+		<u-tabbar v-show="isShowTabbar" v-model="tabCurrent" :list="tablist" :mid-button="true" :border-top="false" active-color="#087DFF"
 			@change="changes" mid-button-size="140" icon-size="50"></u-tabbar>
 	</view>
 </template>
@@ -108,13 +134,31 @@
 				localChannel: '',
 				osAppProjectSN: '',
 				mcuProjectSN: '',
-				mcuOTCSN: ''
+				mcuOTCSN: '',
+				isShowTabbar:true,
+				
+				isPageLoaded:false,
+				winHeight:860,
+				
+				isBlockEvent:true,
 			}
 		},
 		onLoad() {
+			uni.getSystemInfo({
+			  success: function(res) {
+			    console.log('屏幕高度:', res.screenHeight);
+			    console.log('窗口高度:', res.windowHeight);
+				this.winHeight=res.windowHeight-300;
+				console.log(this.winHeight)
+			  }
+			});
+			this.isShowTabbar=true;
 			this.loadData()
 		},
 		methods: {
+			swiperChange(e){
+				this.change(e.target.current,1);
+			},
 			loadData() {
 				const token = uni.getStorageSync('apitoken')
 				const user = uni.getStorageSync('user')
@@ -123,21 +167,42 @@
 					getApp().globalData.user = user
 				}
 				if (getApp().globalData.apitoken == '') {
-					uni.navigateTo({
-						url:"/pages/login/login"
-					})
+					this.returnLogin();
 					return
 				}
 				this.$u.api.getUser({ userId: getApp().globalData.user.id })
 					.then(res => {
 						console.log(res)
 					}).catch(e => {
-						uni.navigateTo({
-							url:"/pages/login/login"
-						})
+						// uni.navigateTo({
+						// 	url:"/pages/login/login"
+						// })
+						this.returnLogin();
 					})
 				this.loadEquipList()
 				this.upgradeInfo()
+			},
+			returnLogin(){
+				var getCurSSID=getConnectedSSID();//当前的网络wifi
+				const ssid =uni.getStorageSync('devsn');//设备绑定的wifi
+				console.log(getCurSSID,ssid);
+				if(`"${ssid}"`==getCurSSID){
+					uni.showLoading({
+						title:'断开设备...',
+					})
+					removeWifiBySSID(ssid);
+					setTimeout(()=>{
+						uni.hideLoading();
+						uni.navigateTo({
+							url:"/pages/login/login"
+						})
+					},2000);
+				}else{
+					uni.navigateTo({
+						url:"/pages/login/login"
+					})
+				}
+				
 			},
 			loadEquipList() {
 				this.$u.api.getEquipList({ userId: getApp().globalData.user.id, sn: uni.getStorageSync('devsn') })
@@ -149,14 +214,63 @@
 							this.osAppProjectSN = this.equipInfo ? this.equipInfo.osAppProjectSN : ''
 							this.localChannel = this.equipInfo ? this.equipInfo.channel : ''
 							getApp().globalData.equip = this.equipInfo
-							this.autoConnection()
+							// this.autoConnection()
 						}
 					})
 			},
-			change(index) {
-				this.current = index;
-				if (this.current === 1) {
-					this.$refs['dvrlist'].loadData()
+			change(index,opt=0) {
+				if(this.isBlockEvent==false){
+					return;
+				}
+				this.isBlockEvent=false;
+				var ssid = this.equipInfo.apSN
+				var password = this.equipInfo.apPassword
+				if (index === 1) {
+					uni.showModal({
+						 title: this.$getLang('提示'),
+						 content:'切换到DVR界面，会自动连接车机设备，WIFI名称为【'+ssid+'】.如果连接失败，请手动到WIFI列表连接：WIFI【'+ssid+'】，密码【'+password+'】连接成功再点击继续,是否继续？',
+						 cancelText:this.$getLang('取消'),
+						 confirmText:this.$getLang('继续'),
+						 success:(res)=>{
+							 this.isShowTabbar=false;
+							 if(this.current!=index){
+							 	this.current = index;
+							 }
+							if(res.confirm){
+								 this.$refs['dvrlist'].loadData();
+							}
+							setTimeout(()=>{
+								this.isBlockEvent=true;
+							},2000)
+							
+						 }
+					})
+				}else{
+					uni.showModal({
+						 title: this.$getLang('提示'),
+						 content:'离开DVR页面会断开与车机的连接，是否继续？',
+						 cancelText:this.$getLang('取消'),
+						 confirmText:this.$getLang('继续'),
+						 success:(res)=>{
+							 if(res.confirm){
+								this.isShowTabbar=true;
+								if(this.current!=index){
+									this.current = index;
+								}
+								removeWifiBySSID(ssid);
+							}
+							if(opt==1){
+								if(this.current!=index){
+									this.current = index;
+								}
+								this.isShowTabbar=true;
+							}
+							setTimeout(()=>{
+								this.isBlockEvent=true;
+							},2000)
+						},
+					});
+					
 				}
 			},
 			changes(index) {
@@ -204,12 +318,12 @@
 						success: (res) => {
 							const result = res.result.split('&')
 							console.log(result)
-							if (result.length !== 8) {
-								uni.showToast({
-									title:this.$getLang('仪表版本非最新，请检查') ,
-									icon: 'none'
-								});
-							}
+							// if (result.length !== 8) {
+							// 	uni.showToast({
+							// 		title:this.$getLang('仪表版本非最新，请检查') ,
+							// 		icon: 'none'
+							// 	});
+							// }
 							try {
 								let devName="恒勃智联";
 								const ssid = result[0].split('=')[1].replace('\n', '')
@@ -232,9 +346,9 @@
 								const params = { devSN: devsn, devOSAppVersion: osver, devMCUVersion: mcuver, channel, conf,
 									apSN:ssid,apPassword:password,apWebsocket:url,devName:devName
 								}
-								console.log('params',params);
+								// console.log('params',params);
 								this.$u.api.sendDevInfo(params).then(res => {
-									console.log('sendDevInfo:',res);
+									// console.log('sendDevInfo:',res);
 									if(res.code!==0){
 										uni.showToast({
 											title:this.$getLang(res.code) ,
@@ -243,10 +357,19 @@
 									}else{
 										getApp().globalData.devSN = ssid;
 										this.loadEquipList();
-										if(channel!='0'){
-											connectWifi(ssid,password);
-											this.openWebSocket(url);
-										}
+										uni.showModal({
+											title: this.$getLang('提示'),
+											content:'恭喜您，设备绑定成功，当前设备的设备号为【'+devsn+'】。注意：设备WIFI名称跟设备号是同一个【'+devsn+'】',
+											showCancel:false,
+											confirmText:this.$getLang('确定'),
+											success:(res)=> {
+												
+											}
+										})
+										// if(channel!='0'){
+										// 	connectWifi(ssid,password);
+										// 	this.openWebSocket(url);
+										// }
 										uni.setStorageSync('devsn', devsn)
 									}
 								})
@@ -258,7 +381,6 @@
 				}
 			},
 			openWebSocket(url) {
-				console.log('正在打开socket', url)
 				this.socketStatus = this.$getLang('连接中');
 			  const ws = uni.connectSocket({
 			    url: url,
@@ -362,7 +484,7 @@
 			position: relative;
 			.item-popover {
 				position: absolute;
-				top: 20rpx;
+				top: 0rpx;
 				right: 30rpx;
 			}
 			&__plus {
@@ -438,5 +560,23 @@
 				border-radius: 30rpx;
 			}
 		}
+	}
+</style>
+<style>
+	.tabs{
+		background-color: #EBF5FF;width: 100%;height: 60rpx;
+	}
+	.tabs-body{
+		width: 300rpx;height:50rpx; margin: auto;display: flex;flex-direction:row;
+	}
+	.tabs-item{
+		width: 100rpx;text-align: center;position: relative;line-height: 50rpx;font-size: 32rpx;
+	}
+	.tabs-active{
+		color: #1F252A;font-weight: bold;
+		
+	}
+	.tabs-bar{
+		position: absolute;bottom: -6rpxrpx;left: 23rpx; width:54rpx;height: 6rpx;background-color: #1F252A;border-radius: 2rpx;
 	}
 </style>

@@ -9,7 +9,7 @@ export function connectStartWifi() {
 		let index = 0
 		const interval = setInterval(() => {
 			const curSSID = getConnectedSSID()
-			if (index > 20) {
+			if (index > 10) {
 				console.log('wifi连接失败')
 				clearInterval(interval)
 				resolve(false)
@@ -35,7 +35,7 @@ export function openWebSocket() {
 				console.error(err)
 				getApp().globalData.socketTask = null
 				uni.showToast({
-					title: 'socket连接失败' + err,
+					title: '设备连接断开！',
 					icon: 'none'
 				})
 				resolve(false)
@@ -51,7 +51,7 @@ export function openWebSocket() {
 		ws.onError((err) => {
 			getApp().globalData.socketTask = null
 			uni.showToast({
-				title: '连接失败',
+				title: '设备连接断开！',
 				icon: 'none'
 			})
 			resolve(false)
