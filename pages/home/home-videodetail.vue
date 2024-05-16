@@ -72,6 +72,7 @@
 			// console.log(getApp().globalData)
 			if (option) {
 				this.params = option
+				console.log(option);
 				if(option.type==2){
 					this.videoTime=this.params.duration;
 				}else{
@@ -134,7 +135,7 @@
 					'videoCameraType': this.params.angle === 'front' ? '0' : '1',
 					'videoSize': size
 				};
-				// console.log(formData)
+				console.log(formData)
 				const uploadTask = uni.uploadFile({
 					url: getApp().globalData.uploadUrl + '/api/video', // 你的上传API地址
 					filePath: this.params.playUrl,

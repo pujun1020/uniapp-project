@@ -61,7 +61,7 @@
 											</view>
 										</view>
 										
-										<view v-for="(e,i) in cloudList[index].body" :key="i" @longpress="longpress">
+										<!-- <view v-for="(e,i) in cloudList[index].body" :key="i" @longpress="longpress">
 
 											<view class="player" @click="videoDetailClound(e)">
 												<u-image class="video" src="/static/cover_video.png" width="100%" height="250"></u-image>
@@ -70,7 +70,7 @@
 													<view class="timelong">{{e.totalTime}}</view>
 												</view>
 											</view>
-										</view>
+										</view> -->
 										
 									</view>
 									<!-- </view> -->
@@ -78,15 +78,15 @@
 							</u-collapse>
 						</view>
 						<!-- <u-loadmore bg-color="rgb(240, 240, 240)" :status="loadStatus" @loadmore="addRandomData"></u-loadmore> -->
-						<u-empty
-							style="margin-top: 50px"
-							v-if="localChannel != '1' || (!cloundFirst.id)"
-							mode="data"
-							:text="$getLang('无数据')"
-						>
-						</u-empty>
+						
 					</view>
-					
+					<!-- style="margin-top: 200px" -->
+					<u-empty
+						v-if="localChannel != '1' || (!cloundFirst.id)"
+						mode="data"
+						:text="$getLang('无数据')"
+					>
+					</u-empty>
 				</scroll-view>
 			</swiper-item>
 			<swiper-item class="swiper-item">
@@ -168,15 +168,16 @@
 		<!-- 日历筛选组件 -->
 		<u-calendar v-model="calendarShow" mode="range" @change="calendarChange"></u-calendar>
 		<!-- 上传进度弹出层 start -->
-		<u-popup v-model="uploadShow" mode="center" width="500" height="500" border-radius="14" :mask-close-able="false" closeable>
+		<u-popup v-model="uploadShow" mode="center" width="500" height="500" border-radius="14" :mask-close-able="false">
 			<view class="u-m-l-30 u-m-r-30 u-m-t-25 u-m-b-30">
 				<view class="u-text-center">
-					<view class="u-font-34 u-font-weight">{{$getLang('视频名称')}}</view>
-					<!-- <view class="u-type-info u-font-24 u-m-t-10">2024-3-22 17:15:00</view> -->
+					<view class="u-font-34 u-font-weight">{{ uploadOrDownload }}</view>
+					<view class="u-type-info u-font-24 u-m-t-10">{{ params.name }}</view>
+					<view class="u-type-info u-font-24 u-m-t-30">{{ progressTxt }}</view>
 				</view>
 				
 				<view style="margin-top: 30%;">
-					<u-line-progress active-color="#2979ff" :percent="70"></u-line-progress>
+					<u-line-progress active-color="#2979ff" :percent="progressVal"></u-line-progress>
 				</view>
 			</view>
 		</u-popup>
@@ -263,9 +264,15 @@
 				endDate: '',
 				// 上传进度条
 				uploadShow: false,
+				progressVal: 0,
+				progressTxt: '',
+				uploadOrDownload: '',
+				videoTime: '',
 				localChannel: '',
 				
 				winHeight:860,
+				
+				params:{},
 			}
 		},
 		onLoad() {
@@ -348,50 +355,188 @@
 			},
 			// 长按事件 start
 			longpress(item) {
+				this.params={};
+				var itemList= [this.$getLang('上传') , this.$getLang('删除')];
+				if(this.current==0){
+					itemList= [this.$getLang('删除')];
+				}
 				uni.showActionSheet({
-					itemList: [this.$getLang('上传') , this.$getLang('删除')],
-					success: (res) => {
-						if (res.tapIndex == 0) {
-							this.uploadShow = true;
-						} else {
+					itemList: itemList,
+					success: async(res) => {
+						
+						if(this.current==0){
 							uni.showModal({
 								title:  this.$getLang('提示'),
-								content:  this.$getLang('确认要删除当前视频吗'),
+								content:  this.$getLang('确认要删除当前云端视频吗？一旦删除将无法恢复~'),
 								success: (res) => {
 									if (res.confirm) {
-										var fileUrl=item.playUrl;
-										uni.removeSavedFile({
-											filePath: fileUrl,
-											success: ()=> {
-											  uni.showToast({
-											  	title:'删除成功！'
-											  })
-											  this.vieoList =this.vieoList.filter((vieo)=>{
-												  return vieo.id!=item.id;
-											  });
-											  uni.removeStorageSync(fileUrl);
-											},
-											fail:()=> {
-												uni.showToast({
-													title:'删除失败！',
-													icon:'none'
-												})
-											}
-										});
-										
-										uni.showToast({
-											title:  this.$getLang('删除成功'),
-											icon: 'none'
-										})
+										var datas={ devSN: item.devSN, id:item.id };
+										this.$u.api.delteCloundVideo(datas)
+											.then(res => {
+												if (res.code === 0) {
+													uni.showToast({
+														title:'删除成功！'
+													})
+													//重新加载一次
+													setTimeout(()=>{
+														this.loadCloundVideo();
+													},2000);
+												} else {
+													uni.showToast({
+														title: res.message,
+														icon: 'none'
+													})
+												}
+											})
+											.catch((err)=>{
+												console.log(err)
+											})
 									}
 								}
 							})
+						}else{
+							if (res.tapIndex == 0) {
+								// this.uploadShow = true;
+								this.params=item;
+								await this.onUpload(item);
+							} else {
+								uni.showModal({
+									title:  this.$getLang('提示'),
+									content:  this.$getLang('确认要删除当前视频吗'),
+									success: (res) => {
+										if (res.confirm) {
+											var fileUrl=item.playUrl;
+											uni.removeSavedFile({
+												filePath: fileUrl,
+												success: ()=> {
+												  uni.showToast({
+													title:'删除成功！'
+												  })
+												  this.vieoList =this.vieoList.filter((vieo)=>{
+													  return vieo.id!=item.id;
+												  });
+												  uni.removeStorageSync(fileUrl);
+												},
+												fail:()=> {
+													uni.showToast({
+														title:'删除失败！',
+														icon:'none'
+													})
+												}
+											});
+											
+											uni.showToast({
+												title:  this.$getLang('删除成功'),
+												icon: 'none'
+											})
+										}
+									}
+								})
+							}
 						}
 					},
 					fail: function(res) {
 						console.log(res.errMsg);
 					}
 				});
+			},
+			async onUpload(item) {
+				if (!getApp().globalData.uploadtoken) {
+					await this.uploadLogin()
+				}
+				const size = await this.getFileInfo()
+				const sec = Math.floor(Number(this.params.duration) / 1000)
+				this.videoTime = `${ Math.floor(sec/60) }分${Math.floor(sec%60)}秒`
+				const nameArr = this.params.name.split('-')
+				const videoDate = `${nameArr[1].replace('_', '-').replace('_', '-')} ${nameArr[2].replace('_', ':').replace('_', ':')}`
+				this.uploadShow = true
+				this.uploadOrDownload =this.$getLang('正在上传') 
+				var formData={
+					'devSN':getApp().globalData.equip.sn,
+					'videoName': nameArr[0],
+					'videoDate': videoDate,
+					'videoFileName': this.params.name,
+					'videoTotalTime': this.videoTime,
+					'videoCameraType': this.params.angle === 'front' ? '0' : '1',
+					'videoSize': size
+				};
+				// console.log(formData)
+				const uploadTask = uni.uploadFile({
+					url: getApp().globalData.uploadUrl + '/api/video', // 你的上传API地址
+					filePath: this.params.playUrl,
+					name: 'video', // 文件对应的 key , 开发者在服务器端通过这个 key 可以获取到文件二进制内容
+								header: {
+									'content-type': 'multipart/form-data',
+									'Authorization': getApp().globalData.uploadtoken,
+								},
+					formData: formData,
+					fileSize: 200 * 1024 * 1024,
+					success: uploadRes => {
+						this.uploadShow = false
+						if (uploadRes.statusCode === 200) {
+							const data = JSON.parse(uploadRes.data)
+							if (data.code === 0) {
+								uni.showModal({
+									title: this.$getLang('提示'),
+									content:'恭喜您，当前视频已上传到云端，在云端列表可查看！',
+									showCancel:false,
+									confirmText:this.$getLang('确定'),
+									success:()=>{
+										
+									}
+								})
+							} else {
+								uni.showToast({
+									title: data.message,
+									icon: 'none'
+								})
+							}
+							
+						} else {
+							uni.showToast({
+								title:this.$getLang('上传服务错误，请稍后重试'),
+								icon: 'none'
+							})
+						}
+					},
+					fail: uploadError => {
+						console.error('upload error:', uploadError);
+					}
+				});
+				uploadTask.onProgressUpdate(res => {
+							this.progressVal = res.progress
+							this.progressTxt = ''
+				});
+			},
+			getFileInfo() {
+				console.log('获取文件信息')
+				return new Promise((resove, reject) => {
+					uni.getFileInfo({
+						filePath: this.params.playUrl,
+						success: (res) => {
+							resove(res.size)
+						},
+						fail: (err) => {
+							console.log('获取文件失败', err)
+						}
+					})
+				})
+			},
+			uploadLogin() {
+				return new Promise((resove, reject) => {
+					this.$u.upload.login({ username: getApp().globalData.user.userName, password: getApp().globalData.user.password })
+						.then(res => {
+							console.log(res)
+							if (res.code === 0) {
+								getApp().globalData.uploadtoken = res.token
+								resove(true)
+							} else {
+								reject('上传登陆失败')
+							}
+						}).catch(e => {
+							reject(e)
+						})
+				})
 			},
 			// 长按事件 end
 			// 筛选事件触发 start
@@ -487,7 +632,8 @@
 										result.push({ time: datekey, body: [curren] })
 									}
 									return result
-								}, [])
+								}, []);
+								console.log(this.cloudList)
 							}
 						}
 					})

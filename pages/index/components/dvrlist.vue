@@ -568,7 +568,7 @@
 						events:{
 							//获取下级页面传递回来的参数
 							sonPageData:data=>{
-								console.log('接收返回的数据',data);
+								// console.log('接收返回的数据',data);
 								var list=this.vieoListNew;
 								var tempsList=[];
 								for(var i=0;i<list.length;i++){

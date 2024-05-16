@@ -36,7 +36,7 @@
 </template>
 <script>
 	import { md5 } from '@/common/md5.js'
-	
+	import {connectWifi,getConnectedSSID,removeWifi,removeWifiBySSID} from '../../common/cx-wifi/cx-wifi.js'
 	export default {
 		data() {
 			return {
@@ -106,12 +106,33 @@
 								icon: 'none'
 							});
 						}
+						
 					}).catch(e => {
-						console.log(e)
-						uni.showToast({
-							title:this.$getLang('账号密码错误'),
-							icon: 'none'
-						});
+						console.log('登录失败：',e)
+						if(e.errMsg.indexOf('request:fail abort statusCode:-1')>-1){
+							var curSSID=getConnectedSSID();
+							console.log(curSSID.replace('"','').replace('"','')) 
+							removeWifiBySSID(curSSID.replace('"','').replace('"',''));
+							uni.showLoading({
+								title:'网络连接中',
+								mask:true,
+							})
+							
+							setTimeout(()=>{
+								uni.hideLoading();
+								uni.showToast({
+									title:'网络异常，请重新尝试点击登录！',
+									icon:'none'
+								})
+							},3000)
+					
+						}else{
+							uni.showToast({
+								title:this.$getLang('账号或密码错误'),
+								icon: 'none'
+							});
+						}
+						
 					})
 			},
 			//注册按钮点击
