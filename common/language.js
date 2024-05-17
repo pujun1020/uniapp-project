@@ -21,7 +21,7 @@ module.exports  = {
 		'车辆信息': ['车辆信息', 'Vehicle Information'],
 		'仪表设置': ['仪表配置', 'Instrument Cluster Settings'],
 		'扫一扫': ['扫描', 'Scan'],
-		'未连接': ['未连', 'Not Connected'],
+		'未连接': ['未连接', 'Not Connected'],
 		'仪表版本非最新，请检查': ['仪表非最新版本，请查', 'Check仪表 Version Not Latest'],
 		'连接中': ['连接中', 'Connecting'],
 		'连接失败': ['连失败', 'Connection Failed'],
@@ -121,7 +121,7 @@ module.exports  = {
 		'确认密码': ['确认密码', 'Confirm Password'],
 		'请输入确认密码': ['请输入确认密码！', 'Please confirm your password.'],
 		'注 册': ['注 册', 'Register'],
-		'已有帐号？点击登陆': ['已有帐号？点击登陆', 'Already have an account? Click to log in.'],
+		'已有帐号？点击登录': ['已有帐号？点击登录', 'Already have an account? Click to log in.'],
 		'注册成功': ['注册成功！', 'Registration Successful!'],
 		
 		
@@ -164,8 +164,8 @@ module.exports  = {
 		
 		/**************************** 【用户反馈、关于、头像等页面】 **************************************/
 		'设置信息':['设置信息','Set information'],
-		'退出登陆':['退出登陆','Log out'],
-		'确认要退出登陆吗':['确认要退出登陆吗？','Are you sure you want to log out？'],
+		'退出登录':['退出登录','Log out'],
+		'确认要退出登录吗':['确认要退出登录吗？','Are you sure you want to log out？'],
 		'请在此处输入反馈信息':['请在此处输入反馈信息','Please enter your feedback here'],
 		'提交反馈':['提交反馈','Submit feedback'],
 		'提交用户反馈成功':['提交用户反馈成功!','Submitting user feedback succeeded！'],

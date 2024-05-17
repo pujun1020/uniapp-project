@@ -17,7 +17,7 @@
 				<u-cell-item icon="kefu-ermai" :title="$getLang('用户反馈')" @click="menu(2)" hover-class="none"></u-cell-item>
 				<u-cell-item icon="setting" :title="$getLang('设置信息')" @click="menu(3)" hover-class="none"></u-cell-item>
 				<u-cell-item icon="file-text" :title="$getLang('隐私协议')" @click="menu(4)" hover-class="none"></u-cell-item>
-				<u-cell-item icon="man-delete" :title="$getLang('退出登陆')" style="color: #dd6161" @click="login" hover-class="none"></u-cell-item>
+				<u-cell-item icon="man-delete" :title="$getLang('退出登录')" style="color: #dd6161" @click="login" hover-class="none"></u-cell-item>
 				<!-- <u-cell-item icon="file-text" title="scoket测试" @click="test()" hover-class="none"></u-cell-item> -->
 			</u-cell-group>
 		</view>
@@ -28,6 +28,7 @@
 </template>
 
 <script>
+	import {connectWifi,getConnectedSSID,removeWifi,removeWifiBySSID} from '../../common/cx-wifi/cx-wifi.js'
 	export default {
 		data() {
 			return {
@@ -62,27 +63,54 @@
 		
 		},
 		onLoad() {
-			this.user = getApp().globalData.user
+			const token = uni.getStorageSync('apitoken')
+			const user = uni.getStorageSync('user')
+			
+			if (token && user) {
+				this.user = user;
+			}else{
+				uni.redirectTo({
+					url:'/pages/login/login'
+				})
+			}
+			
 		},
 		methods: {
 			menu(param) {
-				if (param == 1) {
-					uni.navigateTo({
-						url: "/pages/my/userinfo"
+				var getCurSSID=getConnectedSSID();//当前的网络wifi
+				const ssid = getApp().globalData.equip.apSN;//设备绑定的wifi
+				if(`"${ssid}"`==getCurSSID){
+					uni.showModal({
+						title: this.$getLang('提示'),
+						content:'您当前连接的是设备WIFI，暂无网络，无法操作用户信息！',
+						showCancel:false,
+						confirmText:this.$getLang('确定'),
+						success:(res)=>{
+							
+						}
 					})
-				} else if (param == 2) {
-					uni.navigateTo({
-						url: "/pages/my/feedback"
-					})
-				} else if (param == 3) {
-					uni.navigateTo({
-						url: "/pages/my/set"
-					})
-				} else {
-					uni.navigateTo({
-						url: "/pages/my/privacy"
-					})
+					return;
+				}else{
+					if (param == 1) {
+						uni.navigateTo({
+							url: "/pages/my/userinfo"
+						})
+					} else if (param == 2) {
+						uni.navigateTo({
+							url: "/pages/my/feedback"
+						})
+					} else if (param == 3) {
+						uni.navigateTo({
+							url: "/pages/my/set"
+						})
+					} else {
+						uni.navigateTo({
+							url: "/pages/my/privacy"
+						})
+					}
 				}
+				
+				
 			},
 			test() {
 				uni.navigateTo({
@@ -92,11 +120,16 @@
 			login() {
 				uni.showModal({
 					title: this.$getLang('提示'),
-					content:this.$getLang('确认要退出登陆吗') ,
+					content:this.$getLang('确认要退出登录吗') ,
 					cancelText:this.$getLang('取消'),
 					confirmText:this.$getLang('确认'),
 					success: (res) => {
 						if (res.confirm) {
+							uni.removeStorageSync('username');
+							uni.removeStorageSync('password');
+							uni.removeStorageSync('remPassword');
+							uni.removeStorageSync('apitoken');
+							uni.removeStorageSync('user');
 							uni.navigateTo({
 								url: "/pages/login/login"
 							})

@@ -18,6 +18,14 @@
 				<text @click="onSelected(item)" class="gui-icons gui-card-footer-item" :style="{ color: item.sn === equipSn ? '#626675' : '#2B9DF3' }">{{$getLang('切换设备')}}</text>
 			</view>
 		</view>
+		<view style="margin-top:300rpx">
+			<u-empty
+				v-if="equipList.length==0"
+				mode="data"
+				:text="$getLang('无设备列表，请检查网络')"
+			>
+			</u-empty>
+		</view>
 	</view>
 </template>
 
@@ -45,7 +53,13 @@
 					})
 			},
 			onDel(equip) {
-				if (equip.sn === this.equipSn) return
+				if (equip.sn === this.equipSn){
+					uni.showToast({
+						title:'当前设备无法解绑！',
+						icon:'none'
+					}) 
+					return
+				} 
 				uni.showModal({
 					title:this.$getLang('提示') ,
 					content:this.$getLang('确认要解绑该设备吗'),
@@ -69,7 +83,13 @@
 				})
 			},
 			onSelected(equip) {
-				if (equip.sn === this.equipSn) return
+				if (equip.sn === this.equipSn) {
+					uni.showToast({
+						title:'已是当前设备，无需切换！',
+						icon:'none'
+					}) 
+					return
+				}
 				uni.showModal({
 					title: this.$getLang('提示'),
 					content: this.$getLang('确认要切换到该设备吗？'),
@@ -79,6 +99,7 @@
 						if (res.confirm) {
 							getApp().globalData.equip = equip
 							getApp().globalData.devSN = equip.sn
+							uni.setStorageSync('equip',equip);
 							uni.setStorageSync('devsn', equip.sn)
 							uni.navigateTo({
 							    url: "/pages/index/index"

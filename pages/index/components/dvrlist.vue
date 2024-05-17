@@ -1,6 +1,8 @@
 <template>
-	<view class="wrap">
-		<view v-if="equip" style="display: flex;flex-direction: column;text-align: center;background-color: #EBF5FF;line-height:50rpx;">
+	<view class="wrap" style="background-color: #EBF5FF;min-height: 860px;">
+		<view style="width: 100%;height: 20rpx;background-color: #EBF5FF;"></view>
+		<view v-if="wifiConnectionState&&equip" 
+		style="display: flex;flex-direction: column;text-align: center;background-color: #EBF5FF;line-height:50rpx;">
 			<text style="color: green;font-size: 28rpx;">当前已连接设备：【{{equip.apSN}}】</text>
 			<text style="color: #ccc;">您可以点击查看视频，或长按更多操作~</text>
 		</view>
@@ -11,12 +13,45 @@
 		</view> -->
 		<!-- 搜索框 end -->
 
-		<view>
-			<view class="local-list" style="padding-top: 20rpx;" v-for="(video,inx) in vieoListNew">
+		<view   style="width: 100%;height: 100%; background-color: #EBF5FF;">
+			
+			<view class="u-m-l-30 u-m-r-30">
+				<u-collapse :arrow="false" style="background-color: #EBF5FF;">
+					<u-collapse-item :title="video.date" v-for="(video, inx) in vieoListNew" :key="inx"
+						:open="inx < 2 ? true : false">
+						<view class="list_item">
+							<view v-for="(item,index) in video.vieoList" :key="index">
+								<view class="player" style="position: relative;"  @longpress="longpress(item)" @click="videoDetail(item,index,inx)">
+									<view v-show="item.locDownLoad" style="position: absolute;top:20rpx;left: 0; width:150rpx;height: 50rpx;line-height: 50rpx;background:green;text-align: center;
+									font-size:24rpx;padding:2rpx 8rpx;z-index: 99;color: #fff;">
+									本地已下载
+									</view>
+									<view  v-show="isBachtStatus" style="position: absolute;top: 20rpx;right: 0;width: 46rpx;height: 46rpx;z-index: 99;">
+										<view style="border-radius: 50%;width: 46rpx;height: 46rpx;
+										border:1px #087DFF solid;background-color: #fff;">
+											<view v-show="item.checked" style="width: 40rpx;height: 40rpx;background-color: #087DFF;margin:3rpx auto;border-radius: 50%;"></view>
+										</view>
+									</view>
+									
+									<u-image class="video" :src="item.thumbUrl" width="100%" height="250"></u-image>
+									<view class="tips">
+										<view class="name">{{item.name}}</view>
+										<view class="timelong">{{item.title}}</view>
+									</view>
+								</view>
+							</view>
+			
+						</view>
+			
+					</u-collapse-item>
+				</u-collapse>
+			</view>
+			<view style="width: 100%;height: 100rpx;background-color: #EBF5FF;"></view>
+			<!-- <view class="local-list" style="padding-top: 20rpx;" v-for="(video,inx) in vieoListNew">
 				<view style="font-size: 32rpx;font-weight: bold;color: #000;width: 100%;padding:0rpx 26rpx;text-align: center;position: relative;">
 					日期：{{video.date}}
 				</view>
-				<!-- 模拟数据 start -->
+
 				<view class="player" style="position: relative;" v-for="(item,index) in video.vieoList" :key="index" @longpress="longpress(item)"
 					@click="videoDetail(item,index,inx)">
 					<view v-show="item.locDownLoad" style="position: absolute;top:20rpx;left: 0; width:150rpx;height: 50rpx;line-height: 50rpx;background:green;text-align: center;
@@ -34,13 +69,17 @@
 						<view class="timelong">{{ item.title }}</view>
 					</view>
 				</view>
-				<!-- 模拟数据 end -->
+
 			</view>
 			
-			<view style="margin-top: 20%;">
-				<u-empty v-if="!wifiConnectionState" text="未连接设备WIFI" mode="wifi"></u-empty>
-			</view>
+			 -->
 			
+		</view>
+		
+		<view style="margin-top: 300rpx"  v-if="!wifiConnectionState">
+			<u-empty text="未连接设备WIFI" mode="wifi"></u-empty>
+			<button @tap="loadData()"
+			style="background-color:#087DFF;color: #fff;margin-top: 30rpx;width: 310rpx;">点击连接设备</button>
 		</view>
 		
 		<!-- 筛选弹出层 start -->
@@ -100,7 +139,7 @@
 		<!-- 上传进度弹出层 end -->
 		
 		<!-- 批量删除弹层 start -->
-		<view class="button" v-show="isBachtStatus" style="position: fixed;bottom: 0;left: 0;width: 100%;z-index: 9999;">
+		<view v-if="isBachtStatus" style="position: fixed !important;top: 0px;left: 0;width: 100%;z-index: 9999;">
 			<u-grid :col="2">
 				
 				<u-grid-item bg-color="#fff" @tap="delCancel()">
@@ -256,16 +295,71 @@
 				this.loadStatus = 'loadmore'
 			}
 		},
-		onLoad() {
-		
-			uni.showLoading({
-				title:'加载中...'
-			})
-			this.loadData();
-			
-			
+	    created() {
+			console.log('加载组件页面');
+			//判断当前wifi是否连接状态并且是否视频列表为空，如果为空重新加载一次
+			var getCurSSID=getConnectedSSID();//当前的网络wifi
+			const ssid = getApp().globalData.equip.apSN;//设备绑定的wifi
+			const password = getApp().globalData.equip.apPassword
+			//表示当前连接的WIFI是设备指定的WIFI
+			if(`"${ssid}"`==getCurSSID&&this.vieoListNew.length==0&&getApp().globalData.equip&&Object.keys(getApp().globalData.equip).length!=0){
+				if(getApp().globalData.vieoListNew&&getApp().globalData.vieoListNew.length>0){
+					this.wifiConnectionState=true;
+					this.$emit('updateWifiConnectionState',true);
+					setTimeout(()=>{
+						this.vieoListNew=getApp().globalData.vieoListNew;
+					},3000)
+				}else{
+					setTimeout(()=>{
+						this.getVideoNew();
+					},3000);
+				}
+			}else{
+				this.wifiConnectionState=false;
+				this.$emit('updateWifiConnectionState',false);
+				this.vieoListNew==[];
+				getApp().globalData.vieoListNew=[];
+			}
 		},
+		// onLoad() {
+		
+		// 	uni.showLoading({
+		// 		title:'加载中...'
+		// 	})
+		// 	this.loadData();
+			
+			
+		// },
 		methods: {
+			async getVideoNew(){
+				this.equip= getApp().globalData.equip;
+				let socketTask = getApp().globalData.socketTask
+				if (!socketTask) {
+					socketTask = await openWebSocket()
+				}
+				if(socketTask){
+					uni.showLoading({
+						title:'加载视频中...',
+						mask:true
+					})
+					this.loadVideoFun(socketTask);
+					this.showWIFIConnOpt=false;
+				}else{
+					uni.showModal({
+						title:'提示',
+						content:'与设备服务连接时失败，检查是否将设备调节到以下苹果手机投屏界面',
+						showCancel:false,
+						confirmText:'确定',
+						success:(res)=>{
+							if(res.confirm){
+								
+							}
+						}
+						
+					})
+				}
+			},
+			
 			async showStepFun(index){
 				if(index==1){
 					this.showStep=2;
@@ -276,30 +370,9 @@
 					const password = getApp().globalData.equip.apPassword
 					//表示当前连接的WIFI是设备指定的WIFI
 					if(`"${ssid}"`==getCurSSID){
-						let socketTask = getApp().globalData.socketTask
-						if (!socketTask) {
-							socketTask = await openWebSocket()
-						}
-						if(socketTask){
-							uni.showLoading({
-								title:'加载视频中...'
-							})
-							this.loadVideoFun(socketTask);
-							this.showWIFIConnOpt=false;
-						}else{
-							uni.showModal({
-								title:'提示',
-								content:'与设备服务连接时失败，检查是否将设备调节到以下苹果手机投屏界面',
-								showCancel:false,
-								confirmText:'确定',
-								success:(res)=>{
-									if(res.confirm){
-										
-									}
-								}
-								
-							})
-						}
+						this.equip= getApp().globalData.equip;
+						
+						this.getVideoNew();
 					}else{
 						uni.showModal({
 							title:'提示',
@@ -443,53 +516,56 @@
 				this.isBachtStatus=false;
 			},
 			async loadData() {
-				uni.getSavedFileList({
-				  success: function(res) {
-				    const videoFiles = res.fileList.filter(file => {
-				      // 假设视频文件以.mp4结尾，根据实际情况调整
-				      return file.filePath.endsWith('.mp4');
-				    });
-					console.log('videoFiles',videoFiles);
-					
-				    // 接下来可以遍历videoFiles进行删除操作
-				  }
-				});
-				
+				this.ssid = getApp().globalData.equip.apSN;//设备绑定的wifi
+				this.password = getApp().globalData.equip.apPassword;
+				var getCurSSID=getConnectedSSID();//当前的网络wifi
 				this.showStep=1;
 				this.wifiConnectionState=false;
-				
 				uni.showLoading({
 					title:'连接中...'
 				})
 				let socketTask = getApp().globalData.socketTask
 				if (!socketTask) {
-					this.ssid = getApp().globalData.equip.apSN;//设备绑定的wifi
-					this.password = getApp().globalData.equip.apPassword;
-					
-					if (await connectStartWifi()) {
-						this.equip=getApp().globalData.equip
-						uni.showToast({
-							title:'WIFI已连接!',
-							icon:'success'
-						})
-						uni.showLoading({
-							title:'加载视频中...'
-						})
-						setTimeout(async()=>{
-							socketTask = await openWebSocket()
-							if(socketTask){
-								this.loadVideoFun(socketTask);
-							}
-						},3000)
+					if(`"${this.ssid}"`==getCurSSID){
+						 socketTask = await openWebSocket()
+						 if(socketTask){
+						 	this.loadVideoFun(socketTask);
+						 }
+						 uni.hideLoading();
 					}else{
-						//如果连接失败，弹出指引如何连接设备
-						uni.hideLoading();
-						uni.showToast({
-							title:'WIFI自动连接失败！',
-							icon:'none'
-						});
-						this.showWIFIConnOpt=true;
+						removeWifiBySSID(getCurSSID.replace('"','').replace('"',''));
+						
+						setTimeout(async()=>{
+							if (await connectStartWifi()) {
+								this.equip=getApp().globalData.equip
+								uni.showToast({
+									title:'WIFI已连接!',
+									icon:'success'
+								})
+								uni.showLoading({
+									title:'加载视频中...',
+									mask:true
+								})
+								setTimeout(async()=>{
+									socketTask = await openWebSocket()
+									if(socketTask){
+										this.loadVideoFun(socketTask);
+									}
+								},3000)
+							}else{
+								//如果连接失败，弹出指引如何连接设备
+								uni.hideLoading();
+								uni.showToast({
+									title:'WIFI自动连接失败！',
+									icon:'none'
+								});
+								this.showWIFIConnOpt=true;
+							}
+						},2000)
+						
 					}
+					
+					
 				}else{
 					this.loadVideoFun(socketTask);
 				}
@@ -497,8 +573,8 @@
 			},
 			loadVideoFun(socketTask){
 				this.wifiConnectionState=true;
+				this.$emit('updateWifiConnectionState',true);
 				
-				// console.log('uni.getStorageInfoSync()',uni.getStorageInfoSync());
 				// 本地视频
 				var locVieoList = uni.getStorageInfoSync().keys.filter(k => k.includes('/uniapp_save/')).map(k => {
 					return { ...uni.getStorageSync(k), playUrl: k }
@@ -513,12 +589,17 @@
 				socketTask.onMessage((res) => {
 					// console.log('收到服务器内容：' + res.data)
 					const data = JSON.parse(res.data)
+					// console.log(data);
 					if (data.METHOD === 'VIDEO.DATE' && data.code === 0) {
 						const allDate = data.dateList
+						console.log('加载一次allDate',allDate);
 						this.allDate = allDate
 						this.pageIndex = 1
 						this.dateList = allDate.slice(0, this.pageIndex * this.pageSize)
-						this.loadVideo()
+						if(!getApp().globalData.vieoListNew||getApp().globalData.vieoListNew.length==0){
+							this.loadVideo()
+						}
+						
 					} else if (data.METHOD === 'VIDEO.INFO.LIST' && data.code === 0) {
 						if(data.videoBeanList.length>0){
 							for(var i=0;i<data.videoBeanList.length;i++){
@@ -537,14 +618,20 @@
 							var date=playUrl.split('-')[1].replace(/_/g, "-");
 							var objVideo={date:date,vieoList:data.videoBeanList};
 							this.vieoListNew.push(objVideo);
-							// console.log(this.vieoListNew)
+							const isEqual = date === this.dateList[this.dateList.length - 1];
+							if(isEqual){
+								// console.log('视频加载完成',this.vieoListNew);
+								uni.hideLoading();
+								getApp().globalData.vieoListNew=this.vieoListNew
+							}
 						}
 						
 					} else {
 						console.error(data)
 					}
-					uni.hideLoading();
+					
 				})
+				
 			},
 			loadVideo() {
 				const socketTask = getApp().globalData.socketTask
@@ -682,7 +769,7 @@
 
 <style lang="scss">
 	body,
-	html {
+   html {
 		background-color: #EBF5FF;
 	}
 
@@ -701,7 +788,7 @@
 		}
 
 		.swiper-item {
-			position: relative;
+			// position: relative;
 			background-color: #EBF5FF;
 		}
 	}

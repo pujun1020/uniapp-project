@@ -1,11 +1,9 @@
 <template>
 	<view class="wrap">
-		<!-- <u-navbar :is-back="false" :background="background" :border-bottom="false"></u-navbar> -->
+
 		<u-gap height="88" bg-color="#EBF5FF"></u-gap>
 
 		<view v-show="localChannel == '1'" class="wrap__head">
-		<!-- 	<u-tabs :list="list" :is-scroll="false" :current="current" @change="tabsChange" bg-color="#EBF5FF"
-				font-size="32" active-color="#1F252A" bar-width="67"></u-tabs> -->
 			<view class="tabs">
 					<view class="tabs-body">
 						<view @tap="tabsChange(0)" class="tabs-item " :class="current==0?'tabs-active':''" style="margin-right:100rpx;">
@@ -21,15 +19,24 @@
 		</view>
 		
 		<!-- 搜索框 start -->
-		<view class="u-m-l-30 u-m-r-30 u-m-t-30 u-flex">
-			<u-search :placeholder="$getLang('视频名称')" :show-action='false' v-model="videoName" @search="loadCloundVideo()" @clear="loadCloundVideo()" bg-color="#fff"></u-search>
-			<u-icon name="/static/index/bg-screen.png" size='40' class="u-m-l-30" @click="screen"></u-icon>
+		<view class="u-flex">
+			<u-dropdown ref="uDropdown" @open="dropdownOpen">
+				<u-dropdown-item v-model="dropVal1" :title="dropValTitle1" @change="selectEquipList" :options="filterEquipList"></u-dropdown-item>
+				<u-dropdown-item v-model="cameraType" :title="dropValTitle2" @change="selectTranslate" :options="translate"></u-dropdown-item>
+				<u-dropdown-item v-model="dropVal2" title="选择日期">
+					
+				</u-dropdown-item>
+			</u-dropdown>
+		</view>
+		<view class="u-m-l-30 u-m-r-30 u-m-t-10 u-flex">
+			<u-search :placeholder="$getLang('视频名称')" :show-action='true' v-model="videoName" @search="loadCloundVideo()" @clear="loadCloundVideo()" bg-color="#fff"></u-search>
+			<!-- 	<u-icon name="/static/index/bg-screen.png" size='40' class="u-m-l-30" @click="screen"></u-icon> -->
 		</view>
 		<!-- 搜索框 end -->
 
-		<swiper :current="current" @change="swiperChange"  :style="{'height':winHeight+'px'}">
+		<swiper :current="current" @change="swiperChange"  :style="{'min-height':winHeight+'px'}">
 			<swiper-item class="swiper-item">
-				<scroll-view scroll-y style="width: 100%;" :style="{'height':winHeight+'px'}">
+				<scroll-view scroll-y style="width: 100%;" :style="{'min-height':winHeight+'px'}">
 					<view v-show="current === 0">
 						<view v-show="cloundFirst.id" class="clound-swiper" @click="videoDetailClound(cloundFirst)">
 							<u-image class="video" src="/static/cover_video.png" width="100%" height="400"></u-image>
@@ -45,13 +52,8 @@
 							<u-collapse :arrow="false">
 								<u-collapse-item :title="item.time" v-for="(item, index) in cloudList" :key="index"
 									:open="index == 0 ? true : false">
-									<!-- <view class="clound-list"> -->
 									<view class="list_item">
 										<view v-for="(e,i) in cloudList[index].body" :key="i" @longpress="longpress">
-											<!-- <view class="title">
-												<view class="left">2024-02-27</view>
-												<view class="right">展开</view>
-											</view> -->
 											<view class="player" @click="videoDetailClound(e)">
 												<u-image class="video" src="/static/cover_video.png" width="100%" height="250"></u-image>
 												<view class="tips">
@@ -60,42 +62,32 @@
 												</view>
 											</view>
 										</view>
-										
-										<!-- <view v-for="(e,i) in cloudList[index].body" :key="i" @longpress="longpress">
 
-											<view class="player" @click="videoDetailClound(e)">
-												<u-image class="video" src="/static/cover_video.png" width="100%" height="250"></u-image>
-												<view class="tips">
-													<view class="name">{{e.name}}</view>
-													<view class="timelong">{{e.totalTime}}</view>
-												</view>
-											</view>
-										</view> -->
-										
 									</view>
-									<!-- </view> -->
+
 								</u-collapse-item>
 							</u-collapse>
 						</view>
-						<!-- <u-loadmore bg-color="rgb(240, 240, 240)" :status="loadStatus" @loadmore="addRandomData"></u-loadmore> -->
+						<view style="margin-top:300rpx">
+							<u-empty 
+								v-show="localChannel != '1' || (!cloundFirst.id)"
+								mode="data"
+								:text="$getLang('暂无云端视频')"
+							>
+							</u-empty>
+						</view>
 						
 					</view>
 					<!-- style="margin-top: 200px" -->
-					<u-empty
-						v-if="localChannel != '1' || (!cloundFirst.id)"
-						mode="data"
-						:text="$getLang('无数据')"
-					>
-					</u-empty>
+					
 				</scroll-view>
 			</swiper-item>
 			<swiper-item class="swiper-item">
 				<scroll-view scroll-y style="width: 100%;" :style="{'height':winHeight+'px'}">
-					<view v-if="vieoList.length>0" style="margin-top: 30rpx; display: flex;flex-direction: column;text-align: center;background-color: #EBF5FF;line-height:50rpx;">
-						<text style="color: #ccc;">您可以点击查看视频，或长按更多操作~</text>
+					<!-- <view v-if="vieoList.length>0" style="margin-top: 30rpx; display: flex;flex-direction: column;text-align: center;background-color: #EBF5FF;line-height:50rpx;">
 						<button @tap="delAllVideoList()"
-						style="background-color:#087DFF;color: #fff;margin-top: 30rpx;width: 310rpx;font-size: 28rpx;">{{$getLang('一键清空缓存')}}</button>
-					</view>
+						style="background-color:#087DFF;color: #fff;margin-top: 30rpx;width: 310rpx;">{{$getLang('一键清空缓存')}}</button>
+					</view> -->
 					<view v-show="current === 1">
 						<view class="local-list">
 							<!-- 模拟数据 start -->
@@ -110,12 +102,15 @@
 							<!-- 模拟数据 end -->
 						</view>
 					</view>
-					<u-empty
-						v-if="vieoList.length==0"
-						mode="data"
-						:text="$getLang('无本地视频')"
-					>
-					</u-empty>
+					
+					<view style="margin-top:300rpx">
+						<u-empty
+							v-if="vieoList.length==0"
+							mode="data"
+							:text="$getLang('无本地视频，可到DVR下载')"
+						>
+						</u-empty>
+					</view>
 				</scroll-view>
 			</swiper-item>
 		</swiper>
@@ -166,7 +161,7 @@
 		</u-popup>
 		<!-- 筛选弹出层 end -->
 		<!-- 日历筛选组件 -->
-		<u-calendar v-model="calendarShow" mode="range" @change="calendarChange"></u-calendar>
+		<u-calendar v-model="calendarShow" mode="date" @change="calendarChange" @input="calendarClose"></u-calendar>
 		<!-- 上传进度弹出层 start -->
 		<u-popup v-model="uploadShow" mode="center" width="500" height="500" border-radius="14" :mask-close-able="false">
 			<view class="u-m-l-30 u-m-r-30 u-m-t-25 u-m-b-30">
@@ -187,7 +182,7 @@
 
 <script>
 	import { byteToMb } from '@/common/unit.js'
-	
+	import {connectWifi,getConnectedSSID,removeWifi,removeWifiBySSID} from '../../common/cx-wifi/cx-wifi.js'
 	export default {
 		data() {
 			return {
@@ -242,18 +237,18 @@
 				// 分类
 				translate: [{
 						value: '',
-						name:this.$getLang('全部'),
-						disabled: false
+						label:this.$getLang('全部'),
+						checked: false
 					},
 					{
 						value: '0',
-						name: this.$getLang('前录'),
-						disabled: false
+						label: this.$getLang('前录'),
+						checked: false
 					},
 					{
 						value: '1',
-						name:  this.$getLang('后录'),
-						disabled: false
+						label:  this.$getLang('后录'),
+						checked: false
 					}
 				],
 				cameraType: '',
@@ -273,6 +268,41 @@
 				winHeight:860,
 				
 				params:{},
+				
+				dropVal1:'',
+				dropValTitle1:'全部设备',
+				
+				dropVal2:'',
+				dropValTitle2:'录制方向',
+				dropOptions1:[
+					{
+						label: '全部',
+						value: '',
+					},
+					{
+						label: '设备1',
+						value: '1',
+					},
+					{
+						label: '设备2',
+						value: '2',
+					}
+				],
+				dropOptions2:[
+					{
+						label: '全部',
+						value: '',
+					},
+					{
+						label: '前置',
+						value: '1',
+					},
+					{
+						label: '后置',
+						value: '2',
+					},
+				],
+				vieoListBack:[],
 			}
 		},
 		onLoad() {
@@ -285,14 +315,39 @@
 			  }
 			});
 			
+			const token = uni.getStorageSync('apitoken')
+			const user = uni.getStorageSync('user')
+			
+			if (token && user) {
+				
+			}else{
+				uni.redirectTo({
+					url:'/pages/login/login'
+				})
+			}
+			
 			this.loadEquipList();
 			this.addRandomData();
 			
-			if(getApp().globalData.equip){
+			var equip=getApp().globalData.equip
+			if(equip){
 				console.log(getApp().globalData.equip)
-				this.localChannel = getApp().globalData.equip.channel
-				this.selectEquip=getApp().globalData.equip.sn
-				this.loadData();
+				this.localChannel =equip.channel
+				this.selectEquip=equip.sn;
+				this.dropValTitle1=equip.apSN;
+				this.dropVal1=equip.apSN;
+				//判断主要
+				var getCurSSID=getConnectedSSID();//当前的网络wifi
+				const ssid = equip.apSN;//设备绑定的wifi
+				if(`"${ssid}"`==getCurSSID){
+					this.filterEquipList=[
+						{label:'全部设备',value: '', checked: true},
+						{label:equip.abbreviation+'('+equip.apSN+')',value: equip.apSN, checked: false},
+					];
+					return;
+				}else{
+					this.loadData();
+				}
 			}
 			
 			
@@ -310,17 +365,35 @@
 			
 		},
 		onReachBottom() {
-			// this.loadStatus = 'loading';
-			// 模拟数据加载
-			// this.dateList = this.allDate().slice(0, this.pageIndex * this.pageSize)
-			// if (this.pageIndex * this.pageSize > this.allDate.length) {
-			// 	this.pageIndex++
-			// 	this.loadStatus = 'nomore'
-			// } else {
-			// 	this.loadStatus = 'loadmore'
-			// }
+
 		},
 		methods: {
+			selectTranslate(e){
+				console.log(e)
+				if(e==''){
+					this.dropValTitle2="录制方向";
+				}else if(e=='0'){
+					this.dropValTitle2="前录";
+				}else if(e=='1'){
+					this.dropValTitle2="后录";
+				}
+				this.cloudList=[];
+				this.cloundFirst={};
+				this.loadData();
+			},
+			selectEquipList(e){
+				this.dropValTitle1=e?e:'全部设备';
+				this.selectEquip=e;
+				this.dropVal1=e;
+				this.cloudList=[];
+				this.cloundFirst={};
+				this.loadData();
+			},
+			dropdownOpen(e){
+				if(e==2){
+					this.calendarShow=true;
+				}
+			},
 			swiperChange(e){
 				this.tabsChange(e.target.current);
 			},
@@ -556,9 +629,16 @@
 			// 筛选分类end
 			// 日历选择触发 start
 			calendarChange(param) {
-				this.calendarValue = param.startDate + ' - ' + param.endDate
-				this.startDate = param.startDate
-				this.endDate = param.endDate
+				this.calendarValue = param.result; //param.startDate + ' - ' + param.endDate
+				this.startDate = param.result
+				this.endDate = param.result
+				this.cloudList=[];
+				this.cloundFirst={};
+				this.loadData();
+				this.$refs.uDropdown.close();
+			},
+			calendarClose(){
+				this.$refs.uDropdown.close();
 			},
 			// 日历选择触发 end
 			// 重置 start
@@ -597,8 +677,9 @@
 						if (res.code === 0) {
 							console.log('filterEquipList',res.data)
 							this.filterEquipList = res.data.map(d => {
-								return { value: d.sn, name: d.abbreviation, disabled: false }
+								return { value: d.apSN, label: d.abbreviation+'('+d.apSN+')', checked: false }
 							})
+							// this.filterEquipList.unshift({label:'全部设备',value: '', checked: true});
 						}
 					})
 			},
@@ -608,6 +689,25 @@
 					this.vieoList = uni.getStorageInfoSync().keys.filter(k => k.includes('/uniapp_save/')).map(k => {
 						return { ...uni.getStorageSync(k), playUrl: k }
 					})
+					
+					var vieoList=this.vieoList.filter((q,index)=>{
+						let condition = true;
+						if(this.selectEquip){
+							condition = condition && q.devSN==this.selectEquip;
+						}
+						if(this.cameraType){
+							var cameraType=this.cameraType==0?'front':''
+							condition = condition && q.angle==cameraType;
+						}
+						if(this.videoName){
+							condition = condition && (
+								q.name.toLowerCase().includes(this.videoName.toLowerCase())
+								||q.devSN.toLowerCase().includes(this.videoName.toLowerCase()) 
+							);
+						}
+						return condition;
+					})
+					this.vieoList=vieoList;
 					console.log('本地视频列表',this.vieoList)
 				} else {
 					// 云端视频
@@ -615,9 +715,12 @@
 				}
 			},
 			loadCloundVideo() {
-				this.screenShow = false;
-				this.$u.api.getCloundVideoList({ page: 1, size: 999, name: this.videoName, devSN: this.selectEquip, cameraType: this.cameraType, sdate: this.startDate, edate: this.endDate })
+				// this.screenShow = false;
+				var datas={ page: 1, size: 999, name: this.videoName, devSN: this.selectEquip, cameraType: this.cameraType, sdate: this.startDate, edate: this.endDate };
+				console.log('检索参数',datas)
+				this.$u.api.getCloundVideoList(datas)
 					.then(res => {
+						// console.log('视频检索',res.data)
 						if (res.code === 0) {
 							if (res.data.length > 0) {
 								console.log('getCloundVideoList',res.data)
@@ -633,7 +736,7 @@
 									}
 									return result
 								}, []);
-								console.log(this.cloudList)
+								// console.log(this.cloudList)
 							}
 						}
 					})
