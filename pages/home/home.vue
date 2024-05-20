@@ -34,11 +34,11 @@
 		</view>
 		<!-- 搜索框 end -->
 
-		<swiper :current="current" @change="swiperChange"  :style="{'min-height':winHeight+'px'}">
+		<swiper :current="current" @change="swiperChange"  :style="{'height':winHeight+'px'}">
 			<swiper-item class="swiper-item">
-				<scroll-view scroll-y style="width: 100%;" :style="{'min-height':winHeight+'px'}">
+				<scroll-view scroll-y style="width: 100%;" :style="{'height':winHeight+'px'}">
 					<view v-show="current === 0">
-						<view v-show="cloundFirst.id" class="clound-swiper" @click="videoDetailClound(cloundFirst)">
+						<view v-if="cloundFirst" class="clound-swiper" @click="videoDetailClound(cloundFirst)">
 							<u-image class="video" src="/static/cover_video.png" width="100%" height="400"></u-image>
 							<view class="tips">
 								<view class="name">{{ cloundFirst.name }}</view>
@@ -69,12 +69,20 @@
 							</u-collapse>
 						</view>
 						<view style="margin-top:300rpx">
-							<u-empty 
-								v-show="localChannel != '1' || (!cloundFirst.id)"
+							<u-empty v-if="!wifiConnectionState"
+								v-show="localChannel != '1' || (cloudList.length==0)"
 								mode="data"
 								:text="$getLang('暂无云端视频')"
 							>
 							</u-empty>
+							<u-empty v-if="wifiConnectionState"
+								v-show="localChannel != '1' || (cloudList.length==0)"
+								mode="data"
+								text="无网络,暂无云端视频"
+							>
+							</u-empty>
+							<button v-if="wifiConnectionState" @tap="loadCloundVideo(1)"
+							style="background-color:#087DFF;color: #fff;margin-top: 30rpx;width: 310rpx;font-size: 30rpx;">加载云端视频</button>
 						</view>
 						
 					</view>
@@ -84,10 +92,10 @@
 			</swiper-item>
 			<swiper-item class="swiper-item">
 				<scroll-view scroll-y style="width: 100%;" :style="{'height':winHeight+'px'}">
-					<!-- <view v-if="vieoList.length>0" style="margin-top: 30rpx; display: flex;flex-direction: column;text-align: center;background-color: #EBF5FF;line-height:50rpx;">
+					<view v-if="vieoList.length>0" style="margin-top: 30rpx; display: flex;flex-direction: column;text-align: center;background-color: #EBF5FF;line-height:50rpx;">
 						<button @tap="delAllVideoList()"
-						style="background-color:#087DFF;color: #fff;margin-top: 30rpx;width: 310rpx;">{{$getLang('一键清空缓存')}}</button>
-					</view> -->
+						style="background-color:#087DFF;color: #fff;margin-top: 30rpx;width: 310rpx;font-size: 30rpx;">{{$getLang('一键清空缓存')}}</button>
+					</view>
 					<view v-show="current === 1">
 						<view class="local-list">
 							<!-- 模拟数据 start -->
@@ -110,6 +118,7 @@
 							:text="$getLang('无本地视频，可到DVR下载')"
 						>
 						</u-empty>
+						
 					</view>
 				</scroll-view>
 			</swiper-item>
@@ -182,7 +191,7 @@
 
 <script>
 	import { byteToMb } from '@/common/unit.js'
-	import {connectWifi,getConnectedSSID,removeWifi,removeWifiBySSID} from '../../common/cx-wifi/cx-wifi.js'
+	import {connectWifi,getConnectedSSID,getConnectedSSIDNew,removeWifi,removeWifiBySSID} from '../../common/cx-wifi/cx-wifi.js'
 	export default {
 		data() {
 			return {
@@ -217,7 +226,7 @@
 				allDate: [],
 				dateList: [],
 				cloudList: [],
-				cloundFirst: {},
+				cloundFirst: null,
 				vieoList: [],
 				list: [{
 					name: this.$getLang('云端')
@@ -303,15 +312,28 @@
 					},
 				],
 				vieoListBack:[],
+				wifiConnectionState:false,
 			}
 		},
 		onLoad() {
 			uni.getSystemInfo({
-			  success: function(res) {
-			    console.log('屏幕高度:', res.screenHeight);
-			    console.log('窗口高度:', res.windowHeight);
-				this.winHeight=res.windowHeight-300;
-				console.log(this.winHeight)
+			  success: (res)=> {
+				  uni.setStorageSync('platform',res.platform);
+				  getApp().globalData.platform=res.platform;
+				  
+				  var screenHeight_px=res.screenHeight;
+				  var screenWidth_px=res.screenWidth;
+			
+				// this.winHeight=res.windowHeight;
+				var headerHeight_rpx = 408; // 假设头部导航高度为100rpx  
+				// 将头部导航高度从rpx转换为px  
+				var headerHeight_px = headerHeight_rpx * (screenWidth_px / 750);  
+				  
+				// 计算剩余高度（单位为px）  
+				var remainingHeight_px = screenHeight_px - headerHeight_px;  
+				this.winHeight=remainingHeight_px;
+				console.log(remainingHeight_px); // 输出剩余高度（单位为px）
+			
 			  }
 			});
 			
@@ -326,8 +348,7 @@
 				})
 			}
 			
-			this.loadEquipList();
-			this.addRandomData();
+			
 			
 			var equip=getApp().globalData.equip
 			if(equip){
@@ -337,17 +358,32 @@
 				this.dropValTitle1=equip.apSN;
 				this.dropVal1=equip.apSN;
 				//判断主要
-				var getCurSSID=getConnectedSSID();//当前的网络wifi
-				const ssid = equip.apSN;//设备绑定的wifi
-				if(`"${ssid}"`==getCurSSID){
-					this.filterEquipList=[
-						{label:'全部设备',value: '', checked: true},
-						{label:equip.abbreviation+'('+equip.apSN+')',value: equip.apSN, checked: false},
-					];
-					return;
-				}else{
-					this.loadData();
-				}
+				setTimeout(async()=>{
+					var getCurSSID=await getConnectedSSIDNew();//当前的网络wifi
+					const ssid = equip.apSN;//设备绑定的wifi
+					if(`"${ssid}"`==getCurSSID){
+						this.filterEquipList=[
+							{label:'全部设备',value: '', checked: true},
+							{label:equip.abbreviation+'('+equip.apSN+')',value: equip.apSN, checked: false},
+						];
+						
+						var cloudList = getApp().globalData.cloudList;
+						if(cloudList&&cloudList.length>0){
+							this.cloudList=cloudList;
+							this.cloundFirst = getApp().globalData.cloundFirst;
+							this.wifiConnectionState=false;
+						}else{
+							this.wifiConnectionState=true;
+						}
+						return;
+					}else{
+						this.loadEquipList();
+						this.addRandomData();
+						
+						this.loadData();
+					}
+				},20)
+				
 			}
 			
 			
@@ -378,7 +414,7 @@
 					this.dropValTitle2="后录";
 				}
 				this.cloudList=[];
-				this.cloundFirst={};
+				this.cloundFirst=null;
 				this.loadData();
 			},
 			selectEquipList(e){
@@ -386,7 +422,7 @@
 				this.selectEquip=e;
 				this.dropVal1=e;
 				this.cloudList=[];
-				this.cloundFirst={};
+				this.cloundFirst=null;
 				this.loadData();
 			},
 			dropdownOpen(e){
@@ -633,7 +669,7 @@
 				this.startDate = param.result
 				this.endDate = param.result
 				this.cloudList=[];
-				this.cloundFirst={};
+				this.cloundFirst=null;
 				this.loadData();
 				this.$refs.uDropdown.close();
 			},
@@ -672,16 +708,19 @@
 				this.current2 = index;
 			},
 			loadEquipList() {
-				this.$u.api.getEquipList({ userId: getApp().globalData.user.id })
-					.then(res => {
-						if (res.code === 0) {
-							console.log('filterEquipList',res.data)
-							this.filterEquipList = res.data.map(d => {
-								return { value: d.apSN, label: d.abbreviation+'('+d.apSN+')', checked: false }
-							})
-							// this.filterEquipList.unshift({label:'全部设备',value: '', checked: true});
-						}
-					})
+				if(getApp().globalData.user&&getApp().globalData.user.id){
+					this.$u.api.getEquipList({ userId: getApp().globalData.user.id })
+						.then(res => {
+							if (res.code === 0) {
+								console.log('filterEquipList',res.data)
+								this.filterEquipList = res.data.map(d => {
+									return { value: d.apSN, label: d.abbreviation+'('+d.apSN+')', checked: false }
+								})
+								// this.filterEquipList.unshift({label:'全部设备',value: '', checked: true});
+							}
+						})
+				}
+				
 			},
 			loadData() {
 				if (this.current === 1) {
@@ -714,13 +753,32 @@
 					this.loadCloundVideo()
 				}
 			},
-			loadCloundVideo() {
+			loadCloundVideo(opt) {
+				if(this.wifiConnectionState&&opt==1){
+					uni.showModal({
+						title:'提示',
+						content:'抱歉，当前连接的是设备WIFI，无法加载云端视频，是否需要断开设备网络加载云端视频？',
+						cancelText:'取消',
+						confirmText:'确定',
+						success:(res)=>{
+							if(res.confirm){
+								const ssid = getApp().globalData.equip.apSN;//设备绑定的wifi
+								removeWifiBySSID(ssid);
+								setTimeout(()=>{
+									this.loadCloundVideo();
+									this.wifiConnectionState=false;
+								},2000)
+							}
+						}
+					})
+					return;
+				}
 				// this.screenShow = false;
 				var datas={ page: 1, size: 999, name: this.videoName, devSN: this.selectEquip, cameraType: this.cameraType, sdate: this.startDate, edate: this.endDate };
 				console.log('检索参数',datas)
 				this.$u.api.getCloundVideoList(datas)
 					.then(res => {
-						// console.log('视频检索',res.data)
+						console.log('视频检索',res.data)
 						if (res.code === 0) {
 							if (res.data.length > 0) {
 								console.log('getCloundVideoList',res.data)
@@ -736,9 +794,15 @@
 									}
 									return result
 								}, []);
-								// console.log(this.cloudList)
+								this.wifiConnectionState=false;
+								getApp().globalData.cloudList=this.cloudList;
+								getApp().globalData.cloundFirst=this.cloundFirst;
+								console.log(this.cloudList)
 							}
 						}
+					})
+					.catch((res)=>{
+						console.log(res)
 					})
 			},
 			loadVideo() {

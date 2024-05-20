@@ -28,7 +28,7 @@
 </template>
 
 <script>
-	import {connectWifi,getConnectedSSID,removeWifi,removeWifiBySSID} from '../../common/cx-wifi/cx-wifi.js'
+	import {connectWifi,getConnectedSSID,getConnectedSSIDNew,removeWifi,removeWifiBySSID} from '../../common/cx-wifi/cx-wifi.js'
 	export default {
 		data() {
 			return {
@@ -76,8 +76,8 @@
 			
 		},
 		methods: {
-			menu(param) {
-				var getCurSSID=getConnectedSSID();//当前的网络wifi
+			async menu(param) {
+				var getCurSSID=await getConnectedSSIDNew();//当前的网络wifi
 				const ssid = getApp().globalData.equip.apSN;//设备绑定的wifi
 				if(`"${ssid}"`==getCurSSID){
 					uni.showModal({

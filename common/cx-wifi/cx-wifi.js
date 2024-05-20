@@ -38,11 +38,11 @@ function setWifi(ssid,pwd) {
 	});
 
 	// 获取 WIFI 管理实例  
-	let wifiManager = getWifiManager();
-	let cfg = createWifiConfig(wifiManager, ssid,pwd);
-	let i = wifiManager.addNetwork(cfg);
-	let b = wifiManager.enableNetwork(i, true);
-
+	var wifiManager = getWifiManager();
+	var cfg = createWifiConfig(wifiManager, ssid,pwd);
+	var i = wifiManager.addNetwork(cfg);
+	var b = wifiManager.enableNetwork(i, true);
+	
 	// 回收类
 	plus.android.autoCollection(cfg);
 	plus.android.autoCollection(wifiManager);
@@ -58,8 +58,8 @@ function setWifi(ssid,pwd) {
  */
 function createWifiConfig(wifiManager, ssid, pwd) {
 	plus.android.importClass("java.util.BitSet");
-	let WifiConfiguration = plus.android.importClass("android.net.wifi.WifiConfiguration");
-	let config = new WifiConfiguration();
+	var WifiConfiguration = plus.android.importClass("android.net.wifi.WifiConfiguration");
+	var config = new WifiConfiguration();
 	
 	plus.android.getAttribute(config, "allowedAuthAlgorithms").clear();
 	plus.android.getAttribute(config, "allowedGroupCiphers").clear();
@@ -68,7 +68,7 @@ function createWifiConfig(wifiManager, ssid, pwd) {
 	plus.android.getAttribute(config, "allowedProtocols").clear();
 	plus.android.setAttribute(config, "SSID", `"${ssid}"`);
 
-	let tempConfig = isExsits(wifiManager,ssid);
+	var tempConfig = isExsits(wifiManager,ssid);
 	if (tempConfig != null) {
 		wifiManager.removeNetwork(plus.android.getAttribute(tempConfig, "networkId"));
 		plus.android.autoCollection(tempConfig);
@@ -92,12 +92,13 @@ function createWifiConfig(wifiManager, ssid, pwd) {
  * @param {Object} ssid
  */
 function isExsits(wifiManager, ssid) {
-	let rawssid = `"${ssid}"`,
+	var rawssid = `"${ssid}"`,
 		list = wifiManager.getConfiguredNetworks(),
 		size = list.size(),
 		wifiConfiguration;
-	for (let i = 0; i < size; i++) {
-		let wifiConfiguration = list.get(i);
+	console.log(list);
+	for (var i = 0; i < size; i++) {
+		var wifiConfiguration = list.get(i);
 		if (plus.android.getAttribute(wifiConfiguration, "SSID") === rawssid) {
 			plus.android.autoCollection(list);
 			return wifiConfiguration;
@@ -120,20 +121,68 @@ function removeWifi(wifiManager, paramInt) {
 }
 
 
-// 获取当前连接ssid
+// 获取当前连接ssidss
 function getConnectedSSID() {
 	// 获取 WIFI 管理实例
-	let wifiManager = getWifiManager();
-	let ssid = wifiManager.getConnectionInfo().getSSID();
-	plus.android.autoCollection(wifiManager);
-	return ssid;
+	var platform=uni.getStorageSync('platform');
+	var sand = uni.requireNativePlugin("sand-plugin-wifi");
+	if(platform&&platform=='ios'){
+		// 调用异步方法
+		sand.getWIFIInfo({},
+			(ret) => {
+				console.log('获取wifi信息',ret)
+		  //在页面显示获取的结果内容
+		  // page.content+="原始结果："+JSON.stringify(ret);
+		  // page.content+="WiFi信息：[ssid:"+ret.ssid+"],[bssid:"+ret.bssid+"]"
+		  if(ret.ssid){
+			  console.log(ret.ssid)
+			  var ssid=ret.ssid;
+			  return `"${ssid}"`;
+		  }
+		});
+	}else{
+		var wifiManager = getWifiManager();
+		var ssid = wifiManager.getConnectionInfo().getSSID();
+		plus.android.autoCollection(wifiManager);
+		return ssid;
+	}
+	return '';
 }
+
+function getConnectedSSIDNew(){
+	 return new Promise((resolve, reject) => {
+		// 获取 WIFI 管理实例
+		var platform = uni.getStorageSync('platform');
+		var sand = uni.requireNativePlugin("sand-plugin-wifi");
+		if (platform && platform === 'ios') {
+			// 调用异步方法
+			sand.getWIFIInfo({}, (ret) => {
+				console.log('获取wifi信息', ret);
+				if (ret.ssid) {
+					console.log(ret.ssid);
+					var ssid = ret.ssid;
+					resolve(`"${ssid}"`); // 异步操作成功，通过resolve传递结果
+				} else {
+					reject(''); // 如果需要，可以在这里处理错误情况
+				}
+			});
+		} else {
+			var wifiManager = getWifiManager();
+			var ssid = wifiManager.getConnectionInfo().getSSID();
+			plus.android.autoCollection(wifiManager);
+			resolve(ssid); // Android部分直接返回结果
+		}
+	});
+}
+
+
 
 module.exports = {
 	connectWifi: setWifi, //连接wifi
 	getConnectedSSID: getConnectedSSID, //获取当前wifi ssid
+	getConnectedSSIDNew:getConnectedSSIDNew,
 	removeWifi(i){ // 通过网络id删除wifi
-		let wifiManager = getWifiManager();
+		var wifiManager = getWifiManager();
 		removeWifi(wifiManager,i);
 		plus.android.autoCollection(wifiManager);
 	},
@@ -142,8 +191,10 @@ module.exports = {
 			return;
 		}
 		plus.android.importClass("android.net.wifi.WifiConfiguration");
-		let wifiManager = getWifiManager();
-		let tempConfig = isExsits(wifiManager,ssid);
+		var wifiManager = getWifiManager();
+		// console.log('wifiManager',wifiManager)
+		var tempConfig = isExsits(wifiManager,ssid);
+		console.log('tempConfig',tempConfig)
 		if(tempConfig!=null){
 			removeWifi(wifiManager,plus.android.getAttribute(tempConfig, "networkId"));
 		}

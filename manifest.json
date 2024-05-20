@@ -2,7 +2,7 @@
     "name" : "DVR存储",
     "appid" : "__UNI__3D8F432",
     "description" : "",
-    "versionName" : "1.0.52",
+    "versionName" : "1.0.54",
     "versionCode" : "100",
     "transformPx" : false,
     /* 5+App特有相关 */
@@ -20,7 +20,8 @@
         "modules" : {
             "VideoPlayer" : {},
             "Barcode" : {},
-            "Camera" : {}
+            "Camera" : {},
+            "Geolocation" : {}
         },
         /* 应用发布信息 */
         "distribute" : {
@@ -49,11 +50,21 @@
             },
             /* ios打包配置 */
             "ios" : {
-                "dSYMs" : false
+                "dSYMs" : false,
+                "privacyDescription" : {
+                    "NSPhotoLibraryUsageDescription" : "更换用户头像",
+                    "NSCameraUsageDescription" : "更换头像可以掉用摄像头拍照",
+                    "NSLocalNetworkUsageDescription" : "用于连接摩托车仪表设备wifi",
+                    "NSLocationWhenInUseUsageDescription" : "为了获取wifi信息"
+                }
             },
             /* SDK配置 */
             "sdkConfigs" : {
-                "geolocation" : {},
+                "geolocation" : {
+                    "system" : {
+                        "__platform__" : [ "ios", "android" ]
+                    }
+                },
                 "maps" : {},
                 "ad" : {}
             },
@@ -104,10 +115,24 @@
                     "platforms" : "Android,iOS",
                     "url" : "https://ext.dcloud.net.cn/plugin?id=2029",
                     "android_package_name" : "com.hb.dvr",
-                    "ios_bundle_id" : "com.hb.dvr.ios",
+                    "ios_bundle_id" : "com.hb.dvr",
                     "isCloud" : true,
                     "bought" : 1,
                     "pid" : "2029",
+                    "parameters" : {}
+                }
+            },
+            "sand-plugin-wifi" : {
+                "__plugin_info__" : {
+                    "name" : "WiFi信息获取插件",
+                    "description" : "获取手机当前WiFi信息，包括有SSID，BSSID",
+                    "platforms" : "Android,iOS",
+                    "url" : "https://ext.dcloud.net.cn/plugin?id=4843",
+                    "android_package_name" : "com.hb.dvr",
+                    "ios_bundle_id" : "com.hb.dvr.ios",
+                    "isCloud" : true,
+                    "bought" : 1,
+                    "pid" : "4843",
                     "parameters" : {}
                 }
             }
@@ -137,3 +162,5 @@
     },
     "vueVersion" : "2"
 }
+/* ios打包配置 *//* SDK配置 */
+

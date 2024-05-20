@@ -4,25 +4,31 @@ export function connectStartWifi() {
 	return new Promise((resolve, reject) => {
 		const ssid = getApp().globalData.equip.apSN
 		const password = getApp().globalData.equip.apPassword
-		console.log(ssid,password)
-		connectWifi(ssid, password)
-		let index = 0
-		const interval = setInterval(() => {
-			const curSSID = getConnectedSSID()
-			if (index > 10) {
-				console.log('wifi连接失败')
-				clearInterval(interval)
-				resolve(false)
-			}
-			if(`"${ssid}"`== curSSID) {
-				console.log('wifi连接成功')
-				clearInterval(interval)
-				resolve(true)
-			} else {
-				// console.log('尝试等待wifi连接', index)
-				index++
-			}
-		}, 1000)
+		
+		var platform=uni.getStorageSync('platform');
+		if(platform&&platform=='ios'){
+			resolve(false)
+		}else{
+			connectWifi(ssid, password);
+			
+			let index = 0
+			const interval = setInterval(() => {
+				const curSSID = getConnectedSSID()
+				if (index > 10) {
+					console.log('wifi连接失败')
+					clearInterval(interval)
+					resolve(false)
+				}
+				if(`"${ssid}"`== curSSID) {
+					console.log('wifi连接成功')
+					clearInterval(interval)
+					resolve(true)
+				} else {
+					index++
+				}
+			}, 1000)
+		}
+		
 	})
 }
 

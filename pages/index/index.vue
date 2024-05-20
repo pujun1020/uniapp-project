@@ -25,12 +25,11 @@
 		</view>
 		<!-- bg -->
 		
-		<swiper :current="current" @change="swiperChange"  :style="{'height':winHeight+'px'}">
+		<swiper :current="current" @change="swiperChange" :style="'height:'+winHeight+'px'">
 			<swiper-item class="swiper-item">
-				<scroll-view scroll-y style="width: 100%;" :style="{'height':winHeight+'px'}">
+				<scroll-view scroll-y style="width: 100%;" :style="'height:'+winHeight+'px'">
 					<view class="bg">
 						<view class="u-flex-col u-col-center u-p-t-38">
-							<!-- <u-image @click="toEquipList" src="../../static/banner1.png" width="602rpx" height="448rpx" mode="aspectFit"></u-image> -->
 							<image @click="toEquipList" src="../../static/banner1.png" mode="widthFix" style="width: 100%;"></image>
 							<view class="u-flex-col u-col-center" style="margin-top: -150rpx;z-index: 999;">
 								<view class="bg__name" v-show="localChannel == '1'">金浪318</view>
@@ -39,10 +38,6 @@
 							</view>
 						</view>
 					</view>
-				<!-- 	<view class="u-flex u-row-center u-m-l-30 u-m-r-30 map">
-						<u-image src="/static/index/map.png" width="100%" height="140rpx" mode="aspectFit"></u-image>
-						<view class="map__btn">{{$getLang('导航寻车')}}</view>
-					</view> -->
 					<view class="device" v-if="equipInfo">
 						<view class="device__title">{{$getLang('设备信息')}}</view>
 						<view class="u-m-t-10 u-font-26">{{$getLang('设备')}}：{{ equipInfo ? equipInfo.osAppProjectName : '' }}</view>
@@ -67,7 +62,7 @@
 						</view>
 						
 					</view> -->
-					<view v-show="localChannel == '0'" class="u-m-l-30 u-m-r-30 u-flex wrap__bottom u-row-between">
+					<view v-if="localChannel == '0'" class="u-m-l-30 u-m-r-30 u-flex wrap__bottom u-row-between">
 						<view v-show="localChannel == '0'" class="wrap__bottom__view" @click="upgradation">
 							<u-icon name="/static/index/menu-3.png" size="64"></u-icon>
 							<view class="u-font-26 u-type-info">OTA</view>
@@ -90,7 +85,7 @@
 
 <script>
 	import DvrList from './components/dvrlist.vue'
-	import {connectWifi,getConnectedSSID,removeWifi,removeWifiBySSID} from '../../common/cx-wifi/cx-wifi.js'
+	import {connectWifi,getConnectedSSID,getConnectedSSIDNew,removeWifi,removeWifiBySSID} from '../../common/cx-wifi/cx-wifi.js'
 	export default {
 		components: { DvrList },
 		data() {
@@ -148,19 +143,37 @@
 			
 		},
 		onLoad() {
+			
 			uni.getSystemInfo({
-			  success: function(res) {
-			    // console.log('屏幕高度:', res.screenHeight);
-			    // console.log('窗口高度:', res.windowHeight);
-				this.winHeight=res.windowHeight;
-				// console.log(this.winHeight)
+			  success: (res)=> {
+				  console.log(res);
+				  uni.setStorageSync('platform',res.platform);
+				  getApp().globalData.platform=res.platform;
+				  
+				  var screenHeight_px=res.screenHeight;
+				  var screenWidth_px=res.screenWidth;
+
+				// this.winHeight=res.windowHeight;
+				var headerHeight_rpx = 278; // 假设头部导航高度为100rpx  
+				// 将头部导航高度从rpx转换为px  
+				var headerHeight_px = headerHeight_rpx * (screenWidth_px / 750);  
+				  
+				// 计算剩余高度（单位为px）  
+				var remainingHeight_px = screenHeight_px - headerHeight_px;  
+				this.winHeight=remainingHeight_px;
+				console.log(remainingHeight_px); // 输出剩余高度（单位为px）
+
+				if(getApp().globalData.platform=='android'){
+					setTimeout(()=>{
+						this.startNetworkMonitor();
+					},2000);
+				}
+				
+				this.isShowTabbar=true;
+				this.loadData()
 			  }
 			});
-			setTimeout(()=>{
-				this.startNetworkMonitor();
-			},2000);
-			this.isShowTabbar=true;
-			this.loadData()
+			
 		},
 		methods: {
 			updateWifiConnectionState(state){
@@ -243,38 +256,16 @@
 						}
 					})
 			},
-			change(index,opt=0) {
+			async change(index,opt=0) {
 				var ssid = this.equipInfo.apSN
 				var password = this.equipInfo.apPassword
 				if (index === 1) {
-					// uni.showModal({
-					// 	 title: this.$getLang('提示'),
-					// 	 content:'切换到DVR界面，会自动连接车机设备，WIFI名称为【'+ssid+'】.如果连接失败，请手动到WIFI列表连接：WIFI【'+ssid+'】，密码【'+password+'】连接成功再点击继续,是否继续？',
-					// 	 cancelText:this.$getLang('取消'),
-					// 	 confirmText:this.$getLang('继续'),
-					// 	 success:(res)=>{
-					// 		 this.isShowTabbar=false;
-					// 		 if(this.current!=index){
-					// 		 	this.current = index;
-					// 		 }
-					// 		if(res.confirm){
-					// 			 this.$refs['dvrlist'].loadData();
-					// 		}
-					// 		setTimeout(()=>{
-					// 			this.isBlockEvent=true;
-					// 		},2000)
-							
-					// 	 }
-					// })
-					
-					 var getCurSSID=getConnectedSSID();//当前的网络wifi
+					 var getCurSSID=await getConnectedSSIDNew();//当前的网络wifi
 					 const ssid = getApp().globalData.equip.apSN;//设备绑定的wifi
 					 
 					 if(`"${ssid}"`==getCurSSID){
 						if(getApp().globalData.vieoListNew&&getApp().globalData.vieoListNew.length>0){
 							this.$refs['dvrlist'].equip=getApp().globalData.equip;
-								// console.log('临时对象还有视频列表无需重复加载',getApp().globalData.vieoListNew)
-								// this.$refs['dvrlist'].getVideoNew(1);
 						}else{
 							this.$refs['dvrlist'].getVideoNew();
 						}
@@ -285,46 +276,11 @@
 						 this.$refs['dvrlist'].wifiConnectionState=false;
 					 }
 					 this.current = index;
-					 this.isShowTabbar=false;
-					 // this.$refs['dvrlist'].loadData();
-						// setTimeout(()=>{
-						// 	this.isBlockEvent=true;
-						// },2000)
-				}else{
-					// uni.showModal({
-					// 	 title: this.$getLang('提示'),
-					// 	 content:'离开DVR页面会断开与车机的连接，是否继续？',
-					// 	 cancelText:this.$getLang('取消'),
-					// 	 confirmText:this.$getLang('继续'),
-					// 	 success:(res)=>{
-					// 		 if(res.confirm){
-					// 			this.isShowTabbar=true;
-					// 			if(this.current!=index){
-					// 				this.current = index;
-					// 			}
-					// 			removeWifiBySSID(ssid);
-					// 		}
-					// 		if(opt==1){
-					// 			if(this.current!=index){
-					// 				this.current = index;
-					// 			}
-					// 			this.isShowTabbar=true;
-					// 		}
-					// 		setTimeout(()=>{
-					// 			this.isBlockEvent=true;
-					// 		},2000)
-					// 	},
-					// });
 					
-					// if(opt==1){
-					// 	if(this.current!=index){
-					// 		this.current = index;
-					// 	}
-					// 	this.isShowTabbar=true;
-					// }
+				}else{
 					
 					this.current = index;
-					this.isShowTabbar=true;
+					// this.isShowTabbar=true;
 					
 				}
 			},
@@ -525,12 +481,12 @@
 					this.checkNetwork();
 				}, 3000); // 每3秒检查一次网络
 			},
-			checkNetwork(){
+			async checkNetwork(){
 				if(getApp().globalData.equip&&getApp().globalData.equip.apSN){
-					var getCurSSID=getConnectedSSID();//当前的网络wifi
+					var getCurSSID=await getConnectedSSIDNew();//当前的网络wifi
+					console.log('getCurSSID',getCurSSID)
 					const ssid = getApp().globalData.equip.apSN;//设备绑定的wifi
 					// console.log('当前网络');
-					// console.log(getCurSSID,ssid)
 					if(`"${ssid}"`!=getCurSSID){
 						this.socketStatus='未连接';
 					}else{
@@ -595,7 +551,7 @@
 
 		.bg {
 			background: url("../../static/index/bg.png") no-repeat;
-			height: 618rpx;
+			// height: 618rpx;
 			background-size: 100%;
 
 			&__name {

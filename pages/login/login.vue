@@ -52,6 +52,15 @@
 				this.password = uni.getStorageSync('password') || ''
 				this.remPassword = uni.getStorageSync('remPassword') === true
 			}
+			//触发一次位置获取，否则iphone设置中没有定位服务
+			uni.getLocation({
+				type: 'wgs84',
+				success: function (res) {
+					console.log('当前位置的经度：' + res.longitude);
+					console.log('当前位置的纬度：' + res.latitude);
+					// page.content+="位置信息：[经度:"+res.longitude+"],[纬度:"+res.latitude+"]"
+				}
+			});
 		},
 		methods: {
 			//当前登录按钮操作
