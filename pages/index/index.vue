@@ -2,7 +2,7 @@
 	<view class="wrap">
 		<u-gap height="88" bg-color="#EBF5FF"></u-gap>
 		<view  class="wrap__head"> 
-			<view class="tabs" v-show="this.equipInfo.channel == '1'">
+			<view class="tabs" v-if="equipInfo&&equipInfo.channel == '1'">
 					<view class="tabs-body">
 						<view @tap="change(0)" class="tabs-item " :class="current==0?'tabs-active':''" style="margin-right:100rpx;">
 							{{this.$getLang('设备')}}
@@ -47,7 +47,7 @@
 					<view v-else>
 						<view class="u-m-t-100" style="width: 460rpx;height: 150rpx;margin:50rpx auto;text-align: center;">
 							<text style="line-height: 50rpx;color: #ccc;font-size: 32rpx;">{{$getLang('您当前还未绑定任何设备哦')}}~</text>
-							<button @tap="onPlusDialog({value:'sanc'})" 
+							<button @click="onPlusDialog({value:'sanc'})" 
 							style="background-color:#087DFF;color: #fff;margin-top: 30rpx;width: 310rpx;">{{$getLang('立即扫码绑定')}}</button>
 						</view>
 					</view>
@@ -70,7 +70,7 @@
 					</view>
 				</scroll-view>
 			</swiper-item>
-			<swiper-item class="swiper-item">
+			<swiper-item class="swiper-item" v-if="equipInfo">
 				<scroll-view scroll-y style="width: 100%;" :style="{'height':winHeight+'px'}">
 					<DvrList ref="dvrlist" @updateWifiConnectionState="updateWifiConnectionState" />
 				</scroll-view>
@@ -122,7 +122,7 @@
 					value: 'sanc'
 				}],
 				socketStatus: this.$getLang('未连接'),
-				equipInfo: {},
+				equipInfo: null,
 				localChannel: '',
 				osAppProjectSN: '',
 				mcuProjectSN: '',
@@ -138,7 +138,18 @@
 			}
 		},
 		onShow() {
+			const token = uni.getStorageSync('apitoken')
+			const user = uni.getStorageSync('user')
 			
+			if (!token || !user) {
+				
+				setTimeout(()=>{
+					uni.navigateTo({
+						url:'/pages/login/login'
+					})
+				},1500)
+				
+			}
 			//设计一个定时器，每3秒钟检查一下网络是否是当前设备WIFI
 			
 		},
@@ -215,7 +226,7 @@
 						// uni.navigateTo({
 						// 	url:"/pages/login/login"
 						// })
-						this.returnLogin();
+						// this.returnLogin();
 					})
 				
 			},
@@ -322,6 +333,7 @@
 				}
 			},
 			onPlusDialog(e) {
+				
 				if (e.value === 'sanc') {
 					uni.scanCode({
 						scanType:['qrCode'],
@@ -513,6 +525,7 @@
 				position: absolute;
 				top: 0rpx;
 				right: 30rpx;
+				z-index: 999;
 			}
 			&__plus {
 				// position: absolute;

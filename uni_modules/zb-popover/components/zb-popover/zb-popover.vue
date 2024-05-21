@@ -44,7 +44,7 @@
         </view>
       </slot>
     </view>
-		<view ref="popmark" :style="{ 'z-index': zIndex }" class="mark" @click="close()"></view>
+		<view ref="popmark" v-if="show" :style="{ 'z-index': zIndex }" class="mark" @click="close()"></view>
   </view>
 </template>
 

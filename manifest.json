@@ -122,7 +122,7 @@
                     "parameters" : {}
                 }
             },
-            "sand-plugin-wifi" : {
+            "sand-plugin-wifi" : { 
                 "__plugin_info__" : {
                     "name" : "WiFi信息获取插件",
                     "description" : "获取手机当前WiFi信息，包括有SSID，BSSID",

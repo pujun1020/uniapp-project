@@ -78,19 +78,22 @@
 		methods: {
 			async menu(param) {
 				var getCurSSID=await getConnectedSSIDNew();//当前的网络wifi
-				const ssid = getApp().globalData.equip.apSN;//设备绑定的wifi
-				if(`"${ssid}"`==getCurSSID){
-					uni.showModal({
-						title: this.$getLang('提示'),
-						content:'您当前连接的是设备WIFI，暂无网络，无法操作用户信息！',
-						showCancel:false,
-						confirmText:this.$getLang('确定'),
-						success:(res)=>{
-							
-						}
-					})
-					return;
-				}else{
+				if(getApp().globalData.equip){
+					const ssid = getApp().globalData.equip.apSN;//设备绑定的wifi
+					if(`"${ssid}"`==getCurSSID){
+						uni.showModal({
+							title: this.$getLang('提示'),
+							content:'您当前连接的是设备WIFI，暂无网络，无法操作用户信息！',
+							showCancel:false,
+							confirmText:this.$getLang('确定'),
+							success:(res)=>{
+								
+							}
+						})
+						return;
+					}
+				}
+				else{
 					if (param == 1) {
 						uni.navigateTo({
 							url: "/pages/my/userinfo"
@@ -117,25 +120,48 @@
 					url: "/pages/my/test"
 				})
 			},
-			login() {
-				uni.showModal({
-					title: this.$getLang('提示'),
-					content:this.$getLang('确认要退出登录吗') ,
-					cancelText:this.$getLang('取消'),
-					confirmText:this.$getLang('确认'),
-					success: (res) => {
-						if (res.confirm) {
-							uni.removeStorageSync('username');
-							uni.removeStorageSync('password');
-							uni.removeStorageSync('remPassword');
-							uni.removeStorageSync('apitoken');
-							uni.removeStorageSync('user');
-							uni.navigateTo({
-								url: "/pages/login/login"
-							})
-						}
+		  async	login() {
+				var getCurSSID=await getConnectedSSIDNew();//当前的网络wifi
+				
+				if(getApp().globalData.equip){
+					const ssid = getApp().globalData.equip.apSN;//设备绑定的wifi
+					if(`"${ssid}"`==getCurSSID){
+						uni.showModal({
+							title: this.$getLang('提示'),
+							content:'您当前连接的是设备WIFI，暂无网络，无法操作用户信息！',
+							showCancel:false,
+							confirmText:this.$getLang('确定'),
+							success:(res)=>{
+								
+							}
+						})
+						return;
 					}
-				})
+				}
+				else{
+				
+					uni.showModal({
+						title: this.$getLang('提示'),
+						content:this.$getLang('确认要退出登录吗') ,
+						cancelText:this.$getLang('取消'),
+						confirmText:this.$getLang('确认'),
+						success: (res) => {
+							if (res.confirm) {
+								uni.removeStorageSync('username');
+								uni.removeStorageSync('password');
+								uni.removeStorageSync('remPassword');
+								uni.removeStorageSync('apitoken');
+								uni.removeStorageSync('user');
+								uni.removeStorageSync('equip');
+								getApp().globalData.equip =null;
+								getApp().globalData.user=null;
+								uni.navigateTo({
+									url: "/pages/login/login"
+								})
+							}
+						}
+					})
+				}
 			},
 			changes(index) {
 				if (index == 0) {

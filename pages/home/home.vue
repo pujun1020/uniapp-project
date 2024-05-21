@@ -3,7 +3,7 @@
 
 		<u-gap height="88" bg-color="#EBF5FF"></u-gap>
 
-		<view v-show="localChannel == '1'" class="wrap__head">
+		<view v-if="localChannel == '1'" class="wrap__head">
 			<view class="tabs">
 					<view class="tabs-body">
 						<view @tap="tabsChange(0)" class="tabs-item " :class="current==0?'tabs-active':''" style="margin-right:100rpx;">
@@ -90,7 +90,7 @@
 					
 				</scroll-view>
 			</swiper-item>
-			<swiper-item class="swiper-item">
+			<swiper-item class="swiper-item" v-if="localChannel == '1'">
 				<scroll-view scroll-y style="width: 100%;" :style="{'height':winHeight+'px'}">
 					<view v-if="vieoList.length>0" style="margin-top: 30rpx; display: flex;flex-direction: column;text-align: center;background-color: #EBF5FF;line-height:50rpx;">
 						<button @tap="delAllVideoList()"
