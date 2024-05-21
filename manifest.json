@@ -2,7 +2,7 @@
     "name" : "DVR存储",
     "appid" : "__UNI__3D8F432",
     "description" : "",
-    "versionName" : "1.0.54",
+    "versionName" : "1.0.55",
     "versionCode" : "100",
     "transformPx" : false,
     /* 5+App特有相关 */
@@ -115,14 +115,14 @@
                     "platforms" : "Android,iOS",
                     "url" : "https://ext.dcloud.net.cn/plugin?id=2029",
                     "android_package_name" : "com.hb.dvr",
-                    "ios_bundle_id" : "com.hb.dvr",
+                    "ios_bundle_id" : "com.hb.dvr.ios",
                     "isCloud" : true,
                     "bought" : 1,
                     "pid" : "2029",
                     "parameters" : {}
                 }
             },
-            "sand-plugin-wifi" : { 
+            "sand-plugin-wifi" : {
                 "__plugin_info__" : {
                     "name" : "WiFi信息获取插件",
                     "description" : "获取手机当前WiFi信息，包括有SSID，BSSID",
