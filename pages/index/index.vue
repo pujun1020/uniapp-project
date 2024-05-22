@@ -33,7 +33,7 @@
 							<image @click="toEquipList" src="../../static/banner1.png" mode="widthFix" style="width: 100%;"></image>
 							<view class="u-flex-col u-col-center" style="margin-top: -150rpx;z-index: 999;">
 								<view class="bg__name" v-show="localChannel == '1'">金浪318</view>
-								<view class="bg__name" v-show="localChannel == '0'">恒勃智联</view>
+								<view class="bg__name" v-show="localChannel == '0'">恒勃智驾</view>
 								<view class="bg__status" :style="{ color: socketStatus === '已连接' ? 'green' : '#7D818C' }">{{ socketStatus }}</view>
 							</view>
 						</view>
@@ -144,7 +144,7 @@
 			if (!token || !user) {
 				
 				setTimeout(()=>{
-					uni.navigateTo({
+					uni.reLaunch({
 						url:'/pages/login/login'
 					})
 				},1500)
@@ -157,7 +157,7 @@
 			
 			uni.getSystemInfo({
 			  success: (res)=> {
-				  console.log(res);
+
 				  uni.setStorageSync('platform',res.platform);
 				  getApp().globalData.platform=res.platform;
 				  
@@ -172,18 +172,26 @@
 				// 计算剩余高度（单位为px）  
 				var remainingHeight_px = screenHeight_px - headerHeight_px;  
 				this.winHeight=remainingHeight_px;
-				console.log(remainingHeight_px); // 输出剩余高度（单位为px）
-
-				if(getApp().globalData.platform=='android'){
-					setTimeout(()=>{
-						this.startNetworkMonitor();
-					},2000);
-				}
-				
 				this.isShowTabbar=true;
 				this.loadData()
+				
+				this.startNetworkMonitor();
 			  }
 			});
+			
+			 // uni.getNetworkType({
+			 //        success: (res) => {
+			 //            console.log('当前网络类型:', res.networkType);
+				// 		if(res.networkType=="wifi"){
+							
+				// 		}
+			 //            console.log('是否连接网络:', res.isConnected ? '是' : '否');
+			 //        },
+			 //        fail: (err) => {
+			 //            console.error('获取网络状态失败:', err);
+			 //        }
+			 //    });
+
 			
 		},
 		methods: {
@@ -241,12 +249,12 @@
 					removeWifiBySSID(ssid);
 					setTimeout(()=>{
 						uni.hideLoading();
-						uni.navigateTo({
+						uni.reLaunch({
 							url:"/pages/login/login"
 						})
 					},2000);
 				}else{
-					uni.navigateTo({
+					uni.reLaunch({
 						url:"/pages/login/login"
 					})
 				}
@@ -275,12 +283,13 @@
 					 const ssid = getApp().globalData.equip.apSN;//设备绑定的wifi
 					 
 					 if(`"${ssid}"`==getCurSSID){
+						 console.log('切换dvr',getApp().globalData.vieoListNew)
 						if(getApp().globalData.vieoListNew&&getApp().globalData.vieoListNew.length>0){
 							this.$refs['dvrlist'].equip=getApp().globalData.equip;
 						}else{
 							this.$refs['dvrlist'].getVideoNew();
 						}
-					 	
+						
 					 }else{
 						 getApp().globalData.vieoListNew=[];
 						 this.$refs['dvrlist'].vieoListNew=[];
@@ -348,7 +357,7 @@
 							// 	});
 							// }
 							try {
-								let devName="恒勃智联";
+								let devName="恒勃智驾";
 								const ssid = result[0].split('=')[1].replace('\n', '')
 								const password = result[1].split('=')[1]
 								const url = result[2].split('=')[1]
@@ -491,7 +500,7 @@
 			startNetworkMonitor(){
 				this.timer = setInterval(() => {
 					this.checkNetwork();
-				}, 3000); // 每3秒检查一次网络
+				}, 1000); // 每3秒检查一次网络
 			},
 			async checkNetwork(){
 				if(getApp().globalData.equip&&getApp().globalData.equip.apSN){
@@ -503,6 +512,7 @@
 						this.socketStatus='未连接';
 					}else{
 						this.socketStatus='已连接';
+						clearInterval(this.timer);
 					}
 				}
 				

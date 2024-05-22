@@ -106,18 +106,18 @@
 		<!-- 上传进度弹出层 end -->
 		
 		<!-- 批量删除弹层 start -->
-		<view v-if="isBachtStatus" style="position: fixed !important;top: 0px;left: 0;width: 100%;z-index: 9999;">
-			<u-grid :col="2">
+		<view v-if="isBachtStatus" style="position: fixed !important;bottom: 20px;left: 0;width: 100%;z-index: 9999;">
+			<u-grid :col="3">
 				
 				<u-grid-item bg-color="#fff" @tap="delCancel()">
 					<view class="grid-text">{{$getLang('取消')}}</view>
 				</u-grid-item>
-				<u-grid-item bg-color="#fff" @tap="delBacht()">
-					<view class="grid-text" style="color: red;">{{$getLang('批量删除')}}</view>
+				<u-grid-item bg-color="#fff" @tap="delBacht(0)">
+					<view class="grid-text" style="color: red;">{{$getLang('删除选中')}}</view>
 				</u-grid-item>
-				<!-- <u-grid-item bg-color="#fff" @tap="delBacht()">
-					<view class="grid-text" style="color: #ccc;">{{$getLang('全部删除')}}</view>
-				</u-grid-item> -->
+				<u-grid-item bg-color="#fff" @tap="delBacht(1)">
+					<view class="grid-text" style="color: red;">{{$getLang('删除全部')}}</view>
+				</u-grid-item>
 			</u-grid>
 		</view>
 		<!-- button end -->
@@ -285,9 +285,9 @@
 					// 		this.datelist=getApp().globalData.datelist;
 					// 	},1000)
 					// }else{
-						setTimeout(()=>{
-							this.getVideoNew();
-						},1000);
+						// setTimeout(()=>{
+						// 	this.getVideoNew();
+						// },3000);
 					// }
 				}else{
 					this.wifiConnectionState=false;
@@ -728,7 +728,7 @@
 				}
 				
 			},
-			delBacht(){
+			delBacht(opt){
 				var list=this.vieoListNew;
 				var temps=[];
 				var ids=[];
@@ -737,6 +737,9 @@
 					var item1=list[i];
 					for(var k=0;k<item1.vieoList.length;k++){
 						var item2=item1.vieoList[k];
+						if(opt==1){
+							item2.checked=true;
+						}
 						if(item2.checked){
 							temps.push(item2.playUrl);
 							ids.push(item2.id);
@@ -779,10 +782,10 @@
 										}
 									}
 									this.vieoListNew=newList;
-									uni.showToast({
-										title: this.$getLang('删除成功'),
-										icon: 'none'
-									})
+									// uni.showToast({
+									// 	title: this.$getLang('删除成功'),
+									// 	icon: 'none'
+									// })
 									this.isBachtStatus=false;
 								});
 							}

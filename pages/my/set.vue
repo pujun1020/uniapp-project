@@ -72,6 +72,15 @@
 								title: this.$getLang('修改提示成功'),
 								icon: 'none'
 							})
+							if(key=="uploadSound"){
+								uni.setStorageSync(key,value?"开启":"关闭");
+							}
+							if(key=="downloadSound"){
+								uni.setStorageSync(key,value?"开启":"关闭");
+							}
+							if(key=="wifi"){
+								uni.setStorageSync(key,value?"":"no_wifi");
+							}
 						} else {
 							uni.showToast({
 								title: res.message,

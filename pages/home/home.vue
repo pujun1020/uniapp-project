@@ -29,7 +29,7 @@
 			</u-dropdown>
 		</view>
 		<view class="u-m-l-30 u-m-r-30 u-m-t-10 u-flex">
-			<u-search :placeholder="$getLang('视频名称')" :show-action='true' v-model="videoName" @search="loadCloundVideo()" @clear="loadCloundVideo()" bg-color="#fff"></u-search>
+			<u-search :placeholder="$getLang('视频名称')" :show-action='true' v-model="videoName" @search="loadData()" @custom="loadData()" @clear="loadData()" bg-color="#fff"></u-search>
 			<!-- 	<u-icon name="/static/index/bg-screen.png" size='40' class="u-m-l-30" @click="screen"></u-icon> -->
 		</view>
 		<!-- 搜索框 end -->
@@ -100,7 +100,11 @@
 						<view class="local-list">
 							<!-- 模拟数据 start -->
 							<view class="player" v-for="(item,index) in vieoList" :key="index" @longpress="longpress(item)"
-								@click="videoDetail(item)">
+								@click="videoDetail(item)" style="position: relative;">
+								<view v-show="item.is_upload" style="position: absolute;top:20rpx;left: 0; width:150rpx;height: 50rpx;line-height: 50rpx;background:green;text-align: center;
+								font-size:24rpx;padding:2rpx 8rpx;z-index: 99;color: #fff;">
+								已上传云端
+								</view>
 								<u-image class="video" :src="item.thumbUrl" width="100%" height="250"></u-image>
 								<view class="tips">
 									<view class="name">{{ item.name }}</view>
@@ -343,7 +347,7 @@
 			if (token && user) {
 				
 			}else{
-				uni.redirectTo({
+				uni.reLaunch({
 					url:'/pages/login/login'
 				})
 			}
@@ -724,6 +728,7 @@
 			},
 			loadData() {
 				if (this.current === 1) {
+					console.log(this.videoName)
 					// 本地视频
 					this.vieoList = uni.getStorageInfoSync().keys.filter(k => k.includes('/uniapp_save/')).map(k => {
 						return { ...uni.getStorageSync(k), playUrl: k }
@@ -778,10 +783,9 @@
 				console.log('检索参数',datas)
 				this.$u.api.getCloundVideoList(datas)
 					.then(res => {
-						console.log('视频检索',res.data)
+						// console.log('视频检索',res.data)
 						if (res.code === 0) {
 							if (res.data.length > 0) {
-								console.log('getCloundVideoList',res.data)
 								this.cloundFirst = res.data[0]
 								const data = res.data.slice(1)
 								this.cloudList = data.reduce((result, curren) => {
@@ -849,7 +853,7 @@
 			// 视频详情
 			videoDetail(item) {
 				uni.navigateTo({
-					url: `/pages/home/home-videodetail?type=1&angle=${item.angle}&duration=${item.duration}&exigency=${item.exigency}&id=${item.id}&name=${item.name}&playUrl=${item.playUrl}&recordTime=${item.recordTime}&size=${item.size}&title=${item.title}&thumbUrl=${item.thumbUrl}`,
+					url: `/pages/home/home-videodetail?type=1&angle=${item.angle}&duration=${item.duration}&exigency=${item.exigency}&id=${item.id}&name=${item.name}&playUrl=${item.playUrl}&recordTime=${item.recordTime}&size=${item.size}&title=${item.title}&thumbUrl=${item.thumbUrl}&is_upload=${item.is_upload}`,
 					events:{
 						//获取下级页面传递回来的参数
 						sonPageData:data=>{

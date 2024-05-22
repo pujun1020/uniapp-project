@@ -93,7 +93,6 @@
 						return;
 					}
 				}
-				else{
 					if (param == 1) {
 						uni.navigateTo({
 							url: "/pages/my/userinfo"
@@ -111,8 +110,6 @@
 							url: "/pages/my/privacy"
 						})
 					}
-				}
-				
 				
 			},
 			test() {
@@ -122,7 +119,7 @@
 			},
 		  async	login() {
 				var getCurSSID=await getConnectedSSIDNew();//当前的网络wifi
-				
+				console.log(getCurSSID)
 				if(getApp().globalData.equip){
 					const ssid = getApp().globalData.equip.apSN;//设备绑定的wifi
 					if(`"${ssid}"`==getCurSSID){
@@ -138,30 +135,27 @@
 						return;
 					}
 				}
-				else{
-				
-					uni.showModal({
-						title: this.$getLang('提示'),
-						content:this.$getLang('确认要退出登录吗') ,
-						cancelText:this.$getLang('取消'),
-						confirmText:this.$getLang('确认'),
-						success: (res) => {
-							if (res.confirm) {
-								uni.removeStorageSync('username');
-								uni.removeStorageSync('password');
-								uni.removeStorageSync('remPassword');
-								uni.removeStorageSync('apitoken');
-								uni.removeStorageSync('user');
-								uni.removeStorageSync('equip');
-								getApp().globalData.equip =null;
-								getApp().globalData.user=null;
-								uni.navigateTo({
-									url: "/pages/login/login"
-								})
-							}
+				uni.showModal({
+					title: this.$getLang('提示'),
+					content:this.$getLang('确认要退出登录吗') ,
+					cancelText:this.$getLang('取消'),
+					confirmText:this.$getLang('确认'),
+					success: (res) => {
+						if (res.confirm) {
+							uni.removeStorageSync('username');
+							uni.removeStorageSync('password');
+							uni.removeStorageSync('remPassword');
+							uni.removeStorageSync('apitoken');
+							uni.removeStorageSync('user');
+							uni.removeStorageSync('equip');
+							getApp().globalData.equip =null;
+							getApp().globalData.user=null;
+							uni.reLaunch({
+								url: "/pages/login/login"
+							})
 						}
-					})
-				}
+					}
+				})
 			},
 			changes(index) {
 				if (index == 0) {

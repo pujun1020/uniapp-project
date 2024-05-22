@@ -79,8 +79,6 @@
 					const sec = Math.floor(Number(this.params.duration) / 1000)
 					this.videoTime = `${ Math.floor(sec/60) }分${Math.floor(sec%60)}秒`
 				}
-				
-				
 			}
 		},
 		methods: {
@@ -96,13 +94,16 @@
 								this.params.devSN=getApp().globalData.equip.sn;
 								this.params.date=new Date();
 								this.params.playUrl=fileRes.savedFilePath;
-								console.log(fileRes)
-								console.log(this.params)
 								uni.setStorageSync(fileRes.savedFilePath, this.params)
-								uni.showToast({
-									title:this.$getLang('下载完成！') ,
-									icon: 'none'
-								})
+								
+								var downloadSound=uni.getStorageSync('downloadSound');
+								if(downloadSound!="关闭"){
+									uni.showToast({
+										title:this.$getLang('下载完成！') ,
+										icon: 'none'
+									})
+								}
+
 								this.uploadShow = false
 							},
 							fail: (err) => {
@@ -117,6 +118,38 @@
 				})
 			},
 			async onUpload() {
+				console.log(this.params.is_upload)
+				if(this.params.is_upload==true){
+					uni.showModal({
+						title:this.$getLang('提示'),
+						content:this.$getLang('90041'),
+						showCancel:false,
+						confirmText:this.$getLang('确定'),
+						success:()=>{
+							
+						}
+					})
+					return;
+				}
+				
+				var getNetworkType=await getNetworkType();
+				if(!getNetworkType){//连接的是WIFI
+					var wifi=uni.getStorageSync('wifi');
+					if(wifi=="no_wifi"){
+						uni.showModal({
+							title:this.$getLang('提示'),
+							content:'抱歉,必须wifi环境上传,请到APP中我的->设置信息->关闭“必须wifi环境上传',
+							showCancel:false,
+							confirmText:this.$getLang('确认'),
+							success:()=>{
+								
+							}
+						})
+						return;
+					}
+				}
+				
+				
 				if (!getApp().globalData.uploadtoken) {
 					await this.uploadLogin()
 				}
@@ -151,22 +184,36 @@
 						if (uploadRes.statusCode === 200) {
 							const data = JSON.parse(uploadRes.data)
 							if (data.code === 0) {
-								uni.showModal({
-									title: this.$getLang('提示'),
-									content:'恭喜您，当前视频已上传到云端，在云端列表可查看！',
-									showCancel:false,
-									confirmText:this.$getLang('确定'),
-									success:()=>{
-										
-									}
+								
+								var uploadSound=uni.getStorageSync('uploadSound');
+								if(uploadSound!="关闭"){
+									uni.showModal({
+										title: this.$getLang('提示'),
+										content:'恭喜您，当前视频已上传到云端，在云端列表可查看！',
+										showCancel:false,
+										confirmText:this.$getLang('确定'),
+										success:()=>{
+											
+										}
+									})
+								}
+								
+								var locVieoList = uni.getStorageInfoSync().keys.filter(k => k.includes('/uniapp_save/')).map(k => {
+									return { ...uni.getStorageSync(k), playUrl: k }
 								})
-								// uni.showToast({
-								// 	title:this.$getLang('上传完成！') ,
-								// 	icon: 'none'
-								// })
+								
+								for(var i=0;i<locVieoList.length;i++){
+									var loc=locVieoList[i];
+									if(loc.id==this.params.id){
+										loc.is_upload=true;
+										uni.setStorageSync(loc.playUrl, loc);
+									}
+								}
+								
+								
 							} else {
 								uni.showToast({
-									title: data.message,
+									title: this.$getLang(data.code),
 									icon: 'none'
 								})
 							}
@@ -187,6 +234,25 @@
 					this.progressTxt = ''
         });
 			},
+			
+			getNetworkType(){
+				return new Promise((resolve, reject) => {
+					uni.getNetworkType({
+					   success: (res) => {
+							if(res.networkType=="wifi"){
+								resolve(true);
+							}else{
+								resolve(false);
+							}
+
+					   },
+					   fail: (err) => {
+						 resolve(false);
+					   }
+				   });
+				})
+			},
+			
 			getFileInfo() {
 				console.log('获取文件信息')
 				return new Promise((resove, reject) => {
@@ -213,7 +279,18 @@
 								reject('上传登陆失败')
 							}
 						}).catch(e => {
-							reject(e)
+							if(e.errMsg.indexOf('request:fail abort statusCode:-1')>-1){
+								uni.showToast({
+									title:'抱歉，网络连接失败,无法上传云端！',
+									icon:'none'
+								})
+								setTimeout(()=>{
+									uni.redirectTo({
+										url:'/pages/home/home'
+									})
+								},2000);
+							}
+							// reject(e)
 						})
 				})
 			},

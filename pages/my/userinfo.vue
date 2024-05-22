@@ -15,7 +15,7 @@
 		<u-popup v-model="showName" mode="bottom" height="30%">
 			<view class="popupBox">
 				<u-form>
-					<u-form-item :label="$getLang('姓名')"><u-input v-model="nickName" :placeholder="$getLang('请输入新姓名')" /></u-form-item>
+					<u-form-item label-width="200" :label="$getLang('姓名')"><u-input v-model="nickName" :placeholder="$getLang('请输入新姓名')" /></u-form-item>
 				</u-form>
 				<view class="u-flex u-row-around u-m-t-80">
 					<u-button @click="closeName()" type="info">{{$getLang('取消')}}</u-button>
@@ -26,7 +26,7 @@
 		<u-popup v-model="showMobile" mode="bottom" height="30%">
 			<view class="popupBox">
 				<u-form>
-					<u-form-item :label="$getLang('新号码')"><u-input v-model="mobile" :placeholder="$getLang('请输入新号码')" /></u-form-item>
+					<u-form-item label-width="200" :label="$getLang('新号码')"><u-input v-model="mobile" :placeholder="$getLang('请输入新号码')" maxlength="11" type="number" /></u-form-item>
 				</u-form>
 				<view class="u-flex u-row-around u-m-t-80">
 					<u-button @click="closeMobile()" type="info">{{$getLang('取消')}}</u-button>
@@ -37,7 +37,9 @@
 		<u-popup v-model="showEmail" mode="bottom" height="30%">
 			<view class="popupBox">
 				<u-form>
-					<u-form-item :label="$getLang('新邮箱')"><u-input v-model="email" :placeholder="$getLang('请输入新邮箱')" /></u-form-item>
+					<u-form-item label-width="200" :label="$getLang('新邮箱')">
+						<u-input v-model="email" :isChange="true" maxlength="150" @input="handleInputEmail" :placeholder="$getLang('请输入新邮箱')" />
+					</u-form-item>
 				</u-form>
 				<view class="u-flex u-row-around u-m-t-80">
 					<u-button @click="closeEmail()" type="info">{{$getLang('取消')}}</u-button>
@@ -45,16 +47,19 @@
 				</view>
 			</view>
 		</u-popup>
-		<u-popup v-model="showPwd" mode="bottom" height="45%">
+		<u-popup v-model="showPwd" mode="bottom" height="60%">
 			<view class="popupBox">
 				<u-form>
-					<u-form-item :label="$getLang('原密码')"><u-input type="password" v-model="oldPassword" :placeholder="$getLang('请输入原密码')" /></u-form-item>
+					<u-form-item label-width="200" :label="$getLang('原密码')">
+						<u-input type="password" v-model="oldPassword" :placeholder="$getLang('请输入原密码')" maxlength="20" /></u-form-item>
 				</u-form>
 				<u-form>
-					<u-form-item :label="$getLang('新密码')"><u-input type="password" v-model="newPassword" :placeholder="$getLang('请输入新密码')" /></u-form-item>
+					<u-form-item label-width="200" :label="$getLang('新密码')">
+						<u-input type="password" v-model="newPassword" :placeholder="$getLang('请输入新密码')" maxlength="20" /></u-form-item>
 				</u-form>
 				<u-form>
-					<u-form-item :label="$getLang('确认新密码')"><u-input type="password" v-model="newPassword2" :placeholder="$getLang('请输入确认新密码')" /></u-form-item>
+					<u-form-item label-width="200" :label="$getLang('确认新密码')">
+						<u-input type="password" v-model="newPassword2" :placeholder="$getLang('请输入确认新密码')" maxlength="20" /></u-form-item>
 				</u-form>
 				<view class="u-flex u-row-around u-m-t-80">
 					<u-button @click="closePassword()" type="info">{{$getLang('取消')}}</u-button>
@@ -148,6 +153,14 @@
 				this.mobile = ''
 			},
 			updateMobile() {
+				if(!this.isValidPhoneNumber(this.mobile)){
+					uni.showToast({
+						title:'手机号格式不正确！',
+						icon: 'none'
+					})
+					return;
+				}
+				
 				this.$u.api.setUser({ id: getApp().globalData.user.id, mobile: this.mobile })
 					.then(res => {
 						if (res.code === 0) {
@@ -169,11 +182,35 @@
 						}
 					})
 			},
+			isValidEmail(email) {
+			  var regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+			  return regex.test(email);
+			},
+			isValidPhoneNumber(phoneNumber) {
+			  var regex = /^1[3-9]\d{9}$/;
+			  return regex.test(phoneNumber);
+			},
+			handleInputEmail(){
+				var text = this.email;
+				var regex = /[\u4e00-\u9fa5]/g; // 添加了 'g' 标志
+				setTimeout(()=>{
+					this.email = text.replace(regex, '');
+					console.log(this.email);
+				},200)
+				
+			},
 			closeEmail() {
 				this.showEmail = false
 				this.email = ''
 			},
 			updateEmail() {
+				if(!this.isValidEmail(this.email)){
+					uni.showToast({
+						title:'邮箱号格式不正确！',
+						icon: 'none'
+					})
+					return
+				}
 				this.$u.api.setUser({ id: getApp().globalData.user.id, email: this.email })
 					.then(res => {
 						if (res.code === 0) {

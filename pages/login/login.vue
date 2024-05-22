@@ -5,7 +5,7 @@
 			<view class="t-b">
 				{{$getLang('您好')}}，
 				<br />
-				{{$getLang('欢迎使用')}}恒勃智联
+				{{$getLang('欢迎使用')}}恒勃智驾
 			</view>
 		</view>
 		<view class="login-view" style="">
@@ -106,7 +106,7 @@
 							getApp().globalData.user = res.user
 							uni.setStorageSync('apitoken', res.token)
 							uni.setStorageSync('user', res.user)
-							uni.navigateTo({
+							uni.reLaunch({
 								url:"/pages/index/index"
 							})
 						} else {
@@ -133,7 +133,13 @@
 									title:'网络异常，请重新尝试点击登录！',
 									icon:'none'
 								})
-							},3000)
+								
+								setTimeout(()=>{
+									uni.redirectTo({
+										url:'/pages/login/login'
+									})
+								},1500)
+							},1500)
 					
 						}else{
 							uni.showToast({
