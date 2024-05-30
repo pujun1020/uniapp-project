@@ -2,13 +2,13 @@
 	<view class="wrap">
 		<!-- list -->
 		<u-cell-group :border="false">
-			<u-cell-item :title="$getLang('必须wifi环境上传')" hover-class="none" :arrow="false">
+			<u-cell-item style="display: none;" :title="$getLang('必须wifi环境上传')" hover-class="none" :arrow="false">
 				<u-switch v-model="wifi" @change="onChangeSwitch('wifi', wifi)" size="30" :loading="loading"></u-switch>
 			</u-cell-item>
-			<u-cell-item :title="$getLang('上传成功提示窗')" hover-class="none" :arrow="false">
+			<u-cell-item  style="display: none;" :title="$getLang('上传成功提示窗')" hover-class="none" :arrow="false">
 				<u-switch v-model="uploadSound" @change="onChangeSwitch('uploadSound', uploadSound)" size="30" :loading="loading"></u-switch>
 			</u-cell-item>
-			<u-cell-item :title="$getLang('下载成功提示窗')" hover-class="none" :arrow="false">
+			<u-cell-item  style="display: none;" :title="$getLang('下载成功提示窗')" hover-class="none" :arrow="false">
 				<u-switch v-model="downloadSound" @change="onChangeSwitch('downloadSound', downloadSound)" size="30" :loading="loading"></u-switch>
 			</u-cell-item>
 			<u-cell-item :title="$getLang('地区')" hover-class="none" :value="area" @click="showArea = true"></u-cell-item>
@@ -28,7 +28,7 @@
 		data() {
 			return {
 				id: '',
-				wifi: true,
+				wifi: false,
 				uploadSound: true,
 				downloadSound: true,
 				area: '',

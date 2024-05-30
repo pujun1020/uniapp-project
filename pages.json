@@ -3,7 +3,6 @@
 		"^u-(.*)": "uview-ui/components/u-$1/u-$1.vue"
 	},
 	"pages": [ //pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
-		
 		{
 			"path": "pages/index/index",
 			"style": {
@@ -18,6 +17,9 @@
 				"navigationStyle": "custom"
 			}
 		},
+		
+		
+		
 		{
 			"path": "pages/my/my",
 			"style": {
@@ -154,7 +156,8 @@
 		"navigationBarTextStyle": "black",
 		"navigationBarTitleText": "",
 		"navigationBarBackgroundColor": "#EBF5FF",
-		"backgroundColor": "#EBF5FF"
+		"backgroundColor": "#EBF5FF",
+		"pageOrientation":"portrait"
 	},
 	"uniIdRouter": {}
 }

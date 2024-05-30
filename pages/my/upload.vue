@@ -74,7 +74,7 @@ export default {
 			
 			this.weCropper.getCropperImage(avatar => {
 				if (avatar) {
-					console.log(avatar)
+
 					uni.uploadFile({
 						url: this.$u.api.uploadpic(),
 						filePath: avatar,

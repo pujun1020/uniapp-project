@@ -11,7 +11,7 @@
 		},
 		onLaunch: function() {
 			this.$u.api.getCloud().then(res => {
-				console.log('云端api地址',res)
+				// console.log('云端api地址',res)
 				this.$u.api.setRequestUrl(`${res.cloudPlatformHost}:${res.cloudPlatformPort}`)
 				getApp().globalData.uploadUrl = `http://${res.uploadHost}:${res.uploadPort}`
 			}).catch(e=>{

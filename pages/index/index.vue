@@ -33,14 +33,14 @@
 							<image @click="toEquipList" src="../../static/banner1.png" mode="widthFix" style="width: 100%;"></image>
 							<view class="u-flex-col u-col-center" style="margin-top: -150rpx;z-index: 999;">
 								<view class="bg__name" v-show="localChannel == '1'">金浪318</view>
-								<view class="bg__name" v-show="localChannel == '0'">恒勃智驾</view>
+								<view class="bg__name" v-show="localChannel == '0'">{{$getLang('恒勃智驾')}}</view>
 								<view class="bg__status" :style="{ color: socketStatus === '已连接' ? 'green' : '#7D818C' }">{{ socketStatus }}</view>
 							</view>
 						</view>
 					</view>
 					<view class="device" v-if="equipInfo">
 						<view class="device__title">{{$getLang('设备信息')}}</view>
-						<view class="u-m-t-10 u-font-26">{{$getLang('设备')}}：{{ equipInfo ? equipInfo.osAppProjectName : '' }}</view>
+						<view class="u-m-t-10 u-font-26">{{$getLang('设备')}}：{{ equipInfo ? equipInfo.sn : '' }}</view>
 						<view class="u-m-t-10 u-font-26">MCU：{{ equipInfo ? equipInfo.mcuVersion : '' }}</view>
 						<view class="u-m-t-10 u-font-26">{{$getLang('系统')}}：{{ equipInfo ? equipInfo.osAppProjectSN : '' }}</view>
 					</view>
@@ -135,6 +135,8 @@
 				isBlockEvent:true,
 				
 				timer:null,
+				
+				
 			}
 		},
 		onShow() {
@@ -173,34 +175,31 @@
 				var remainingHeight_px = screenHeight_px - headerHeight_px;  
 				this.winHeight=remainingHeight_px;
 				this.isShowTabbar=true;
-				this.loadData()
-				
+				this.loadData();
+				this.upgradeInfo()
+				// var wifiConnectionState = getApp().globalData.wifiConnectionState;
+				// if(wifiConnectionState==1){
+				// 	this.updateWifiConnectionState(true);
+				// }else{
+					
+				// }
 				this.startNetworkMonitor();
 			  }
 			});
-			
-			 // uni.getNetworkType({
-			 //        success: (res) => {
-			 //            console.log('当前网络类型:', res.networkType);
-				// 		if(res.networkType=="wifi"){
-							
-				// 		}
-			 //            console.log('是否连接网络:', res.isConnected ? '是' : '否');
-			 //        },
-			 //        fail: (err) => {
-			 //            console.error('获取网络状态失败:', err);
-			 //        }
-			 //    });
 
 			
 		},
 		methods: {
 			updateWifiConnectionState(state){
-				if(state){
-					this.socketStatus='已连接'
-				}else{
-					this.socketStatus='未连接'
-				}
+				// console.log('updateWifiConnectionState',state)
+				// var wifiConnectionState = getApp().globalData.wifiConnectionState;
+				// console.log('wifiConnectionState',wifiConnectionState)
+				// if(wifiConnectionState==1&&state){
+				// 	this.socketStatus='已连接'
+				// }else{
+				// 	this.socketStatus='未连接';
+				// 	getApp().globalData.wifiConnectionState=0;
+				// }
 			},
 			swiperChange(e){
 				this.change(e.target.current,1);
@@ -215,9 +214,10 @@
 					var equip=uni.getStorageSync('equip');
 					if(!equip){
 						this.loadEquipList();
-						this.upgradeInfo()
+						
 					}else{
 						this.equipInfo=equip;
+						console.log(equip)
 						getApp().globalData.equip = equip
 						this.localChannel=equip.channel;
 					}
@@ -270,6 +270,7 @@
 							this.osAppProjectSN = this.equipInfo ? this.equipInfo.osAppProjectSN : ''
 							this.localChannel = this.equipInfo ? this.equipInfo.channel : ''
 							getApp().globalData.equip = this.equipInfo
+							console.log(this.equipInfo)
 							uni.setStorageSync('equip',this.equipInfo)
 							// this.autoConnection()
 						}
@@ -278,33 +279,48 @@
 			async change(index,opt=0) {
 				var ssid = this.equipInfo.apSN
 				var password = this.equipInfo.apPassword
+				
 				if (index === 1) {
+					// uni.showToast({
+					// 	title:'视频加载中...',
+					// 	mask:true
+					// })
+					uni.showLoading({
+						title:'加载中...',
+						mask:true
+					})
 					 var getCurSSID=await getConnectedSSIDNew();//当前的网络wifi
 					 const ssid = getApp().globalData.equip.apSN;//设备绑定的wifi
-					 
 					 if(`"${ssid}"`==getCurSSID){
-						 console.log('切换dvr',getApp().globalData.vieoListNew)
-						if(getApp().globalData.vieoListNew&&getApp().globalData.vieoListNew.length>0){
-							this.$refs['dvrlist'].equip=getApp().globalData.equip;
-						}else{
-							this.$refs['dvrlist'].getVideoNew();
-						}
+						 getApp().globalData.socketTask=null;
+						
+						this.$refs['dvrlist'].current=0;
+						this.$refs['dvrlist'].getVideoNew();
 						
 					 }else{
 						 getApp().globalData.vieoListNew=[];
 						 this.$refs['dvrlist'].vieoListNew=[];
 						 this.$refs['dvrlist'].wifiConnectionState=false;
+						uni.hideLoading();
 					 }
-					 this.current = index;
-					
+					  this.current = index;
 				}else{
-					
 					this.current = index;
+					var getCurSSID=await getConnectedSSIDNew();//当前的网络wifi
+					const ssid = getApp().globalData.equip.apSN;//设备绑定的wifi
+					if(`"${ssid}"`!=getCurSSID){
+						this.socketStatus='未连接'
+					}
 					// this.isShowTabbar=true;
 					
 				}
 			},
 			changes(index) {
+				clearInterval(this.timer);
+				console.log(this.socketStatus)
+				if(this.socketStatus=='已连接'){
+					getApp().globalData.wifiConnectionState=1;
+				}
 				if (index == 0) {
 					uni.navigateTo({
 						url:"/pages/home/home",
@@ -383,7 +399,7 @@
 									// console.log('sendDevInfo:',res);
 									if(res.code!==0){
 										uni.showToast({
-											title:this.$getLang(res.code) ,
+											title:'设备已被其他用户绑定，不支持重复绑定设备！',
 											icon:'none'
 										})
 									}else{
@@ -498,26 +514,103 @@
 				})
 			},
 			startNetworkMonitor(){
+				this.checkNetwork();
 				this.timer = setInterval(() => {
 					this.checkNetwork();
-				}, 1000); // 每3秒检查一次网络
+				}, 2000); // 每3秒检查一次网络
 			},
 			async checkNetwork(){
+				// console.log('判断')
 				if(getApp().globalData.equip&&getApp().globalData.equip.apSN){
-					var getCurSSID=await getConnectedSSIDNew();//当前的网络wifi
-					console.log('getCurSSID',getCurSSID)
-					const ssid = getApp().globalData.equip.apSN;//设备绑定的wifi
-					// console.log('当前网络');
-					if(`"${ssid}"`!=getCurSSID){
+					var getCurSSID=await this.getConnectedSSIDNewIndex();//当前的网络wifi
+					// console.log('getCurSSID',getCurSSID)
+					if(getCurSSID=='fail.location'){
+						clearInterval(this.timer);
 						this.socketStatus='未连接';
 					}else{
-						this.socketStatus='已连接';
-						clearInterval(this.timer);
+						const ssid = getApp().globalData.equip.apSN;//设备绑定的wifi
+						if(`"${ssid}"`!=getCurSSID){
+							this.socketStatus='未连接';
+						}else{
+							this.socketStatus='已连接';
+						}
 					}
+					
+				}else{
+					clearInterval(this.timer);
 				}
 				
 				
+			},
+			getConnectedSSIDNewIndex(){
+				 return new Promise((resolve, reject) => {
+					// 获取 WIFI 管理实例
+					var platform = uni.getStorageSync('platform');
+					var sand = uni.requireNativePlugin("sand-plugin-wifi");
+					//触发一次位置获取，否则iphone设置中没有定位服务
+					if(getApp().globalData.longitude&&getApp().globalData.latitude){
+						uni.getLocation({
+							type: 'wgs84',
+							success: function (res) {
+								getApp().globalData.longitude=res.longitude;
+								getApp().globalData.latitude=res.latitude;
+								// console.log('当前位置的经度：' + res.longitude);
+								// console.log('当前位置的纬度：' + res.latitude);
+								// 调用异步方法
+								
+							},
+							fail() {
+								clearInterval(this.timer);
+								uni.showModal({
+									title:'提示',
+									content:'抱歉，获取定位信息授权失败！如果wifi无法识别或者设备连接失败，请到手机设置【打开定位授权】',
+									showCancel:false,
+									confirmText:'确认',
+									success:()=> {
+										if(platform=="android"){
+											var context = plus.android.importClass('android.content.Context');
+											var locationManager = plus.android.importClass('android.location.LocationManager');
+											var main = plus.android.runtimeMainActivity();
+											var mainSvr = main.getSystemService(context.LOCATION_SERVICE);
+											if (!mainSvr.isProviderEnabled(locationManager.GPS_PROVIDER)) {
+												if (!mainSvr.isProviderEnabled(locationManager.GPS_PROVIDER)) {
+													var Intent = plus.android.importClass('android.content.Intent');
+													var Settings = plus.android.importClass('android.provider.Settings');
+													var intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+													main.startActivity(intent); // 打开系统设置定位服务功能页面
+													
+												} else {
+													console.log('定位服务功能已开启');
+												}
+											}
+
+										}
+									}
+								})
+								
+								resolve('fail.location'); // 如果需要，可以在这里处理错误情况
+							}
+						});
+					}
+					setTimeout(()=>{
+						sand.getWIFIInfo({}, (ret) => {
+							// console.log('获取wifi信息', ret);
+							if (ret.ssid) {
+								// console.log(ret.ssid);
+								var ssid = ret.ssid;
+								resolve(`"${ssid}"`); // 异步操作成功，通过resolve传递结果
+							} else {
+								resolve(''); // 如果需要，可以在这里处理错误情况
+							}
+						});
+					})
+				});
 			}
+			
+		},
+		onUnload() {
+			console.log('页面卸载，关闭定时器')
+			clearInterval(this.timer);
 		},
 	}
 </script>

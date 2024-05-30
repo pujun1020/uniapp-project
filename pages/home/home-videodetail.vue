@@ -1,26 +1,45 @@
 <template>
 	<view>
-		<!-- header start -->
-		<view class="u-text-center u-type-info u-font-24">
-			<!-- time -->
-			<view class="u-m-t-30">{{ params.name }}</view>
-			<!-- name -->
-			<view>{{ params.angle ? (params.angle === 'front' ? $getLang('前录') : $getLang('后录')) : '' }}</view>
-			<!-- size -->
-			<view>{{ params.size }}</view>
-			<view>{{ videoTime }}</view>
-		</view>
-		<!-- header end -->
-
+		
 		<!-- video start -->
-		<view v-show="!uploadShow" class="videoBox">
-			<video :src="params.playUrl"
+		<view class="videoBox">
+			<video v-if="isShpwPlayVideo&&!uploadShow" :src="params.playUrl" :poster="thumbUrl"
 				class="videoBox__video"></video>
 		</view>
+		<!-- header start -->
+		<view class=" u-type-info u-font-24" style=" padding:0 20rpx;">
+			<!-- time -->
+			<view class="u-m-t-30" style="font-size:30rpx;color: #000;line-height: 50rpx;margin-bottom: 10rpx;">
+			{{ params.name }}
+			</view>
+			<!-- name -->
+			
+			<!-- size -->
+			<view style="display: flex;">
+				<view>视频时常：{{ videoTime }}</view> 
+				<view style="margin-left: 50rpx;"> 视频大小：{{ params.size }}</view> 
+				<view style="margin-left: 50rpx;">{{ params.angle ? (params.angle === 'front' ? $getLang('前录') : $getLang('后录')) : '' }}</view>
+			</view>
+			<view style="display: flex;" v-if="params.date">
+				<view style="line-height: 50rpx;">视频时间：{{ params.date }}</view> 
+				<view style="margin-left: 50rpx;line-height: 50rpx;">
+					<text  v-if="isUploadToCloud" style="padding: 3rpx 12rpx;background-color: green;color: #fff;font-size: 20rpx;border-radius: 4rpx;">已上传云端</text>
+					<text  v-if="isDownLoad" style="padding: 3rpx 12rpx;background-color: green;color: #fff;font-size: 20rpx;border-radius: 4rpx;">本地已下载</text>
+				</view>
+			</view>
+		</view>
+		<view style="width: 100%;height: 16rpx;background-color: #f8f8f8;margin: 20rpx 0;"></view>
+		<view v-if="curVideoGroup.time" style="width: 100%;min-height: 400rpx;">
+			<u-cell-group :title="'【'+curVideoGroup.time+'】视频列表'" :title-style="{color:'#000'}">
+				<u-cell-item @click="tapCellItem(item,index)" v-for="(item,index) in curVideoGroup.body" icon="play-circle" :title="item.date" :arrow="false" 
+				:value="params.date==item.date?'当前视频':''" :value-style="{ color: 'red' }"></u-cell-item>
+			</u-cell-group>
+		</view>
+		<view style="width: 100%;height:170rpx ;"></view>
 		<!-- video end -->
 
 		<!-- button start -->
-		<view class="button">
+		<view class="button" style="z-index: 999;background-color: #fff;">
 			<u-grid :col="3">
 				<u-grid-item @click="onDelete" bg-color="#fff">
 					<u-icon name="trash" :size="46"></u-icon>
@@ -33,6 +52,10 @@
 				<u-grid-item bg-color="#fff" @click="onDownLoad" v-show="params.type === '0'">
 					<u-icon name="download" :size="46"></u-icon>
 					<view class="grid-text">{{$getLang('下载')}}</view>
+				</u-grid-item>
+				<u-grid-item bg-color="#fff" @click="onToPhotosAlbum">
+					<u-icon name="download" :size="46"></u-icon>
+					<view class="grid-text">{{'保存到相册'}}</view>
 				</u-grid-item>
 			</u-grid>
 		</view>
@@ -57,6 +80,8 @@
 <script>
 	import { socketLogin, socket2001, socket2003 } from '@/common/upload.js'
 	import { connectStartWifi, openWebSocket } from '../../common/wifi-tcp.js'
+	import { verfyDownLoad,verfyUploadToCloud,dvrDownLoadToPhotosAlbum,extractAndFormatDateTime,extractYearMonthDay } from '../../common/common.js'
+	
 	export default {
 		data() {
 			return {
@@ -65,108 +90,227 @@
 				progressVal: 0,
 				progressTxt: '',
 				uploadOrDownload: '',
-				videoTime: ''
+				videoTime: '',
+				thumbUrl:'',
+				isUploadToCloud:false,
+				isDownLoad:false,
+				curVideoGroup:{},
+				
+				isShpwPlayVideo:true,
+				optType:0,
 			}
 		},
 		onLoad(option) {
 			// console.log(getApp().globalData)
 			if (option) {
 				this.params = option
+				this.optType=option.type;
 				console.log(option);
 				if(option.type==2){
 					this.videoTime=this.params.duration;
+					this.params.angle=this.params.angle==0?'front':'';
+					var list=getApp().globalData.curVideoGroup;
+					if(list){
+						this.curVideoGroup=list;
+					}
+					console.log('当天的所有视频列表',list)
 				}else{
 					const sec = Math.floor(Number(this.params.duration) / 1000)
 					this.videoTime = `${ Math.floor(sec/60) }分${Math.floor(sec%60)}秒`
+					
+					//判断是否已经上传云端
+					if(this.params.type==1){
+						var list=getApp().globalData.curVideoGroup;
+						if(list){
+							for(var i=0;i<list.body.length;i++){
+								list.body[i].date=extractAndFormatDateTime(list.body[i].name);
+							}
+							this.curVideoGroup=list;
+						}
+						setTimeout(async()=>{
+							var flag=await verfyUploadToCloud(this,this.params.id,1);
+							if(flag==false){
+								this.isUploadToCloud=true;
+							}
+						},10)
+						console.log('本地视频对象：',this.params)
+					}
+					//判断是否下载本地
+					if(this.params.type==0){
+						var list=getApp().globalData.curVideoGroup;
+						if(list){
+							for(var i=0;i<list.body.length;i++){
+								list.body[i].date=extractAndFormatDateTime(list.body[i].name);
+							}
+							this.curVideoGroup=list;
+						}
+						setTimeout(async()=>{
+							console.log(this.params.id)
+							var flag=await verfyDownLoad(this,this.params.id,1);
+							if(flag){
+								this.isDownLoad=true;
+							}
+						},10)
+					}
+				}
+				if(!this.params.date){//如果时间为空，重视频标题里面截取
+					this.params.date=extractAndFormatDateTime(this.params.name);
+					console.log(this.params.date)
+				}
+				if(this.params.thumbUrl){
+					this.thumbUrl=this.params.thumbUrl;
 				}
 			}
 		},
 		methods: {
-			onDownLoad() {
-				this.uploadShow = true
-				this.uploadOrDownload =this.$getLang('正在下载') 
-				const downloadTask = uni.downloadFile({
-					url: this.params.playUrl,
-					success: (res) => {
-						uni.saveFile({
-							tempFilePath: res.tempFilePath,
-							success: (fileRes) => {
-								this.params.devSN=getApp().globalData.equip.sn;
-								this.params.date=new Date();
-								this.params.playUrl=fileRes.savedFilePath;
-								uni.setStorageSync(fileRes.savedFilePath, this.params)
-								
-								var downloadSound=uni.getStorageSync('downloadSound');
-								if(downloadSound!="关闭"){
-									uni.showToast({
-										title:this.$getLang('下载完成！') ,
-										icon: 'none'
-									})
-								}
-
-								this.uploadShow = false
-							},
-							fail: (err) => {
-								console.log('保存失败', err)
+			tapCellItem(item,index){
+				// console.log(item);
+				// if(this.optType==2||this.optType==1){
+					this.params=item;
+					if(this.optType==0){
+						const sec = Math.floor(Number(this.params.duration) / 1000)
+						this.videoTime = `${ Math.floor(sec/60) }分${Math.floor(sec%60)}秒`
+						setTimeout(async()=>{
+							var flag=await verfyDownLoad(this,this.params.id,1);
+							if(flag){
+								this.isDownLoad=true;
+							}else{
+								this.isDownLoad=false;
 							}
-						})
+						},10)
+					}else{
+						if(this.optType==1){
+							setTimeout(async()=>{
+								var flag=await verfyUploadToCloud(this,this.params.id,1);
+								if(flag==false){
+									this.isUploadToCloud=true;
+								}else{
+									this.isUploadToCloud=false;
+								}
+							},10)
+						}
+						
+						
+						this.videoTime=item.duration?item.duration:item.totalTime;
 					}
-				})
-				downloadTask.onProgressUpdate(res => {
-					this.progressVal = res.progress
-					this.progressTxt = `${res.totalBytesWritten}/${res.totalBytesExpectedToWrite}`
-				})
+					
+					this.params.angle=this.params.angle==0?'front':'';
+					this.params.type=this.optType;
+					this.isShpwPlayVideo=false;
+					setTimeout(()=>{
+						this.isShpwPlayVideo=true;
+					},1);
+					uni.pageScrollTo({
+					    scrollTop: 0, // 滚动到顶部
+					    duration: 100 // 瞬间完成滚动，如果希望有动画效果，可以设置一个非零值，单位ms
+					});
+				// }
 			},
-			async onUpload() {
-				console.log(this.params.is_upload)
-				if(this.params.is_upload==true){
-					uni.showModal({
-						title:this.$getLang('提示'),
-						content:this.$getLang('90041'),
-						showCancel:false,
-						confirmText:this.$getLang('确定'),
-						success:()=>{
-							
+			//保存视频到相册
+			async onToPhotosAlbum(){
+				await dvrDownLoadToPhotosAlbum(this,this.params,0);
+			},
+			async onDownLoad() {
+				var verfyDow=await verfyDownLoad(this,this.params.id);
+				if(verfyDow){
+					this.uploadShow = true
+					this.uploadOrDownload =this.$getLang('正在下载');
+					
+					var thumbUrl="";//封面图临时路径
+					uni.downloadFile({
+						url: this.params.thumbUrl,
+						success:(res)=>{
+							uni.saveFile({
+								tempFilePath: res.tempFilePath,
+								success: (img) => {
+									thumbUrl=img.savedFilePath;
+								},
+							});
+						}
+					});
+					
+					const downloadTask = uni.downloadFile({
+						url: this.params.playUrl,
+						success: (res) => {
+							console.log('uploadOrDownload',res.tempFilePath)
+							uni.saveFile({
+								tempFilePath: res.tempFilePath,
+								success: (fileRes) => {
+									this.params.devSN=getApp().globalData.equip.sn;
+									// this.params.date=new Date();
+									this.params.playUrl=fileRes.savedFilePath;
+									if(thumbUrl){
+										this.params.thumbUrl=thumbUrl;
+									}
+									uni.setStorageSync(fileRes.savedFilePath, this.params)
+									var downloadSound=uni.getStorageSync('downloadSound');
+									if(downloadSound!="关闭"){
+										uni.showModal({
+											title:this.$getLang('提示'),
+											content:'恭喜您，视频下载到本地完成，您可以到【在路上】的【本地】列表进行查看，是否返回DVR列表页面？',
+											cancelText:this.$getLang('取消'),
+											confirmText:this.$getLang('确认'),
+											success:(res)=>{
+												if(res.confirm){
+													uni.navigateBack();
+												}
+											}
+										})
+										
+									}
+					
+									this.uploadShow = false
+								},
+								fail: (err) => {
+									console.log('保存失败', err)
+								}
+							})
 						}
 					})
+					downloadTask.onProgressUpdate(res => {
+						this.progressVal = res.progress
+						this.progressTxt = `${res.totalBytesWritten}/${res.totalBytesExpectedToWrite}`
+					})
+				}
+				
+				
+			},
+
+			async onUpload() {
+				
+				//判断当前视频是否已经上传到云端
+				var flag=await verfyUploadToCloud(this,this.params.id);
+				if(flag==false||this.uploadShow){
 					return;
 				}
-				
-				var getNetworkType=await getNetworkType();
-				if(!getNetworkType){//连接的是WIFI
-					var wifi=uni.getStorageSync('wifi');
-					if(wifi=="no_wifi"){
-						uni.showModal({
-							title:this.$getLang('提示'),
-							content:'抱歉,必须wifi环境上传,请到APP中我的->设置信息->关闭“必须wifi环境上传',
-							showCancel:false,
-							confirmText:this.$getLang('确认'),
-							success:()=>{
-								
-							}
-						})
-						return;
-					}
-				}
-				
 				
 				if (!getApp().globalData.uploadtoken) {
 					await this.uploadLogin()
 				}
+				
+				var thumbUrl =await this.uploadThumbUrlimg(this.thumbUrl);
+				
+				// console.log(thumbUrl)
 				const size = await this.getFileInfo()
 				const nameArr = this.params.name.split('-')
 				const videoDate = `${nameArr[1].replace('_', '-').replace('_', '-')} ${nameArr[2].replace('_', ':').replace('_', ':')}`
 				this.uploadShow = true
 				this.uploadOrDownload =this.$getLang('正在上传') 
 				// console.log('请求token', getApp().globalData.uploadtoken);
+				if(this.params.angle){
+					this.params.angle = this.params.angle === 'front'? '0' : '1';
+				}else{
+					this.params.angle='2';
+				}
 				var formData={
 					'devSN':getApp().globalData.equip.sn,
 					'videoName': nameArr[0],
 					'videoDate': videoDate,
 					'videoFileName': this.params.name,
 					'videoTotalTime': this.videoTime,
-					'videoCameraType': this.params.angle === 'front' ? '0' : '1',
-					'videoSize': size
+					'videoCameraType': this.params.angle,
+					'videoSize': size,
+					'thumbUrl':thumbUrl
 				};
 				console.log(formData)
 				const uploadTask = uni.uploadFile({
@@ -226,15 +370,39 @@
 						}
 					},
 					fail: uploadError => {
+						this.uploadShow=false;
+						uni.showToast({
+							title:this.$getLang('上传服务错误，请稍后重试'),
+							icon: 'none'
+						})
+						
 						console.error('upload error:', uploadError);
 					}
-        });
-        uploadTask.onProgressUpdate(res => {
-					this.progressVal = res.progress
-					this.progressTxt = ''
-        });
+				});
+				uploadTask.onProgressUpdate(res => {
+							this.progressVal = res.progress
+							this.progressTxt = ''
+				});
 			},
-			
+			//上传封面图返货封面图地址
+			uploadThumbUrlimg(thumbUrl){
+				return new Promise((resolve, reject) => {
+					uni.uploadFile({
+						url: this.$u.api.uploadpic(),
+						filePath: thumbUrl,
+						name: 'photo',
+						success: res => {
+							var data=JSON.parse(res.data) ;
+							if(data.code==0){
+								var url=data.data;
+								resolve(url);
+							}else{
+								resolve('');
+							}
+						}
+					});
+				});
+			},
 			getNetworkType(){
 				return new Promise((resolve, reject) => {
 					uni.getNetworkType({
@@ -271,7 +439,6 @@
 				return new Promise((resove, reject) => {
 					this.$u.upload.login({ username: getApp().globalData.user.userName, password: getApp().globalData.user.password })
 						.then(res => {
-							console.log(res)
 							if (res.code === 0) {
 								getApp().globalData.uploadtoken = res.token
 								resove(true)
@@ -284,11 +451,11 @@
 									title:'抱歉，网络连接失败,无法上传云端！',
 									icon:'none'
 								})
-								setTimeout(()=>{
-									uni.redirectTo({
-										url:'/pages/home/home'
-									})
-								},2000);
+								// setTimeout(()=>{
+								// 	uni.redirectTo({
+								// 		url:'/pages/index/index'
+								// 	})
+								// },2000);
 							}
 							// reject(e)
 						})
@@ -341,7 +508,7 @@
 							}else{
 								// console.log(this.params)
 								var datas={ devSN: this.params.devSN, id:Number(this.params.id) };
-								// console.log('datas',datas)
+
 								this.$u.api.delteCloundVideo(datas)
 									.then(res => {
 										// console.log(res)
@@ -371,10 +538,13 @@
 
 <style lang="scss">
 	.videoBox {
-		margin-top: 35%;
+		height: 400rpx;
+
+		// margin-top: 35%;
 
 		&__video {
 			width: 100%;
+			height: 400rpx;
 		}
 	}
 

@@ -1,8 +1,8 @@
 {
-    "name" : "DVR存储",
+    "name" : "恒勃智驾",
     "appid" : "__UNI__3D8F432",
     "description" : "",
-    "versionName" : "1.0.55",
+    "versionName" : "1.0.59",
     "versionCode" : "100",
     "transformPx" : false,
     /* 5+App特有相关 */
@@ -45,7 +45,9 @@
                     "<uses-permission android:name=\"android.permission.READ_PHONE_STATE\"/>",
                     "<uses-permission android:name=\"android.permission.VIBRATE\"/>",
                     "<uses-permission android:name=\"android.permission.WAKE_LOCK\"/>",
-                    "<uses-permission android:name=\"android.permission.WRITE_SETTINGS\"/>"
+                    "<uses-permission android:name=\"android.permission.WRITE_SETTINGS\"/>",
+                    "<uses-feature android:name=\"android.permission.INTERNET\"/>",
+                    "<uses-feature android:name=\"android.permission.ACCESS_BACKGROUND_LOCATION\"/>"
                 ]
             },
             /* ios打包配置 */
@@ -66,7 +68,8 @@
                     }
                 },
                 "maps" : {},
-                "ad" : {}
+                "ad" : {},
+                "share" : {}
             },
             "icons" : {
                 "android" : {
@@ -101,12 +104,9 @@
                 }
             }
         },
-        "screenOrientation" : [
-            "portrait-primary",
-            "portrait-secondary",
-            "landscape-primary",
-            "landscape-secondary"
-        ],
+        "screenOrientation" : [ "portrait-primary", "portrait-secondary" ],
+        // "landscape-primary",
+        // "landscape-secondary"
         "nativePlugins" : {
             "Aimer-TCPPlugin" : {
                 "__plugin_info__" : {

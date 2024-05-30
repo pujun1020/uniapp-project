@@ -3,7 +3,7 @@
   <view style="margin-top: 100rpx;">
     <button @click="getWifiList">扫描WiFi</button>
     <view>
-      <view class="wifi-item" @click="connectNew(item.name,'secnet-cd',item.bssid,item.sindex)"
+      <view class="wifi-item" @click="connectNew(item.name,'88888888',item.bssid,item.sindex)"
             v-for="(item,index) in wifiArray"
             :key="index">
         {{ item.name }}

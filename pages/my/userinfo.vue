@@ -196,7 +196,7 @@
 				setTimeout(()=>{
 					this.email = text.replace(regex, '');
 					console.log(this.email);
-				},200)
+				},50)
 				
 			},
 			closeEmail() {

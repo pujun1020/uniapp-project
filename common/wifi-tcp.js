@@ -1,4 +1,4 @@
-import { connectWifi, getConnectedSSID } from './cx-wifi/cx-wifi.js'
+import { connectWifi, getConnectedSSID,getConnectedSSIDNew } from './cx-wifi/cx-wifi.js'
 
 export function connectStartWifi() {
 	return new Promise((resolve, reject) => {
@@ -12,8 +12,8 @@ export function connectStartWifi() {
 			connectWifi(ssid, password);
 			
 			let index = 0
-			const interval = setInterval(() => {
-				const curSSID = getConnectedSSID()
+			const interval = setInterval(async() => {
+				const curSSID =await getConnectedSSIDNew()
 				if (index > 10) {
 					console.log('wifi连接失败')
 					clearInterval(interval)

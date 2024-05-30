@@ -29,13 +29,6 @@ function getWifiManager() {
  */
 function setWifi(ssid,pwd) {
 
-	// 获取定位授权才能得到wifi ssid
-	plus.android.requestPermissions(['android.permission.ACCESS_COARSE_LOCATION'], (e) => {
-		if (e.granted.length > 0) { //权限被允许
-		}
-	}, (e) => {
-		console.log('Request Permissions error:' + JSON.stringify(e));
-	});
 
 	// 获取 WIFI 管理实例  
 	var wifiManager = getWifiManager();
@@ -123,30 +116,14 @@ function removeWifi(wifiManager, paramInt) {
 
 // 获取当前连接ssidss
 function getConnectedSSID() {
-	// 获取 WIFI 管理实例
-	var platform=uni.getStorageSync('platform');
-	var sand = uni.requireNativePlugin("sand-plugin-wifi");
-	if(platform&&platform=='ios'){
-		// 调用异步方法
-		sand.getWIFIInfo({},
-			(ret) => {
-				console.log('获取wifi信息',ret)
-		  //在页面显示获取的结果内容
-		  // page.content+="原始结果："+JSON.stringify(ret);
-		  // page.content+="WiFi信息：[ssid:"+ret.ssid+"],[bssid:"+ret.bssid+"]"
-		  if(ret.ssid){
-			  console.log(ret.ssid)
-			  var ssid=ret.ssid;
-			  return `"${ssid}"`;
-		  }
-		});
-	}else{
-		var wifiManager = getWifiManager();
-		var ssid = wifiManager.getConnectionInfo().getSSID();
-		plus.android.autoCollection(wifiManager);
-		return ssid;
-	}
-	return '';
+	var wifiManager = getWifiManager();
+	var ssid = wifiManager.getConnectionInfo().getSSID();
+	plus.android.autoCollection(wifiManager);
+	console.log('getConnectedSSID',ssid)
+	setTimeout(()=>{
+		console.log('getConnectedSSID',ssid)
+	},2000)
+	return ssid;
 }
 
 function getConnectedSSIDNew(){
@@ -154,24 +131,60 @@ function getConnectedSSIDNew(){
 		// 获取 WIFI 管理实例
 		var platform = uni.getStorageSync('platform');
 		var sand = uni.requireNativePlugin("sand-plugin-wifi");
-		if (platform && platform === 'ios') {
+		 //触发一次位置获取，否则iphone设置中没有定位服务
+		// if(getApp().globalData.longitude&&getApp().globalData.latitude){
+			uni.getLocation({
+				type: 'wgs84',
+				success: function (res) {
+					// console.log('当前位置的经度：' + res.longitude);
+					// console.log('当前位置的纬度：' + res.latitude);
+				},
+				fail() {
+					// console.log('获取定位授权失败！')
+					if(platform=="android"){
+						var context = plus.android.importClass('android.content.Context');
+						var locationManager = plus.android.importClass('android.location.LocationManager');
+						var main = plus.android.runtimeMainActivity();
+						var mainSvr = main.getSystemService(context.LOCATION_SERVICE);
+						if (!mainSvr.isProviderEnabled(locationManager.GPS_PROVIDER)) {
+							if (!mainSvr.isProviderEnabled(locationManager.GPS_PROVIDER)) {
+								var Intent = plus.android.importClass('android.content.Intent');
+								var Settings = plus.android.importClass('android.provider.Settings');
+								var intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+								main.startActivity(intent); // 打开系统设置定位服务功能页面
+							} else {
+								console.log('定位服务功能已开启');
+							}
+						}
+					
+					}
+					resolve(''); // 如果需要，可以在这里处理错误情况
+				}
+			});
+		// }
+		setTimeout(()=>{
 			// 调用异步方法
 			sand.getWIFIInfo({}, (ret) => {
-				console.log('获取wifi信息', ret);
+				// console.log('获取wifi信息', ret);
 				if (ret.ssid) {
-					console.log(ret.ssid);
+					// console.log(ret.ssid);
 					var ssid = ret.ssid;
 					resolve(`"${ssid}"`); // 异步操作成功，通过resolve传递结果
 				} else {
-					reject(''); // 如果需要，可以在这里处理错误情况
+					resolve(''); // 如果需要，可以在这里处理错误情况
 				}
 			});
-		} else {
-			var wifiManager = getWifiManager();
-			var ssid = wifiManager.getConnectionInfo().getSSID();
-			plus.android.autoCollection(wifiManager);
-			resolve(ssid); // Android部分直接返回结果
-		}
+		},1000)
+		
+		
+		// } else {
+		// 	var wifiManager = getWifiManager();
+		// 	console.log('wifiManager',wifiManager)
+		// 	var ssid = wifiManager.getConnectionInfo().getSSID();
+		// 	plus.android.autoCollection(wifiManager);
+		// 	console.log('安卓获取ssid',ssid)
+		// 	resolve(ssid); // Android部分直接返回结果
+		// }
 	});
 }
 
@@ -200,4 +213,5 @@ module.exports = {
 		}
 		plus.android.autoCollection(wifiManager);
 	},
+	
 }
