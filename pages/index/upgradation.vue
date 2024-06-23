@@ -60,17 +60,66 @@
 				</view>
 			</view>
 		</u-popup>
+		
+		
+		<u-popup v-model="showWIFIConnOpt" mode="bottom" height="980" border-radius="14" :mask-close-able="false" zIndex="999">
+			<view style="font-size: 30rpx;font-weight: bold;text-align: center;line-height: 80rpx;">
+				设备连接步骤
+			</view>
+			
+			<view style="font-size:26rpx;text-align: center;line-height:40rpx;width: 90%;margin: auto;">
+				如果您是首次连接或自动连接失败，请根据以下步骤操作！
+			</view>
+			<view v-show="showStep==1" style="width: 90%;margin:15rpx auto;min-height:300rpx;overflow:auto">
+				<view>
+					<view style="line-height: 44rpx;">第一步、打开仪表设备，将设备调节到以下苹果手机投屏界面</view>
+					<image src="../../static/yindao-1.png" mode="widthFix" style="width: 80%;margin: 20rpx 10%;"></image>
+				</view>
+			</view>
+			<view v-show="showStep==2" style="width: 90%;margin:15rpx auto;min-height:300rpx;overflow:auto">
+				<view>
+					<view style="line-height: 44rpx;">第二步、进入手机WIFI列表界面，找到：<br>
+					WIFI【{{ssid}}】  密码：【{{password}}】<br>
+					进行手动连接。连接成功以后回到当前页面，点击下一步。如下图：</view>
+					<image src="../../static/yindao-2.png" mode="widthFix" style="width: 90%;margin-left: 5%;margin-top: 15rpx;"></image>
+				</view>
+			</view>
+			<view style="width: 90%;margin: auto;text-align: center;" v-show="showStep==1">
+				<u-button style="width: 310rpx;background-color:#087DFF;color: #fff;" @tap="showStepFun(1)">下一步</u-button>
+			</view>
+			<view style="width: 90%;margin: auto;text-align: center;" v-show="showStep==2">
+				<u-button v-if="showStepNotUse" style="width: 310rpx;background-color:#087DFF;color: #fff;" @tap="showStepFun(2)">下一步</u-button>
+			</view>
+			
+			<view style="width: 90%;margin:40rpx auto;text-align: center;">
+				<u-button v-if="showStepNotUse" style="width: 310rpx;" @tap="showStepFun(3)">取消</u-button>
+			</view>
+		</u-popup>
 		<!-- button end -->
 	</view>
 </template>
 
 <script>
 
-import {connectWifi,getConnectedSSID,removeWifiBySSID} from '../../common/cx-wifi/cx-wifi.js'
+import {connectWifi,getConnectedSSID,removeWifiBySSID,getConnectedSSIDNew} from '../../common/cx-wifi/cx-wifi.js'
 	var _self;
 	export default {
 		data() {
 			return {
+				showWIFIConnOpt:false,
+				showStep:1,
+				showStepNotUse:true,
+				ssid:'',
+				password:'',
+				
+				//连接wifi参数
+				wifiManager: null,
+				WifiConfiguration: null,
+				wifis: null,
+				nowWifiInfo: null,
+				wifiArray: [],
+				ArrayList: null,
+				
 				background: {
 					backgroundColor: "#D7EAFF",
 				},
@@ -98,20 +147,8 @@ import {connectWifi,getConnectedSSID,removeWifiBySSID} from '../../common/cx-wif
 		},
 		onLoad(option) {
 			_self = this;
-			this.equip = getApp().globalData.equip
-			if(!this.equip){
-				uni.navigateBack(0);
-				return;
-			}
-			console.log('this.equip ',this.equip )
-			//每次进来做一次上报判断，如果缓存中有上报值，那就要做一次上报
-			var otaUpgradeReport = uni.getStorageSync('otaUpgradeReport');
-			if(otaUpgradeReport==1){
-				this.reportVer();
-				
-			}else{
-				this.loadData();
-			}
+			this.equip=getApp().globalData.equip;//默认重全局变量里面去拿
+			this.loadEquipList();
 		},
 		methods: {
 			loadData() {
@@ -122,8 +159,7 @@ import {connectWifi,getConnectedSSID,removeWifiBySSID} from '../../common/cx-wif
 						console.log('getMcuPackage',res)
 						if (res.code === 0 && res.data) {
 							const data = res.data
-							console.log(data)
-							console.log(this.equip)
+						
 							this.newMcuVersion = data.mcuProjectSN.replace(this.equip.mcuOTCSN, data.vercode) // 该字段为最新版本号，用户升级成功后上报到服务器
 							this.otanew = Number(data.vercode) - Number(this.equip.mcuOTCSN) > 0
 							if (this.otanew) {
@@ -138,6 +174,34 @@ import {connectWifi,getConnectedSSID,removeWifiBySSID} from '../../common/cx-wif
 							}
 						}
 					})
+			},
+			
+			loadEquipList() {
+				this.$u.api.getEquipList({ userId: getApp().globalData.user.id, sn: uni.getStorageSync('devsn') })
+					.then(res => {
+						if (res.code === 0) {
+							this.equip = res.data[0];
+							
+							this.mcuProjectSN = this.equip ? this.equip.mcuVersion : ''
+							this.mcuOTCSN = this.equip ? this.equip.mcuOTCSN : ''
+							this.osAppProjectSN = this.equip ? this.equip.osAppProjectSN : ''
+							
+							this.ssid = this.equip.apSN;//设备绑定的wifi
+							this.password = this.equip.apPassword;
+							console.log(this.equip)
+							//每次进来做一次上报判断，如果缓存中有上报值，那就要做一次上报
+							var otaUpgradeReport = uni.getStorageSync('otaUpgradeReport');
+							if(otaUpgradeReport==1){
+								this.reportVer();
+							}else{
+								this.loadData();
+							}
+						}else{
+							uni.navigateBack(0);
+						}
+					}).catch(e=>{
+						console.log(e)
+					});
 			},
 			onOtaUpgrad() {
 				if (!this.otanew) {
@@ -237,6 +301,44 @@ import {connectWifi,getConnectedSSID,removeWifiBySSID} from '../../common/cx-wif
 					this.progressTxt = `${res.totalBytesWritten}/${res.totalBytesExpectedToWrite}`
 				})
 			},
+			async showStepFun(index){
+				if(index==1){
+					this.showStep=2;
+				}
+				if(index==2){
+					var getCurSSID=await getConnectedSSIDNew();//当前的网络wifi
+					const ssid = getApp().globalData.equip.apSN;//设备绑定的wifi
+					const password = getApp().globalData.equip.apPassword
+					//表示当前连接的WIFI是设备指定的WIFI
+					if(`"${ssid}"`==getCurSSID){
+						
+					}else{
+						uni.showModal({
+							title:'提示',
+							content:'您当前连接的WIFI不正确，请切换为设备WIFI【'+ssid+'】,密码：【'+password+'】，提示：密码已复制，可直接粘贴密码',
+							showCancel:false,
+							confirmText:'确定',
+							success:(res)=>{
+								if(res.confirm){
+									
+								}
+							}
+							
+						})
+						
+						uni.setClipboardData({
+							data:password,
+							success() {
+								
+							}
+						})
+					}
+				}
+				if(index==3){
+					
+					this.showWIFIConnOpt=false;
+				}
+			},
 			//连接socket服务
 			connectTCP() {
 				return new Promise((resolve, reject) => {
@@ -251,8 +353,22 @@ import {connectWifi,getConnectedSSID,removeWifiBySSID} from '../../common/cx-wif
 						} else if (status == '1') {
 							//TCP断开连接
 							console.log('通道:' + channel + '断开连接');
-							
-							// resolve(false);
+							// uni.showToast({
+							// 	title:'设备连接失败，请检查是否已打开设备OTA升级界面',
+							// 	icon:'none'
+							// })
+							uni.showModal({
+								title:'提示',
+								content:'设备连接失败，请检查是否已打开设备OTA升级界面',
+								showCancel:false,
+								confirmText:'确认',
+								success:()=>{
+									// this.showWIFIConnOpt=true;
+								}
+							})
+							this.uploadShow = false
+							this.progressVal=0;
+							resolve(false);
 						}
 					};
 					
@@ -443,7 +559,7 @@ import {connectWifi,getConnectedSSID,removeWifiBySSID} from '../../common/cx-wif
 						})
 					} else {
 						getApp().globalData.devSN = ssid;
-						this.loadData()
+						this.loadEquipList();
 					}
 				})
 			},
@@ -462,59 +578,274 @@ import {connectWifi,getConnectedSSID,removeWifiBySSID} from '../../common/cx-wif
 				return bytes.slice(Number(position),Number(position)+0x10000);
 			},
 			connectStartWifi(){
-				return new Promise((resolve, reject) => {
+				return new Promise(async(resolve, reject) => {
 					const ssid = this.equip.apSN;// uni.getStorageSync('ssid')
 					const password =this.equip.apPassword;//  uni.getStorageSync('wifipwd')
-					var getCurSSIDOld=getConnectedSSID();//在切换之前获取当前连接的wifi,如果有连接其他的先移除掉，再去连接当前wifi
-					uni.showLoading({
-						title:this.$getLang('WIFI切换中...')
-					})
-					console.log('之前连接的wifi',getCurSSIDOld.replace('"','').replace('"',''))
-					removeWifiBySSID(getCurSSIDOld.replace('"','').replace('"',''));
+					var platform = uni.getStorageSync('platform');
+					// console.log(platform)
+					if(platform=="android"){
+						if (await this.connectWifiNew()) {
+							uni.showToast({
+								title:'WIFI已连接!',
+								icon:'success'
+							})
+							resolve(true);
+						}else{
+							uni.hideLoading();
+							this.showWIFIConnOpt=true;
+							resolve(false);
+						}
+					}else{
+						if (await connectStartWifi()) {
+							uni.showToast({
+								title:'WIFI已连接!',
+								icon:'success'
+							})
+							resolve(true);
+						}else{
+							//如果连接失败，弹出指引如何连接设备
+							uni.hideLoading();
+							this.showWIFIConnOpt=true;
+							resolve(false);
+						}
+					}
 					
-					//
-					console.log(ssid,password)
-					setTimeout(()=>{
+					// var getCurSSIDOld=getConnectedSSID();//在切换之前获取当前连接的wifi,如果有连接其他的先移除掉，再去连接当前wifi
+					// uni.showLoading({
+					// 	title:this.$getLang('WIFI切换中...')
+					// })
+					// console.log('之前连接的wifi',getCurSSIDOld.replace('"','').replace('"',''))
+					// removeWifiBySSID(getCurSSIDOld.replace('"','').replace('"',''));
+					
+					// //
+					// console.log(ssid,password)
+					// setTimeout(()=>{
 						
-						connectWifi(ssid,password);
-						var index=0;
-						var interval = setInterval(()=>{
-							var getCurSSID=getConnectedSSID();
-							if(index>20){
-								clearInterval(interval);
-								uni.hideLoading();
-								uni.showModal({
-									title: this.$getLang('提示'),
-									content:this.$getLang('WIFI切换失败！请手动点击连接车机WIFI，然后确认继续升级'),
-									cancelText:this.$getLang('取消'),
-									confirmText:this.$getLang('确定'),
-									success:(res)=> {
-										if(res.confirm){
-											// removeWifiBySSID(getCurSSIDOld);
-											this.connectStartWifi();
-										}else{
-											resolve(false);
-										}
-									}
-								})
+					// 	connectWifi(ssid,password);
+					// 	var index=0;
+					// 	var interval = setInterval(()=>{
+					// 		var getCurSSID=getConnectedSSID();
+					// 		if(index>20){
+					// 			clearInterval(interval);
+					// 			uni.hideLoading();
+					// 			uni.showModal({
+					// 				title: this.$getLang('提示'),
+					// 				content:this.$getLang('WIFI切换失败！请手动点击连接车机WIFI，然后确认继续升级'),
+					// 				cancelText:this.$getLang('取消'),
+					// 				confirmText:this.$getLang('确定'),
+					// 				success:(res)=> {
+					// 					if(res.confirm){
+					// 						// removeWifiBySSID(getCurSSIDOld);
+					// 						this.connectStartWifi();
+					// 					}else{
+					// 						resolve(false);
+					// 					}
+					// 				}
+					// 			})
 								
-							}
-							if(`"${ssid}"`==getCurSSID){
-								clearInterval(interval);
-								uni.hideLoading();
-								uni.showToast({
-									title:this.$getLang('网络切换成功，正在连接车机服务'),
-									icon:'none'
-								})
-								resolve(true);
-							}else{
-								index++;
-							}
-						},1000)
-					},2000)
+					// 		}
+					// 		if(`"${ssid}"`==getCurSSID){
+					// 			clearInterval(interval);
+					// 			uni.hideLoading();
+					// 			uni.showToast({
+					// 				title:this.$getLang('网络切换成功，正在连接车机服务'),
+					// 				icon:'none'
+					// 			})
+					// 			resolve(true);
+					// 		}else{
+					// 			index++;
+					// 		}
+					// 	},1000)
+					// },2000)
 					
 				});
 			},
+		
+			connectWifiNew(){
+				return new Promise((resolve, reject) => {
+					var ssid = getApp().globalData.equip.apSN;//设备绑定的wifi
+					var pwd = getApp().globalData.equip.apPassword;
+					
+					const MainActivity = plus.android.runtimeMainActivity()
+					const Context = plus.android.importClass("android.content.Context");
+					plus.android.importClass("android.net.wifi.WifiManager");
+					plus.android.importClass("java.util.List");
+					this.ArrayList = plus.android.importClass("java.util.ArrayList");
+					plus.android.importClass("android.net.wifi.ScanResult");
+					plus.android.importClass("android.net.wifi.WifiInfo");
+					plus.android.importClass("java.util.BitSet");
+					this.WifiConfiguration = plus.android.importClass("android.net.wifi.WifiConfiguration");
+					this.wifiManager = MainActivity.getSystemService(Context.WIFI_SERVICE)
+					
+					setTimeout(async()=>{
+						var openWifiStatus = await this.androidOpenWifi();
+						if(openWifiStatus){
+							//搜索当前wifi
+							var wifiInfo=await this.getWifiList(ssid);
+							if(wifiInfo){
+								this.connectNew(wifiInfo.name,pwd,wifiInfo.bssid,wifiInfo.sindex);
+								let index = 0
+								const interval = setInterval(async() => {
+									const curSSID =await getConnectedSSIDNew()
+									if (index > 10) {
+										// console.log('wifi连接失败')
+										clearInterval(interval)
+										resolve(false);
+									}
+									if(`"${ssid}"`== curSSID) {
+										// console.log('wifi连接成功')
+										clearInterval(interval)
+										resolve(true);
+									} else {
+										index++
+									}
+								}, 1000)
+							}else{
+								resolve(false);
+							}
+						}else{
+							resolve(false);
+						}
+					},10)
+				});
+			},
+			androidOpenWifi() {
+				return new Promise((resolve, reject) => {
+				  let bRet = false;
+				  const wifiManager = this.wifiManager
+				  if (!wifiManager.isWifiEnabled()) {
+					bRet = wifiManager.setWifiEnabled(true); //返回自动打开的结果
+					// console.log("打开wifi的返回结果是" + bRet)
+				  } else {
+					bRet = true;
+					// console.log("wifi原本已经打开")
+				  }
+				  resolve(bRet);
+			  });
+			},
+			getWifiList(ssid){
+				return new Promise((resolve, reject) => {
+					const resultList = this.wifiManager.getScanResults()
+					this.wifis = resultList
+					const len = resultList.size()
+					let wifiArray = []
+					for (let i = 0; i < len; i++) {
+					  // console.log(resultList.get(i).toString())
+					  const oneWiFi = {
+					    sindex: i,
+					    name: resultList.get(i).plusGetAttribute('SSID'),
+					    bssid: resultList.get(i).plusGetAttribute('BSSID'),
+					    signal: resultList.get(i).plusGetAttribute('level')
+					  }
+					  if(oneWiFi.name==ssid){
+						  resolve(oneWiFi);
+					  }
+					  wifiArray.push(oneWiFi);
+					}
+					this.wifiArray = wifiArray;
+					 resolve(null);
+					// console.log('获取wifi列表',this.wifiArray)
+					
+				});
+			},
+			// 连接新的WiFi
+			connectNew(ssid, pwd, BSSID, index) {
+			  // uni.onNetworkStatusChange(function (res) {
+			  //   console.log(res.isConnected);
+			  //   console.log(res.networkType);
+			  // });
+			  console.log('wifi账号密码：',{ssid, pwd})
+			  const wifiManager = this.wifiManager
+			  var wifiConfig = this.androidCreateWifiInfo(ssid, pwd, 'wpa', BSSID);
+			  if (wifiConfig == null) {
+			    // console.log("wifiConfig is null!")
+			    return;
+			  }
+			  //WifiConfiguration
+			  const tempConfig = this.isExsitsAndroid(ssid)
+			  if (tempConfig != null) {
+			    // console.log("删除原来连接的wifi" + tempConfig);
+			    wifiManager.removeNetwork(tempConfig.plusGetAttribute('networkId'));
+			  }
+			  // console.log("要连接的新的wifi配置：" + wifiConfig)
+			  // console.log("要连接的新的wifi配置：", wifiConfig)
+			  const netID = wifiManager.addNetwork(wifiConfig);
+			  // console.log(netID);
+			  //boolean
+			  const enabled = wifiManager.enableNetwork(netID, true);
+			  // console.log("enableNetwork status enable=" + enabled)
+			  // boolean
+			  const connected = wifiManager.reconnect();
+			  // console.log("enableNetwork connected=" + connected)
+			
+			},
+			// 创建新的WiFi信息
+			androidCreateWifiInfo(SSID, Password, Type, BSSID) {
+			  // console.log(SSID, Password, Type)
+			  const WifiConfiguration = this.WifiConfiguration;
+			  let config = new WifiConfiguration();
+			  config.plusGetAttribute('allowedAuthAlgorithms').clear();
+			  config.plusGetAttribute('allowedGroupCiphers').clear();
+			  config.plusGetAttribute('allowedKeyManagement').clear();
+			  config.plusGetAttribute('allowedPairwiseCiphers').clear();
+			  config.plusGetAttribute('allowedProtocols').clear();
+			  config.plusSetAttribute('SSID', '"' + SSID + '"');
+			  // config.plusSetAttribute('BSSID', '"' + BSSID + '"');
+			  // nopass
+			  if (Type === "nopass") {
+			    config.plusSetAttribute('preSharedKey', "");
+			    config.plusGetAttribute('allowedKeyManagement').set(WifiConfiguration.KeyMgmt.NONE);
+			    config.plusSetAttribute('wepTxKeyIndex', 0);
+			  }
+			  // wep
+			  if (Type === "wep") {
+			    if (!Password !== "") {
+			      if (isHexWepKey(Password)) {
+			        config.plusSetAttribute('preSharedKey', Password);
+			      } else {
+			        config.plusSetAttribute('preSharedKey', "\"" + Password + "\"");
+			      }
+			    }
+			    config.allowedAuthAlgorithms.set(AuthAlgorithm.OPEN);
+			    config.allowedAuthAlgorithms.set(AuthAlgorithm.SHARED);
+			    config.allowedKeyManagement.set(KeyMgmt.NONE);
+			    config.plusSetAttribute('wepTxKeyIndex', 0);
+			  }
+			  // wpa
+			  if (Type === "wpa") {
+			    // config.plusSetAttribute('preSharedKey', "\"" + Password + "\"");
+			    config.plusSetAttribute('preSharedKey', '"' + Password + '"');
+			    config.plusSetAttribute('hiddenSSID', true);
+			    config.plusGetAttribute('allowedAuthAlgorithms').set(WifiConfiguration.AuthAlgorithm.OPEN);
+			    config.plusGetAttribute('allowedGroupCiphers').set(WifiConfiguration.GroupCipher.TKIP);
+			    config.plusGetAttribute('allowedKeyManagement').set(WifiConfiguration.KeyMgmt.WPA_PSK);
+			    config.plusGetAttribute('allowedPairwiseCiphers').set(WifiConfiguration.PairwiseCipher.TKIP);
+			    // 此处需要修改否则不能自动重联
+			    //config.plusGetAttribute('allowedProtocols').set(WifiConfiguration.Protocol.WPA);
+			    config.plusGetAttribute('allowedGroupCiphers').set(WifiConfiguration.GroupCipher.CCMP);
+			    config.plusGetAttribute('allowedPairwiseCiphers').set(WifiConfiguration.PairwiseCipher.CCMP);
+			    config.plusSetAttribute('status', WifiConfiguration.Status.ENABLED);
+			  }
+			  return config;
+			},
+			// 查看以前是否也配置过这个网络
+			isExsitsAndroid(sSID) {
+			  // console.log("查看以前是否也配置过这个网络" + sSID);    //WifiConfiguration
+			  const ArrayList = this.ArrayList
+			  const wifiManager = this.wifiManager
+			  let existingConfigs = new ArrayList();
+			  existingConfigs = wifiManager.getConfiguredNetworks();
+			  if (existingConfigs.size() != 0) {
+			    for (var i = 0; i < existingConfigs.size(); i++) {
+			      if (existingConfigs.get(i).plusGetAttribute('SSID') == ("\"" + sSID + "\"")) {
+			        // console.log("该制定的ssid存在于配置中:" + sSID);
+			        return existingConfigs.get(i);
+			      }
+			    }
+			  }
+			  // console.log("该ssid没有配置过")
+			  return null;
+			}
 		}
 	}
 

@@ -30,8 +30,8 @@
 				<scroll-view scroll-y style="width: 100%;" :style="'height:'+winHeight+'px'">
 					<view class="bg">
 						<view class="u-flex-col u-col-center u-p-t-38">
-							<image @click="toEquipList" src="../../static/banner1.png" mode="widthFix" style="width: 100%;"></image>
-							<view class="u-flex-col u-col-center" style="margin-top: -150rpx;z-index: 999;">
+							<image @click="toEquipList" :src="bannerImg" mode="widthFix" style="width: 100%;"></image>
+							<view class="u-flex-col u-col-center" style="z-index: 999;">
 								<view class="bg__name" v-show="localChannel == '1'">金浪318</view>
 								<view class="bg__name" v-show="localChannel == '0'">{{$getLang('恒勃智驾')}}</view>
 								<view class="bg__status" :style="{ color: socketStatus === '已连接' ? 'green' : '#7D818C' }">{{ socketStatus }}</view>
@@ -70,7 +70,7 @@
 					</view>
 				</scroll-view>
 			</swiper-item>
-			<swiper-item class="swiper-item" v-if="equipInfo">
+			<swiper-item class="swiper-item" v-if="equipInfo&&localChannel != '0'">
 				<scroll-view scroll-y style="width: 100%;" :style="{'height':winHeight+'px'}">
 					<DvrList ref="dvrlist" @updateWifiConnectionState="updateWifiConnectionState" />
 				</scroll-view>
@@ -90,6 +90,8 @@
 		components: { DvrList },
 		data() {
 			return {
+				bannerImg:'../../static/banner1.png',
+				
 				tablist: [{
 						iconPath: "/static/tabbar/menu_ls.png",
 						selectedIconPath: "/static/tabbar/menu_ls_active.png",
@@ -136,7 +138,9 @@
 				
 				timer:null,
 				
-				
+				loading: false, // 加载状态
+				noMore: false, // 没有更多数据的状态
+				refresherTriggered: false // 控制刷新状态
 			}
 		},
 		onShow() {
@@ -186,8 +190,6 @@
 				this.startNetworkMonitor();
 			  }
 			});
-
-			
 		},
 		methods: {
 			updateWifiConnectionState(state){
@@ -212,13 +214,18 @@
 					getApp().globalData.apitoken = token
 					getApp().globalData.user = user
 					var equip=uni.getStorageSync('equip');
+					// console.log('缓存equip',equip)
 					if(!equip){
 						this.loadEquipList();
-						
 					}else{
 						this.equipInfo=equip;
-						console.log(equip)
+						if(equip.bannerImg){
+							this.bannerImg=equip.bannerImg;
+						}
 						getApp().globalData.equip = equip
+						getApp().globalData.apSN = equip.apSN;
+						getApp().globalData.apPassword = equip.apPassword;
+
 						this.localChannel=equip.channel;
 					}
 					return;
@@ -261,17 +268,23 @@
 				
 			},
 			loadEquipList() {
+				// console.log(uni.getStorageSync('devsn'))
 				this.$u.api.getEquipList({ userId: getApp().globalData.user.id, sn: uni.getStorageSync('devsn') })
 					.then(res => {
-						if (res.code === 0) {
+						// console.log(res)
+						if (res.code === 0&&res.data.length>0) {
 							this.equipInfo = res.data[0]
+							if(this.equipInfo.bannerImg){
+								this.bannerImg=this.equipInfo.bannerImg;
+							}
 							this.mcuProjectSN = this.equipInfo ? this.equipInfo.mcuVersion : ''
 							this.mcuOTCSN = this.equipInfo ? this.equipInfo.mcuOTCSN : ''
 							this.osAppProjectSN = this.equipInfo ? this.equipInfo.osAppProjectSN : ''
 							this.localChannel = this.equipInfo ? this.equipInfo.channel : ''
 							getApp().globalData.equip = this.equipInfo
-							console.log(this.equipInfo)
 							uni.setStorageSync('equip',this.equipInfo)
+							getApp().globalData.apSN =this.equipInfo.apSN;
+							getApp().globalData.apPassword = this.equipInfo.apPassword;
 							// this.autoConnection()
 						}
 					})
@@ -279,18 +292,14 @@
 			async change(index,opt=0) {
 				var ssid = this.equipInfo.apSN
 				var password = this.equipInfo.apPassword
-				
+				console.log(ssid,password)
 				if (index === 1) {
-					// uni.showToast({
-					// 	title:'视频加载中...',
-					// 	mask:true
-					// })
 					uni.showLoading({
 						title:'加载中...',
 						mask:true
 					})
+
 					 var getCurSSID=await getConnectedSSIDNew();//当前的网络wifi
-					 const ssid = getApp().globalData.equip.apSN;//设备绑定的wifi
 					 if(`"${ssid}"`==getCurSSID){
 						 getApp().globalData.socketTask=null;
 						
@@ -312,7 +321,7 @@
 						this.socketStatus='未连接'
 					}
 					// this.isShowTabbar=true;
-					
+				    
 				}
 			},
 			changes(index) {
@@ -465,7 +474,7 @@
 			upgradeInfo() {
 				this.$u.api.getLastPackage({ appsoftsn: 'App-20240422153752' })
 					.then(res => {
-						console.log(res)
+						// console.log(res)
 						if (res.code === 0 ) {
 							var data=res.data;
 							var vercode=data.vercode;
@@ -476,7 +485,7 @@
 								//如果当前版本小于服务器版本返回-1;
 								//如果当前版本等于服务器版本返回0;
 								var val = this.compareVersions(curVersion,vercode);
-								console.log(curVersion,vercode);
+								// console.log(curVersion,vercode);
 								if(val==-1){
 									uni.setStorageSync('appAPK',res.data);
 									// console.log('app版本发生变化');

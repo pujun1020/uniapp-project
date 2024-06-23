@@ -56,7 +56,8 @@
 					}
 				],
 				tabCurrent: 2,
-				user: {}
+				user: {},
+				isButtonDisabled:false,
 			}
 		},
 		onShow() {
@@ -77,6 +78,9 @@
 		},
 		methods: {
 			async menu(param) {
+				if (this.isButtonDisabled) return; // 如果按钮已禁用，则直接返回，不执行后续操作
+				      
+				this.isButtonDisabled = true; // 禁用按钮
 				var getCurSSID=await getConnectedSSIDNew();//当前的网络wifi
 				if(getApp().globalData.equip){
 					const ssid = getApp().globalData.equip.apSN;//设备绑定的wifi
@@ -95,19 +99,31 @@
 				}
 					if (param == 1) {
 						uni.navigateTo({
-							url: "/pages/my/userinfo"
+							url: "/pages/my/userinfo",
+							success:()=>{
+								this.isButtonDisabled = false; // 跳转完成后或设置一个延迟后重新启用按钮
+							}
 						})
 					} else if (param == 2) {
 						uni.navigateTo({
-							url: "/pages/my/feedback"
+							url: "/pages/my/feedback",
+							success:()=>{
+								this.isButtonDisabled = false; // 跳转完成后或设置一个延迟后重新启用按钮
+							}
 						})
 					} else if (param == 3) {
 						uni.navigateTo({
-							url: "/pages/my/set"
+							url: "/pages/my/set",
+							success:()=>{
+								this.isButtonDisabled = false; // 跳转完成后或设置一个延迟后重新启用按钮
+							}
 						})
 					} else {
 						uni.navigateTo({
-							url: "/pages/my/privacy"
+							url: "/pages/my/privacy",
+							success:()=>{
+								this.isButtonDisabled = false; // 跳转完成后或设置一个延迟后重新启用按钮
+							}
 						})
 					}
 				
@@ -118,8 +134,9 @@
 				})
 			},
 		  async	login() {
+				if (this.isButtonDisabled) return; // 如果按钮已禁用，则直接返回，不执行后续操作
+				this.isButtonDisabled = true; // 禁用按钮
 				var getCurSSID=await getConnectedSSIDNew();//当前的网络wifi
-				console.log(getCurSSID)
 				if(getApp().globalData.equip){
 					const ssid = getApp().globalData.equip.apSN;//设备绑定的wifi
 					if(`"${ssid}"`==getCurSSID){
@@ -129,7 +146,7 @@
 							showCancel:false,
 							confirmText:this.$getLang('确定'),
 							success:(res)=>{
-								
+								this.isButtonDisabled = false; // 禁用按钮
 							}
 						})
 						return;
@@ -154,6 +171,7 @@
 								url: "/pages/login/login"
 							})
 						}
+						this.isButtonDisabled = false; // 禁用按钮
 					}
 				})
 			},

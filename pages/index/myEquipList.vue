@@ -9,13 +9,14 @@
 						<text class="gui-card-name">{{ item.abbreviation }}</text>
 						<text v-show="item.sn === equipSn" class="gui-text-small gui-color-blue">{{$getLang('当前设备')}}</text>
 					</view>
-					<view class="gui-card-text gui-block-text" style="margin-top:10rpx;">{{ item.mcuVersion }}</view> 
+					<view class="gui-card-text gui-block-text" style="margin-top:10rpx;">{{ item.sn }}</view> 
+					<view class="gui-card-text gui-block-text">{{ item.mcuVersion }}</view> 
 					<view class="gui-card-text gui-block-text">{{ item.createTime }}</view>
 				</view>
 			</view>
 			<view class="gui-card-footer gui-flex gui-rows gui-nowrap gui-space-between gui-align-items-center">
-				<text @click="onDel(item)" class="gui-icons gui-card-footer-item gui-border-r" :style="{ color: item.sn === equipSn ? '#626675' : 'red' }">{{$getLang('删除')}}</text>
-				<text @click="onSelected(item)" class="gui-icons gui-card-footer-item" :style="{ color: item.sn === equipSn ? '#626675' : '#2B9DF3' }">{{$getLang('切换设备')}}</text>
+				<text @click="onDel(item)" class="gui-icons gui-card-footer-item gui-border-r" style="color: red;">{{$getLang('删除')}}</text>
+				<text @click="onSelected(item)" class="gui-icons gui-card-footer-item" style="color:#2B9DF3;">{{$getLang('切换设备')}}</text>
 			</view>
 		</view>
 		<view style="margin-top:300rpx">
@@ -48,18 +49,24 @@
 					.then(res => {
 						if (res.code === 0) {
 							this.equipList = res.data
+							if(this.equipList.length==0){
+								uni.removeStorageSync('devsn');
+							}else{
+								//自动切换下一个设备
+								uni.setStorageSync('devsn',this.equipList[0]);
+							}
 							console.log(this.equipList)
 						}
 					})
 			},
 			onDel(equip) {
-				if (equip.sn === this.equipSn){
-					uni.showToast({
-						title:'当前设备无法解绑！',
-						icon:'none'
-					}) 
-					return
-				} 
+				// if (equip.sn === this.equipSn){
+				// 	uni.showToast({
+				// 		title:'当前设备无法解绑！',
+				// 		icon:'none'
+				// 	}) 
+				// 	return
+				// } 
 				uni.showModal({
 					title:this.$getLang('提示') ,
 					content:this.$getLang('确认要解绑该设备吗'),
@@ -67,17 +74,37 @@
 					confirmText:this.$getLang('确定'),
 					success: (res) => {
 						if (res.confirm) {
-							this.$u.api.delteEquip([equip.id])
-								.then(res => {
-									if (res.code === 0) {
-										this.loadEquipList()
-									} else {
-										uni.showToast({
-											title: this.$getLang(res.code),
-											icon: 'none'
-										})
+							uni.showModal({
+								title:this.$getLang('提示') ,
+								content:this.$getLang('当前设备上传的云端视频是否一并清除?'),
+								cancelText:this.$getLang('否'),
+								confirmText:this.$getLang('是'),
+								success: (res) => {
+									var flag=true;
+									if (!res.confirm) {
+										flag=false;
 									}
-								})
+									this.$u.api.delteEquip([equip.id],flag,equip.sn)
+									.then(res => {
+										if (res.code === 0) {
+											uni.removeStorageSync('equip');
+											this.loadEquipList();
+											uni.redirectTo({
+												url:'/pages/index/index'
+											})
+										} else {
+											uni.showToast({
+												title: this.$getLang(res.code),
+												icon: 'none'
+											})
+										}
+									})
+									
+									
+								}
+							})
+							
+							
 						}
 					}
 				})

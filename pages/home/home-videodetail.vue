@@ -16,7 +16,7 @@
 			
 			<!-- size -->
 			<view style="display: flex;">
-				<view>视频时常：{{ videoTime }}</view> 
+				<view>视频时长：{{ videoTime }}</view> 
 				<view style="margin-left: 50rpx;"> 视频大小：{{ params.size }}</view> 
 				<view style="margin-left: 50rpx;">{{ params.angle ? (params.angle === 'front' ? $getLang('前录') : $getLang('后录')) : '' }}</view>
 			</view>
@@ -29,12 +29,23 @@
 			</view>
 		</view>
 		<view style="width: 100%;height: 16rpx;background-color: #f8f8f8;margin: 20rpx 0;"></view>
-		<view v-if="curVideoGroup.time" style="width: 100%;min-height: 400rpx;">
-			<u-cell-group :title="'【'+curVideoGroup.time+'】视频列表'" :title-style="{color:'#000'}">
-				<u-cell-item @click="tapCellItem(item,index)" v-for="(item,index) in curVideoGroup.body" icon="play-circle" :title="item.date" :arrow="false" 
-				:value="params.date==item.date?'当前视频':''" :value-style="{ color: 'red' }"></u-cell-item>
-			</u-cell-group>
-		</view>
+		<scroll-view scroll-y style="width: 100%;" :style="'height:'+winHeight+'px'">
+			<view v-if="curVideoGroup&&curVideoGroup.time" style="width: 100%;min-height: 400rpx;">
+				<!-- <view>【{{curVideoGroup.time}}】视频列表</view> -->
+				<u-cell-group :title="body.hour+'点'" :title-style="{color:'#000',textAlign:'center'}" v-for="body in curVideoGroup.body">
+					<u-cell-item @click="tapCellItem(item,index)" v-for="(item,index) in body.list" icon="play-circle" 
+					 :arrow="false" 
+					:value="params.date==item.date?'当前视频':''" :value-style="{ color: 'red' }">
+						<view slot="title">
+							<text>{{item.title}}</text>
+							<text style="margin-left: 40rpx;">{{getVideoTime(item)}}</text>
+							<text style="margin-left: 40rpx;">{{item.size}}</text>
+							<text style="margin-left: 40rpx;">{{item.angle ? (item.angle === 'front' ? $getLang('前录') : $getLang('后录')) : ''}}</text>
+						</view>
+					</u-cell-item>
+				</u-cell-group>
+			</view>
+		</scroll-view>
 		<view style="width: 100%;height:170rpx ;"></view>
 		<!-- video end -->
 
@@ -94,26 +105,50 @@
 				thumbUrl:'',
 				isUploadToCloud:false,
 				isDownLoad:false,
-				curVideoGroup:{},
+				curVideoGroup:null,
 				
 				isShpwPlayVideo:true,
 				optType:0,
+				
+				winHeight:460,
 			}
 		},
 		onLoad(option) {
+			
+			uni.getSystemInfo({
+			  success: (res)=> {
+			
+				  uni.setStorageSync('platform',res.platform);
+				  getApp().globalData.platform=res.platform;
+				  
+				  var screenHeight_px=res.screenHeight;
+				  var screenWidth_px=res.screenWidth;
+			
+				// this.winHeight=res.windowHeight;
+				var headerHeight_rpx = 278+400+200; // 假设头部导航高度为100rpx  
+				// 将头部导航高度从rpx转换为px  
+				var headerHeight_px = headerHeight_rpx * (screenWidth_px / 750);  
+				  
+				// 计算剩余高度（单位为px）  
+				var remainingHeight_px = screenHeight_px - headerHeight_px;  
+				console.log(remainingHeight_px)
+				this.winHeight=remainingHeight_px;
+			  }
+			});
+			
 			// console.log(getApp().globalData)
+			console.log(option)
 			if (option) {
 				this.params = option
 				this.optType=option.type;
-				console.log(option);
+				// console.log(option);
 				if(option.type==2){
 					this.videoTime=this.params.duration;
 					this.params.angle=this.params.angle==0?'front':'';
 					var list=getApp().globalData.curVideoGroup;
 					if(list){
-						this.curVideoGroup=list;
+						this.curVideoGroup=JSON.parse(JSON.stringify(list));;
 					}
-					console.log('当天的所有视频列表',list)
 				}else{
 					const sec = Math.floor(Number(this.params.duration) / 1000)
 					this.videoTime = `${ Math.floor(sec/60) }分${Math.floor(sec%60)}秒`
@@ -125,7 +160,7 @@
 							for(var i=0;i<list.body.length;i++){
 								list.body[i].date=extractAndFormatDateTime(list.body[i].name);
 							}
-							this.curVideoGroup=list;
+							this.curVideoGroup=JSON.parse(JSON.stringify(list));;
 						}
 						setTimeout(async()=>{
 							var flag=await verfyUploadToCloud(this,this.params.id,1);
@@ -133,7 +168,7 @@
 								this.isUploadToCloud=true;
 							}
 						},10)
-						console.log('本地视频对象：',this.params)
+						// console.log('本地视频对象：',this.params)
 					}
 					//判断是否下载本地
 					if(this.params.type==0){
@@ -142,10 +177,10 @@
 							for(var i=0;i<list.body.length;i++){
 								list.body[i].date=extractAndFormatDateTime(list.body[i].name);
 							}
-							this.curVideoGroup=list;
+							this.curVideoGroup=JSON.parse(JSON.stringify(list));;
 						}
 						setTimeout(async()=>{
-							console.log(this.params.id)
+							// console.log(this.params.id)
 							var flag=await verfyDownLoad(this,this.params.id,1);
 							if(flag){
 								this.isDownLoad=true;
@@ -155,11 +190,52 @@
 				}
 				if(!this.params.date){//如果时间为空，重视频标题里面截取
 					this.params.date=extractAndFormatDateTime(this.params.name);
-					console.log(this.params.date)
+					// console.log(this.params.date)
 				}
 				if(this.params.thumbUrl){
 					this.thumbUrl=this.params.thumbUrl;
 				}
+				if(this.curVideoGroup){
+					this.curVideoGroup.body.sort((a, b) => {
+						const dateA = new Date(a.date).getTime();
+						const dateB = new Date(b.date).getTime();
+						return dateB - dateA; // 降序排列
+					});
+					// 分组逻辑保持不变
+					let groupedData = Object.values(
+						this.curVideoGroup.body.reduce((groups, item) => {
+							const dateObj = new Date(item.date);
+							const hour = ('0' + dateObj.getHours()).slice(-2); // 获取小时并补0
+							
+							if (!groups[hour]) {
+								groups[hour] = {
+									hour: hour,
+									list: []
+								};
+							}
+							if(this.params.type==2){
+								item.title=item.time;
+								item.size=(item.size/1024/1024).toFixed(2)+'Mb';
+								item.angle=item.cameraType=='0'?'front':'';
+							}
+							
+							groups[hour].list.push(item); // 将当前对象放入对应小时的list中
+							
+							return groups;
+						}, {})
+					);
+				
+					// 对分组后的hour进行倒序排序
+					groupedData.sort((a, b) => b.hour.localeCompare(a.hour, undefined, {numeric: true}));
+				
+					this.curVideoGroup.body = groupedData;
+					console.log(groupedData)
+				}
+				
+				uni.setNavigationBarTitle({
+					title:this.curVideoGroup.time+'视频列表'
+				})
+
 			}
 		},
 		methods: {
@@ -199,12 +275,28 @@
 					this.isShpwPlayVideo=false;
 					setTimeout(()=>{
 						this.isShpwPlayVideo=true;
-					},1);
+					},50);
 					uni.pageScrollTo({
 					    scrollTop: 0, // 滚动到顶部
 					    duration: 100 // 瞬间完成滚动，如果希望有动画效果，可以设置一个非零值，单位ms
 					});
 				// }
+			},
+			getVideoTime(item){
+				if(this.optType==1||this.optType==0){
+					const sec = Math.floor(Number(item.duration) / 1000);
+					return `${ Math.floor(sec/60) }分${Math.floor(sec%60)}秒`;
+				}
+				if(this.optType==2){
+					if(item.totalTime.includes('分')){
+						return item.totalTime;
+					}else{
+						var time=Number(item.totalTime);
+						const sec = Math.floor(Number(time) / 1000);
+						return `${ Math.floor(sec/60) }分${Math.floor(sec%60)}秒`;
+					}
+					
+				}
 			},
 			//保存视频到相册
 			async onToPhotosAlbum(){
@@ -232,7 +324,7 @@
 					const downloadTask = uni.downloadFile({
 						url: this.params.playUrl,
 						success: (res) => {
-							console.log('uploadOrDownload',res.tempFilePath)
+							// console.log('uploadOrDownload',res.tempFilePath)
 							uni.saveFile({
 								tempFilePath: res.tempFilePath,
 								success: (fileRes) => {
@@ -422,7 +514,7 @@
 			},
 			
 			getFileInfo() {
-				console.log('获取文件信息')
+				// console.log('获取文件信息')
 				return new Promise((resove, reject) => {
 					uni.getFileInfo({
 						filePath: this.params.playUrl,
@@ -470,9 +562,9 @@
 					success: async(res) => {
 						if (res.confirm) {
 							if(this.params.type==0){
-								console.log(this.params)
+								// console.log(this.params)
 								let socketTask = getApp().globalData.socketTask;
-								console.log('socketTask',socketTask)
+								// console.log('socketTask',socketTask)
 								if(socketTask){
 									var temps=[this.params.playUrl];
 									socketTask.send({

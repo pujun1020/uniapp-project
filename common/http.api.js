@@ -38,7 +38,7 @@ const install = (Vue, vm) => {
 	// 获取设备列表信息
 	let getEquipList = (params = {}) => vm.$u.get(   uni.getStorageSync('requestUrl') + '/api/dev', params);
 	// 删除设备信息
-	let delteEquip = (params = {}) => vm.$u.delete(   uni.getStorageSync('requestUrl') + '/api/dev', params);
+	let delteEquip = (params = {},flag=true,sn='') => vm.$u.delete(   uni.getStorageSync('requestUrl') + '/api/dev?flag='+flag+'&sn='+sn, params);
 	// 获取MCU最新版本信息（用于MCU升级）
 	let getMcuPackage = (params = {}) => vm.$u.get(   uni.getStorageSync('requestUrl') + '/api/mcupackage/lastpackage', params);
 	// 获取OSAPP最新版本信息（用于OSAPP升级）

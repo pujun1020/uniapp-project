@@ -52,7 +52,7 @@
 				this.password = uni.getStorageSync('password') || ''
 				this.remPassword = uni.getStorageSync('remPassword') === true
 			}
-			
+			uni.removeStorageSync('devsn');
 		},
 		methods: {
 			//当前登录按钮操作

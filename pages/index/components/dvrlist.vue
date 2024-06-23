@@ -32,7 +32,7 @@
 					<view :title="video.date" v-for="(video, inx) in vieoListNew" :key="inx">
 						<view class="list_item">
 							<view v-for="(item,index) in video.vieoList" :key="index">
-								<view class="player" style="position: relative;"  @longpress="longpress(item)" @click="videoDetail(item,index,inx)">
+								<view class="player" style="position: relative;" @click="videoDetail(item,index,inx)"   @touchstart="touchstart(item)" @touchend="touchend(item)">
 									<view v-show="item.locDownLoad" style="position: absolute;top:20rpx;left: 0; width:150rpx;height: 50rpx;line-height: 50rpx;background:green;text-align: center;
 									font-size:24rpx;padding:2rpx 8rpx;z-index: 1;color: #fff;">
 									本地已下载
@@ -152,10 +152,14 @@
 				<u-button v-if="showStepNotUse" style="width: 310rpx;" @tap="showStepFun(3)">取消</u-button>
 			</view>
 		</u-popup>
-		<!-- <view style="position: fixed;bottom: 50rpx;right: 15rpx; width: 100rpx;height: 100rpx;background-color: #e1e1e1;border-radius: 50%;z-index: 999;">
-			<u-icon name="trash"></u-icon>
-			<text>删除</text>
-		</view> -->
+		<view class="float-button bounce-enter-active" style="bottom: 170rpx;" v-if="vieoListNew&&vieoListNew.length>0" @tap="reloadList">
+			<text style="padding-top: 4rpx;"><u-icon name="reload"></u-icon></text>
+			<text style="font-size: 24rpx;">刷新</text>
+		</view>
+		<view class="float-button bounce-enter-active" style="background-color: red;padding-top:6rpx;" v-if="vieoListNew&&vieoListNew.length>0" @tap="delAllDvrList">
+			<text style="padding-top:10rpx;font-size: 24rpx;">全部</text>
+			<text style="font-size: 24rpx;">清空</text>
+		</view>
 	</view>
 </template>
 
@@ -238,18 +242,15 @@
 				
 				current:0,
 				showCollapseIndex:0,
+				
+				//是否长按事件
+				islongPress:false,
+				timer:null,//长按计时器
 			}
 		},
 		onReachBottom() {
-			this.loadStatus = 'loading';
-			// 模拟数据加载
-			this.dateList = this.allDate().slice(0, this.pageIndex * this.pageSize)
-			if (this.pageIndex * this.pageSize > this.allDate.length) {
-				this.pageIndex++
-				this.loadStatus = 'nomore'
-			} else {
-				this.loadStatus = 'loadmore'
-			}
+		
+			console.log('下拉刷新')
 		},
 	     created() {
 			// console.log('加载组件页面');
@@ -283,6 +284,17 @@
 				var date=this.datelist[this.current].name;
 				this.loadVideo(date);
 				// this.getVideoNew();
+			},
+			//刷新
+			reloadList(){
+				var date=this.datelist[this.current].name;
+				uni.showLoading({
+					title:'刷新中...'
+				})
+				this.loadVideo(date);
+				setTimeout(()=>{
+					uni.hideLoading();
+				},1500);
 			},
 			change(e){
 				var item=e
@@ -367,6 +379,20 @@
 					this.showWIFIConnOpt=false;
 				}
 			},
+			//手指触摸动作开始
+			touchstart(item){
+				this.timer = setTimeout(()=>{
+					this.longpress(item);
+				},800)
+			},
+			//手指触摸动作结束
+			touchend(){
+				//延时执行为了防止 click() 还未判断 islongPress 的值就被置为 fasle
+				clearTimeout(this.timer);
+				setTimeout(() => {
+					this.islongPress = false
+				}, 200)
+			},
 			// 长按事件 start
 			longpress(item) {
 				uni.showActionSheet({
@@ -433,22 +459,23 @@
 							});
 							this.isBachtStatus=true;
 						}else if(res.tapIndex==3){
-							let socketTask = getApp().globalData.socketTask;
-							if(socketTask){
-								uni.showModal({
-									title: this.$getLang('提示'),
-									content: "是否确认一键删除设备所有删除，一旦删除将无法恢复哦？",
-									cancelText:this.$getLang('取消'),
-									confirmText:this.$getLang('确定'),
-									success: (res) => {
-										if(res.confirm){
-											socketTask.send({
-												data: '{ "METHOD":"VIDEO.DELETE.ALL", "exigency":true}'
-											})
-										}
-									},
-								});
-							}
+							this.delAllDvrList();
+							// let socketTask = getApp().globalData.socketTask;
+							// if(socketTask){
+							// 	uni.showModal({
+							// 		title: this.$getLang('提示'),
+							// 		content: "是否确认一键删除设备所有删除，一旦删除将无法恢复哦？",
+							// 		cancelText:this.$getLang('取消'),
+							// 		confirmText:this.$getLang('确定'),
+							// 		success: (res) => {
+							// 			if(res.confirm){
+							// 				socketTask.send({
+							// 					data: '{ "METHOD":"VIDEO.DELETE.ALL", "exigency":true}'
+							// 				})
+							// 			}
+							// 		},
+							// 	});
+							// }
 							
 						}
 					},
@@ -456,6 +483,24 @@
 						console.log(res.errMsg);
 					}
 				});
+			},
+			delAllDvrList(){
+				let socketTask = getApp().globalData.socketTask;
+				if(socketTask){
+					uni.showModal({
+						title: this.$getLang('提示'),
+						content: "是否确认一键删除设备所有删除，一旦删除将无法恢复哦？",
+						cancelText:this.$getLang('取消'),
+						confirmText:this.$getLang('确定'),
+						success: (res) => {
+							if(res.confirm){
+								socketTask.send({
+									data: '{ "METHOD":"VIDEO.DELETE.ALL", "exigency":true}'
+								})
+							}
+						},
+					});
+				}
 			},
 			// 长按事件 end
 			// 筛选事件触发 start
@@ -488,7 +533,7 @@
 				this.isBachtStatus=false;
 			},
 			async loadData() {
-			
+
 				this.ssid = getApp().globalData.equip.apSN;//设备绑定的wifi
 				this.password = getApp().globalData.equip.apPassword;
 				var getCurSSID=await getConnectedSSIDNew();//当前的网络wifi
@@ -590,6 +635,7 @@
 				})
 				socketTask.onMessage((res) => {
 					const data = JSON.parse(res.data)
+					console.log('回传数据',data)
 					if (data.METHOD === 'VIDEO.DATE' && data.code === 0) {
 						this.datelist=[];
 						const allDate = data.dateList
@@ -665,6 +711,11 @@
 						})
 						this.current=0;
 						this.isBachtStatus=false;
+						getApp().globalData.datelist=[];
+						this.datelist=[];
+						this.vieoListNew=[];
+						this.vieoList=[];
+						uni.hideLoading();
 					}
 					else if(data.METHOD==='CONNECT'&& data.code === 0){
 						// uni.showToast({
@@ -1194,5 +1245,47 @@
 				width: 40%;
 			}
 		}
+	}
+	
+	.float-button{
+		position: fixed;bottom: 50rpx;right: 15rpx; width: 100rpx;height: 100rpx;background-color: #087DFF;border-radius: 50%;z-index: 999;
+			display: flex;flex-direction: column; text-align: center;color: #fff;
+	}
+	
+	@keyframes bounceIn {
+	  0% {
+	    transform: translateY(100%);
+	    opacity: 0;
+	  }
+	  50% {
+	    transform: translateY(-10%);
+	    opacity: 1;
+	  }
+	  80% {
+	    transform: translateY(5%);
+	  }
+	  100% {
+	    transform: translateY(0%);
+	  }
+	}
+	
+	.bounce-enter-active {
+	  animation: bounceIn 0.5s ease-out both;
+	}
+	
+	@keyframes scaleUp {
+	  0% {
+	    transform: scale(1);
+	  }
+	  50% {
+	    transform: scale(1.1);
+	  }
+	  100% {
+	    transform: scale(1);
+	  }
+	}
+	
+	.scale-up {
+	  animation: scaleUp 0.3s ease-in-out;
 	}
 </style>
