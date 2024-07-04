@@ -216,7 +216,7 @@
 					}
 				],
 				cameraType: '',
-				dropValTitle2:'录制方向',
+				dropValTitle2:this.$getLang("录制方向"),
 				
 				value: '',
 				
@@ -274,11 +274,11 @@
 			selectTranslate(e){
 				console.log(e)
 				if(e==''){
-					this.dropValTitle2="录制方向";
+					this.dropValTitle2=this.$getLang("录制方向") ;
 				}else if(e==0){
-					this.dropValTitle2="前录";
+					this.dropValTitle2=this.$getLang("前录") ;
 				}else if(e==1){
-					this.dropValTitle2="后录";
+					this.dropValTitle2=this.$getLang("后录") ;
 				}
 				this.cameraType=e;
 				var date=this.datelist[this.current].name;
@@ -288,8 +288,9 @@
 			//刷新
 			reloadList(){
 				var date=this.datelist[this.current].name;
+				console.log(date);
 				uni.showLoading({
-					title:'刷新中...'
+					title:this.$getLang('加载中')
 				})
 				this.loadVideo(date);
 				setTimeout(()=>{
@@ -454,29 +455,12 @@
 							}
 						}else if(res.tapIndex==2){
 							uni.showToast({
-								title:'请选择要删除的视频文件',
+								title:this.$getLang('请选择要删除的视频文件'),
 								icon:'none'
 							});
 							this.isBachtStatus=true;
 						}else if(res.tapIndex==3){
 							this.delAllDvrList();
-							// let socketTask = getApp().globalData.socketTask;
-							// if(socketTask){
-							// 	uni.showModal({
-							// 		title: this.$getLang('提示'),
-							// 		content: "是否确认一键删除设备所有删除，一旦删除将无法恢复哦？",
-							// 		cancelText:this.$getLang('取消'),
-							// 		confirmText:this.$getLang('确定'),
-							// 		success: (res) => {
-							// 			if(res.confirm){
-							// 				socketTask.send({
-							// 					data: '{ "METHOD":"VIDEO.DELETE.ALL", "exigency":true}'
-							// 				})
-							// 			}
-							// 		},
-							// 	});
-							// }
-							
 						}
 					},
 					fail: function(res) {
@@ -489,7 +473,7 @@
 				if(socketTask){
 					uni.showModal({
 						title: this.$getLang('提示'),
-						content: "是否确认一键删除设备所有删除，一旦删除将无法恢复哦？",
+						content:this.$getLang("是否确认一键删除设备所有视频，一旦删除将无法恢复哦"),
 						cancelText:this.$getLang('取消'),
 						confirmText:this.$getLang('确定'),
 						success: (res) => {
@@ -542,7 +526,7 @@
 				
 				let socketTask = getApp().globalData.socketTask;
 				uni.showLoading({
-					title:'连接中...',
+					title:this.$getLang('连接中...'),
 					mask:true
 				})
 				if (!socketTask) {
@@ -560,7 +544,7 @@
 								if (await this.connectWifiNew()) {
 									this.equip=getApp().globalData.equip
 									uni.showToast({
-										title:'WIFI已连接!',
+										title:this.$getLang('WIFI已连接'),
 										icon:'success'
 									})
 								
@@ -574,17 +558,13 @@
 								}else{
 									//如果连接失败，弹出指引如何连接设备
 									uni.hideLoading();
-									// uni.showToast({
-									// 	title:'WIFI自动连接失败！',
-									// 	icon:'none'
-									// });
 									this.showWIFIConnOpt=true;
 								}
 							}else{
 								if (await connectStartWifi()) {
 									this.equip=getApp().globalData.equip
 									uni.showToast({
-										title:'WIFI已连接!',
+										title:this.$getLang('WIFI已连接'),
 										icon:'success'
 									})
 								
@@ -614,7 +594,7 @@
 			},
 			loadVideoFun(socketTask){
 				uni.showLoading({
-					title:'加载视频中...',
+					title:this.$getLang('加载中'),
 					mask:true
 				})
 				
@@ -635,7 +615,7 @@
 				})
 				socketTask.onMessage((res) => {
 					const data = JSON.parse(res.data)
-					console.log('回传数据',data)
+					// console.log('回传数据',data)
 					if (data.METHOD === 'VIDEO.DATE' && data.code === 0) {
 						this.datelist=[];
 						const allDate = data.dateList
@@ -649,7 +629,7 @@
 						this.loadVideo(allDate[0])
 						
 					} else if(data.METHOD === 'VIDEO.INFO.LIST' && data.code === 0) {
-						// console.log('videoBeanList',data.videoBeanList)
+						console.log('videoBeanList',data.videoBeanList)
 						var videoBeanList=data.videoBeanList;
 						var date='';
 						if(videoBeanList.length>0){
@@ -680,7 +660,6 @@
 								}else{
 									temps.push(item)
 								}
-								
 							}
 							videoBeanList=temps;
 
@@ -696,18 +675,18 @@
 						this.loadVideo(date);
 						this.isBachtStatus=false;
 						uni.showToast({
-							title:'删除成功！'
+							title:this.$getLang('删除成功')
 						})
 					} else if(data.METHOD === 'VIDEO.DELETE' && data.code === 0 ){
 						this.current=0;
 						this.getVideoNew();
 						this.isBachtStatus=false;
 						uni.showToast({
-							title:'删除成功！'
+							title:this.$getLang('删除成功')
 						})
 					} else if(data.METHOD==='VIDEO.DELETE.ALL'&& data.code === 0){
 						uni.showToast({
-							title:'全部删除完成'
+							title:this.$getLang('删除成功')
 						})
 						this.current=0;
 						this.isBachtStatus=false;
@@ -749,7 +728,7 @@
 						events:{
 							//获取下级页面传递回来的参数
 							sonPageData:data=>{
-								this.refreshVideoList(2,data.id);
+								this.reloadList();
 							}
 						}
 
@@ -785,7 +764,7 @@
 					if (socketTask) {
 						uni.showModal({
 							title: this.$getLang('提示'),
-							content: "是否确认要把【"+date+"】的视频全部删除，一旦删除将无法恢复哦？",
+							content: this.$getLang('是否确认')+"【"+date+"】"+this.$getLang('视频全部删除，一旦删除将无法恢复哦'),
 							cancelText:this.$getLang('取消'),
 							confirmText:this.$getLang('确定'),
 							success: (res) => {
@@ -802,14 +781,14 @@
 				
 				if(ids.length==0){
 					uni.showToast({
-						title:'请选择视频！',
+						title:this.$getLang('请选择视频'),
 						icon:'none'
 					})
 					return;
 				}
 				uni.showModal({
 					title: this.$getLang('提示'),
-					content: "是否确认把选中的视频批量删除，一旦删除将无法恢复哦？",
+					content: this.$getLang('是否确认把选中的视频批量删除，一旦删除将无法恢复哦'),
 					cancelText:this.$getLang('取消'),
 					confirmText:this.$getLang('确定'),
 					success: (res) => {

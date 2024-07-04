@@ -879,22 +879,39 @@
 			},
 			loadCloundVideo(opt) {
 				if(this.wifiConnectionState&&opt==1){
-					uni.showModal({
-						title:'提示',
-						content:'抱歉，当前连接的是设备WIFI，无法加载云端视频，是否需要断开设备网络加载云端视频？',
-						cancelText:'取消',
-						confirmText:'确定',
-						success:(res)=>{
-							if(res.confirm){
-								const ssid = getApp().globalData.equip.apSN;//设备绑定的wifi
-								removeWifiBySSID(ssid);
-								setTimeout(()=>{
+					if(getApp().globalData.platform=="ios"){
+						uni.showModal({
+							title:'提示',
+							content:'抱歉，检测到当前网络连接的是设备WIFI，无法加载视频，是否确定当前已切换为数据网络？点击确定进行刷新~',
+							cancelText:'取消',
+							confirmText:'确定',
+							success:(res)=>{
+								if(res.confirm){
+									// const ssid = getApp().globalData.equip.apSN;//设备绑定的wifi
+									// removeWifiBySSID(ssid);
+									// this.wifiConnectionState=false;
 									this.loadCloundVideo();
-									this.wifiConnectionState=false;
-								},2000)
+								}
 							}
-						}
-					})
+						})
+					}else{
+						uni.showModal({
+							title:'提示',
+							content:'抱歉，当前连接的是设备WIFI，无法加载云端视频，是否需要断开设备网络加载云端视频？',
+							cancelText:'取消',
+							confirmText:'确定',
+							success:(res)=>{
+								if(res.confirm){
+									const ssid = getApp().globalData.equip.apSN;//设备绑定的wifi
+									removeWifiBySSID(ssid);
+									setTimeout(()=>{
+										// this.loadCloundVideo();
+									},2000)
+								}
+							}
+						})
+					}
+					
 					return;
 				}
 				// this.screenShow = false;
@@ -908,8 +925,9 @@
 				console.log('检索参数',datas)
 				this.$u.api.getCloundVideoList(datas)
 					.then(res => {
-						console.log('视频检索',res)
+						this.wifiConnectionState=false;
 						if (res.code === 0) {
+							
 							if (res.data.length > 0) {
 								var cloundFirst=res.data[0];
 								// console.log(cloundFirst)

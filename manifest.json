@@ -2,11 +2,14 @@
     "name" : "恒勃智驾",
     "appid" : "__UNI__3D8F432",
     "description" : "",
-    "versionName" : "1.0.65",
+    "versionName" : "1.0.67",
     "versionCode" : "100",
     "transformPx" : false,
     /* 5+App特有相关 */
     "app-plus" : {
+		"locales":{
+			
+		},
         "usingComponents" : true,
         "nvueStyleCompiler" : "uni-app",
         "compilerVersion" : 3,

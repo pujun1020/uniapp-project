@@ -91,6 +91,7 @@
 		data() {
 			return {
 				bannerImg:'../../static/banner1.png',
+				defaultBannerImg:'../../static/banner1.png',
 				
 				tablist: [{
 						iconPath: "/static/tabbar/menu_ls.png",
@@ -160,7 +161,7 @@
 			
 		},
 		onLoad() {
-			
+			// uni.setStorageSync('language',0);//手动切换语言
 			uni.getSystemInfo({
 			  success: (res)=> {
 
@@ -542,6 +543,7 @@
 							this.socketStatus='未连接';
 						}else{
 							this.socketStatus='已连接';
+							this.bannerImg=this.defaultBannerImg;
 						}
 					}
 					

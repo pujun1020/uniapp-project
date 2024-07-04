@@ -563,17 +563,30 @@
 						if (res.confirm) {
 							if(this.params.type==0){
 								// console.log(this.params)
-								let socketTask = getApp().globalData.socketTask;
+								let socketTask =getApp().globalData.socketTask;
 								// console.log('socketTask',socketTask)
 								if(socketTask){
 									var temps=[this.params.playUrl];
 									socketTask.send({
 										data: '{ "METHOD":"FILE.DELETE", "exigency":true, "playUrlList":'+JSON.stringify(temps)+'}'
 									})
-									socketTask.onMessage((res) => {
-										this.getOpenerEventChannel().emit('sonPageData',this.params)
-										uni.navigateBack();
-									});
+									uni.showToast({
+										title:'删除成功！'
+									})
+									this.getOpenerEventChannel().emit('sonPageData',this.params)
+									uni.navigateBack();
+									// socketTask.onMessage((res) => {
+									// 	const data = JSON.parse(res.data)
+									// 	// console.log(data)
+									// 	if(data.METHOD === 'FILE.DELETE' && data.code === 0){
+									// 		uni.showToast({
+									// 			title:'删除成功！'
+									// 		})
+									// 		this.getOpenerEventChannel().emit('sonPageData',this.params)
+									// 		uni.navigateBack();
+									// 	}
+										
+									// });
 								}
 							}else if(this.params.type==1){
 								var fileUrl=this.params.playUrl;

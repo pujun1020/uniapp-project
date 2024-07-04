@@ -13,6 +13,9 @@ module.exports  = {
 		'全部':['全部','All'],
 		'上传':['上传','Upload'],
 		'下载':['下载','Download'],
+		'连接中...':["连接中...","Connecting..."],
+		'WIFI已连接':['WIFI已连接','Successful'],
+		'加载中':["加载中...",'Loading'],
 		
 		/**************************** 【首页】 **************************************/
 		'导航寻车': ['寻车导航', 'Navigation to Find Car'],
@@ -60,6 +63,13 @@ module.exports  = {
 		'删除成功': ['删除成功！', 'Deleted Successfully!'],
 		'前录': ['前录', 'Front Recording'],
 		'后录': ['后录', 'Rear Recording'],
+		'是否确认一键删除设备所有视频，一旦删除将无法恢复哦':['是否确认一键删除设备所有视频，一旦删除将无法恢复哦','Do you confirm to delete all the videos of the device with one click? Once deleted, it will not be restored?']
+		'请选择要删除的视频文件':['请选择要删除的视频文件','Please select the video file you want to delete.']
+		'是否确认把选中的视频批量删除，一旦删除将无法恢复哦':['是否确认把选中的视频批量删除，一旦删除将无法恢复哦？','Do you confirm to delete the selected videos in batches? Once deleted, it will not be restored?']
+		'是否确认':['是否确认','Confirm or not'],
+		'视频全部删除，一旦删除将无法恢复哦':['视频全部删除，一旦删除将无法恢复哦','All videos deleted, once deleted will not be able to recover oh?'],
+		'请选择视频':['请选择视频！','Please select Video!'],
+		'删除成功':['删除成功','Del ok'],
 		
 		/**************************** 【在路上页面】 **************************************/
 		'云端': ['云端', 'Cloud'],
