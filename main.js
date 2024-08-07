@@ -1,11 +1,25 @@
 import App from './App'
-
+import en from './locale/en.json'
+import zhHans from './locale/zh-Hans.json'
 import socket from './common/socket.js'
 
 Vue.prototype.$socket = socket;
 
+const messages = {
+	en,
+	'zh-Hans': zhHans
+}
+console.log('uni.getLocale()',uni.getLocale())
+let i18nConfig = {
+  locale: uni.getLocale(),// 获取已设置的语言
+  messages
+}
+
 // #ifndef VUE3
 import Vue from 'vue'
+import VueI18n from 'vue-i18n'// v8.x
+Vue.use(VueI18n)
+const i18n = new VueI18n(i18nConfig)
 
 import uView from "uview-ui";
 Vue.use(uView);
@@ -14,6 +28,7 @@ import './uni.promisify.adaptor'
 Vue.config.productionTip = false
 App.mpType = 'app'
 const app = new Vue({
+	i18n,
   ...App
 })
 
@@ -31,10 +46,10 @@ Vue.use(httpUploadApi, app)
 app.$mount()
 // #endif
 
-import {getLangContent,lang} from './common/language.js'
+import langObg from './common/language.js'
 // 挂载全局方法
-Vue.prototype.$getLang = getLangContent;
-Vue.prototype.$lang=lang;
+Vue.prototype.$getLang = langObg.getLangContent;
+Vue.prototype.$lang=langObg.lang;
 
 
 // #ifdef VUE3

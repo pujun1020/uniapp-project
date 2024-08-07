@@ -3,7 +3,7 @@
 		<view style="width: 100%;height: 20rpx;background-color: #EBF5FF;"></view>
 		<view v-if="wifiConnectionState&&equip" 
 		style="display: flex;flex-direction: column;text-align: center;background-color: #EBF5FF;line-height:50rpx;">
-			<text style="color: green;font-size: 28rpx;">当前已连接设备：【{{equip.apSN}}】</text>
+			<text style="color: green;font-size: 28rpx;">{{$getLang('当前已连接设备')}}：【{{equip.apSN}}】</text>
 			<!-- <text style="color: #ccc;">您可以点击查看视频，或长按更多操作~</text> -->
 		</view>
 
@@ -33,9 +33,9 @@
 						<view class="list_item">
 							<view v-for="(item,index) in video.vieoList" :key="index">
 								<view class="player" style="position: relative;" @click="videoDetail(item,index,inx)"   @touchstart="touchstart(item)" @touchend="touchend(item)">
-									<view v-show="item.locDownLoad" style="position: absolute;top:20rpx;left: 0; width:150rpx;height: 50rpx;line-height: 50rpx;background:green;text-align: center;
+									<view v-show="item.locDownLoad" style="position: absolute;top:20rpx;left: 0; min-width:150rpx;height: 50rpx;line-height: 50rpx;background:green;text-align: center;
 									font-size:24rpx;padding:2rpx 8rpx;z-index: 1;color: #fff;">
-									本地已下载
+									{{$getLang('本地已下载')}} 
 									</view>
 									<view  v-show="isBachtStatus" style="position: absolute;top: 20rpx;right: 0;width: 46rpx;height: 46rpx;z-index: 99;">
 										<view style="border-radius: 50%;width: 46rpx;height: 46rpx;
@@ -58,18 +58,32 @@
 				<!-- </u-collapse> -->
 			</view>
 			
-			<view v-if="wifiConnectionState" style="width: 100%;margin:50rpx auto;text-align: center;"><text style="color: #ccc;">您可以点击查看视频，或长按更多操作~</text></view>
+			<view v-if="wifiConnectionState" style="width: 100%;margin:50rpx auto;text-align: center;"><text style="color: #ccc;">{{$getLang('您可以点击查看视频，或长按更多操作~')}}</text></view>
 			<view style="width: 100%;height: 100rpx;background-color: #EBF5FF;"></view>
 			
 		</view>
 		
 		<view style="margin-top: 300rpx"  v-if="!wifiConnectionState">
-			<u-empty text="未连接设备WIFI" mode="wifi"></u-empty>
+			<u-empty :text="$getLang('未连接设备')+'WIFI'" mode="wifi"></u-empty>
 			<button @tap="loadData()"
-			style="background-color:#087DFF;color: #fff;margin-top: 30rpx;width: 310rpx;font-size: 30rpx;">点击连接设备</button>
+			style="background-color:#087DFF;color: #fff;margin-top: 30rpx;width: 310rpx;font-size: 30rpx;">{{$getLang('点击连接设备')}}</button>
 		</view>
+		<!-- <u-action-sheet :list="actionSheetList" @select="actionSheetSelectClick" :show="true"></u-action-sheet> -->
 		
-		
+		<u-popup mode="bottom" v-model="actionSheetShow">
+			<view class="content">
+				<scroll-view scroll-y="true" style="height:420rpx;">
+					<view>
+						<view class="u-action-sheet-item u-line-1" v-for="(item,index) in actionSheetList" :key="index" @click="actionSheetSelectClick(index)">
+							{{item}}
+						</view>
+					</view>
+				</scroll-view>
+				<view class="confrim-btn">
+					<u-button @click="actionSheetShow = false;" style="color: #ccc;">{{$getLang('取消')}}</u-button>
+				</view>
+			</view>
+		</u-popup>
 		
 		<!-- 上传进度弹出层 start -->
 		<u-popup v-model="uploadShow" mode="center" width="500" height="500" border-radius="14" :mask-close-able="false" closeable>
@@ -121,45 +135,47 @@
 		
 		<u-popup v-model="showWIFIConnOpt" mode="bottom" height="980" border-radius="14" :mask-close-able="false" zIndex="999">
 			<view style="font-size: 30rpx;font-weight: bold;text-align: center;line-height: 80rpx;">
-				设备连接步骤
+				{{$getLang('设备连接步骤')}}
 			</view>
 			
 			<view style="font-size:26rpx;text-align: center;line-height:40rpx;width: 90%;margin: auto;">
-				如果您是首次连接或自动连接失败，请根据以下步骤操作！
+				{{$getLang('如果您是首次连接或自动连接失败，请根据以下步骤操作！')}}
 			</view>
 			<view v-show="showStep==1" style="width: 90%;margin:15rpx auto;min-height:300rpx;overflow:auto">
 				<view>
-					<view style="line-height: 44rpx;">第一步、打开仪表设备，将设备调节到以下苹果手机投屏界面</view>
+					<view style="line-height: 44rpx;">{{$getLang('第一步、打开仪表设备，将设备调节到以下苹果手机投屏界面')}}</view>
 					<image src="../../../static/yindao-1.png" mode="widthFix" style="width: 80%;margin: 20rpx 10%;"></image>
 				</view>
 			</view>
 			<view v-show="showStep==2" style="width: 90%;margin:15rpx auto;min-height:300rpx;overflow:auto">
 				<view>
-					<view style="line-height: 44rpx;">第二步、进入手机WIFI列表界面，找到：<br>
-					WIFI【{{ssid}}】  密码：【{{password}}】<br>
-					进行手动连接。连接成功以后回到当前页面，点击下一步。如下图：</view>
+					<view style="line-height: 44rpx;">{{$getLang('第二步、进入手机WIFI列表界面，找到：')}}<br>
+					WIFI【{{ssid}}】  {{$getLang('密码')}}：【{{password}}】<br>
+					{{$getLang('进行手动连接。连接成功以后回到当前页面，点击下一步。如下图')}}：</view>
 					<image src="../../../static/yindao-2.png" mode="widthFix" style="width: 90%;margin-left: 5%;margin-top: 15rpx;"></image>
 				</view>
 			</view>
 			<view style="width: 90%;margin: auto;text-align: center;" v-show="showStep==1">
-				<u-button style="width: 310rpx;background-color:#087DFF;color: #fff;" @tap="showStepFun(1)">下一步</u-button>
+				<u-button style="width: 310rpx;background-color:#087DFF;color: #fff;" @tap="showStepFun(1)">{{$getLang('下一步')}}</u-button>
 			</view>
 			<view style="width: 90%;margin: auto;text-align: center;" v-show="showStep==2">
-				<u-button v-if="showStepNotUse" style="width: 310rpx;background-color:#087DFF;color: #fff;" @tap="showStepFun(2)">下一步</u-button>
+				<u-button v-if="showStepNotUse" style="width: 310rpx;background-color:#087DFF;color: #fff;" @tap="showStepFun(2)">{{$getLang('下一步')}}</u-button>
 			</view>
 			
 			<view style="width: 90%;margin:40rpx auto;text-align: center;">
-				<u-button v-if="showStepNotUse" style="width: 310rpx;" @tap="showStepFun(3)">取消</u-button>
+				<u-button v-if="showStepNotUse" style="width: 310rpx;" @tap="showStepFun(3)">{{$getLang('取消')}}</u-button>
 			</view>
 		</u-popup>
 		<view class="float-button bounce-enter-active" style="bottom: 170rpx;" v-if="vieoListNew&&vieoListNew.length>0" @tap="reloadList">
 			<text style="padding-top: 4rpx;"><u-icon name="reload"></u-icon></text>
-			<text style="font-size: 24rpx;">刷新</text>
+			<text style="font-size: 24rpx;">{{$getLang('刷新')}}</text>
 		</view>
 		<view class="float-button bounce-enter-active" style="background-color: red;padding-top:6rpx;" v-if="vieoListNew&&vieoListNew.length>0" @tap="delAllDvrList">
-			<text style="padding-top:10rpx;font-size: 24rpx;">全部</text>
-			<text style="font-size: 24rpx;">清空</text>
+			<text style="padding-top:10rpx;font-size: 24rpx;">{{$getLang('全部')}}</text>
+			<text style="font-size: 24rpx;">{{$getLang('清空')}}</text>
 		</view>
+		
+		
 	</view>
 </template>
 
@@ -246,10 +262,13 @@
 				//是否长按事件
 				islongPress:false,
 				timer:null,//长按计时器
+				
+				actionSheetList:[this.$getLang('下载当前视频'),this.$getLang('删除此视频'),this.$getLang('批量删除视频'),this.$getLang('删除所有DVR视频')],
+				actionSheetShow:false,
+				actionSheetItem:null,//当前操作的内容项
 			}
 		},
 		onReachBottom() {
-		
 			console.log('下拉刷新')
 		},
 	     created() {
@@ -324,10 +343,10 @@
 					}
 				}else{
 					uni.showModal({
-						title:'提示',
-						content:'与设备服务连接时失败，检查是否将设备调节到以下苹果手机投屏界面',
+						title:this.$getLang('提示'),
+						content:this.$getLang('与设备服务连接时失败，检查是否将设备调节到以下苹果手机投屏界面'),
 						showCancel:false,
-						confirmText:'确定',
+						confirmText:this.$getLang('确定'),
 						success:(res)=>{
 							if(res.confirm){
 								
@@ -348,17 +367,17 @@
 					const password = getApp().globalData.equip.apPassword
 					// console.log('getCurSSID',getCurSSID)
 					// console.log('ssid',ssid)
-					//表示当前连接的WIFI是设备指定的WIFI
+					//表示当前连接的WIFI是设备指定的WIFI,pujun
 					if(`"${ssid}"`==getCurSSID){
 						this.equip= getApp().globalData.equip;
 						
 						this.getVideoNew();
 					}else{
 						uni.showModal({
-							title:'提示',
-							content:'您当前连接的WIFI不正确，请切换为设备WIFI【'+ssid+'】,密码：【'+password+'】，提示：密码已复制，可直接粘贴密码',
+							title:this.$getLang('提示'),
+							content:`${this.$getLang('您当前连接的WIFI不正确，请切换为设备WIFI')}【${ssid}】,${this.$getLang('密码')}：【${password}】，${this.$getLang('提示：密码已复制，可直接粘贴密码')}`,
 							showCancel:false,
-							confirmText:'确定',
+							confirmText:this.$getLang('确定'),
 							success:(res)=>{
 								if(res.confirm){
 									
@@ -396,77 +415,91 @@
 			},
 			// 长按事件 start
 			longpress(item) {
-				uni.showActionSheet({
-					itemList: [this.$getLang('下载当前视频'), this.$getLang('删除此视频'), this.$getLang('批量删除视频'), this.$getLang('删除所有DVR视频')],
-					success: async(res) => {
-						// console.log(item)
-						if (res.tapIndex == 0) {
-							var verfyDown=await verfyDownLoad(this,item.id);
-							if(verfyDown){
-								this.uploadShow = true;
-								this.uploadOrDownload =this.$getLang('正在下载')
-								this.payUrlName=item.name;
-								const downloadTask = uni.downloadFile({
-									url: item.playUrl,
-									success: (res) => {
-										uni.saveFile({
-											tempFilePath: res.tempFilePath,
-											success: (fileRes) => {
-												item.devSN=getApp().globalData.equip.sn;
-												item.date=new Date();
-												uni.setStorageSync(fileRes.savedFilePath, item)
-												uni.showToast({
-													title:this.$getLang('下载完成！') 
-												})
-												this.refreshVideoList(2,item.id);
-												this.uploadShow = false
-												
-											},
-											fail: (err) => {
-												console.log('保存失败', err)
-											}
-										})
-									}
-								})
-								downloadTask.onProgressUpdate(res => {
-									this.progressVal = res.progress
-									this.progressTxt = `${res.totalBytesWritten}/${res.totalBytesExpectedToWrite}`
-								})
-								
+				this.actionSheetShow=true;
+				this.actionSheetItem=item;
+			},
+			async actionSheetSelectClick(tapIndex){
+				var item=this.actionSheetItem;
+				if (tapIndex == 0) {
+					var verfyDown=await verfyDownLoad(this,item.id);
+					if(verfyDown){
+						this.uploadShow = true;
+						this.uploadOrDownload =this.$getLang('正在下载')
+						this.payUrlName=item.name;
+						
+						var thumbUrl="";//封面图临时路径
+						uni.downloadFile({
+							url:item.thumbUrl,
+							success:(res)=>{
+								uni.saveFile({
+									tempFilePath: res.tempFilePath,
+									success: (img) => {
+										thumbUrl=img.savedFilePath;
+									},
+								});
 							}
-							
-						} else if(res.tapIndex==1){
-							let socketTask = getApp().globalData.socketTask;
-							if (socketTask) {
-								uni.showModal({
-									title: this.$getLang('提示'),
-									content: this.$getLang('确认要删除当前视频吗'),
-									cancelText:this.$getLang('取消'),
-									confirmText:this.$getLang('确定'),
-									success: (res) => {
-										if (res.confirm) {
-											var playUrlList=[item.playUrl];
-											socketTask.send({
-												data: '{ "METHOD":"FILE.DELETE", "exigency":true, "playUrlList":'+JSON.stringify(playUrlList)+'}'
-											})
+						});
+						
+						const downloadTask = uni.downloadFile({
+							url: item.playUrl,
+							success: (res) => {
+								uni.saveFile({
+									tempFilePath: res.tempFilePath,
+									success: (fileRes) => {
+										item.devSN=getApp().globalData.equip.sn;
+										item.date=new Date();
+										if(thumbUrl){
+											item.thumbUrl=thumbUrl;
 										}
+										uni.setStorageSync(fileRes.savedFilePath, item)
+										uni.showToast({
+											title:this.$getLang('下载完成') 
+										})
+										this.refreshVideoList(2,item.id);
+										this.uploadShow = false
+										
+									},
+									fail: (err) => {
+										console.log('保存失败', err)
 									}
 								})
 							}
-						}else if(res.tapIndex==2){
-							uni.showToast({
-								title:this.$getLang('请选择要删除的视频文件'),
-								icon:'none'
-							});
-							this.isBachtStatus=true;
-						}else if(res.tapIndex==3){
-							this.delAllDvrList();
-						}
-					},
-					fail: function(res) {
-						console.log(res.errMsg);
+						})
+						downloadTask.onProgressUpdate(res => {
+							this.progressVal = res.progress
+							this.progressTxt = `${res.totalBytesWritten}/${res.totalBytesExpectedToWrite}`
+						})
+						
 					}
-				});
+					
+				} else if(tapIndex==1){
+					let socketTask = getApp().globalData.socketTask;
+					if (socketTask) {
+						uni.showModal({
+							title: this.$getLang('提示'),
+							content: this.$getLang('确认要删除当前视频吗'),
+							cancelText:this.$getLang('取消'),
+							confirmText:this.$getLang('确定'),
+							success: (res) => {
+								if (res.confirm) {
+									var playUrlList=[item.playUrl];
+									socketTask.send({
+										data: '{ "METHOD":"FILE.DELETE", "exigency":true, "playUrlList":'+JSON.stringify(playUrlList)+'}'
+									})
+								}
+							}
+						})
+					}
+				}else if(tapIndex==2){
+					uni.showToast({
+						title:this.$getLang('请选择要删除的视频文件'),
+						icon:'none'
+					});
+					this.isBachtStatus=true;
+				}else if(tapIndex==3){
+					this.delAllDvrList();
+				}
+				this.actionSheetShow=false;
 			},
 			delAllDvrList(){
 				let socketTask = getApp().globalData.socketTask;
@@ -1266,5 +1299,22 @@
 	
 	.scale-up {
 	  animation: scaleUp 0.3s ease-in-out;
+	}
+	
+	
+	.u-action-sheet-item {
+		line-height: 1;
+		justify-content: center;
+		align-items: center;
+		font-size: 32rpx;
+		padding: 34rpx 0;
+		flex-direction: column;
+		text-align: center;
+		color: #087DFF;
+	}
+	
+	.u-action-sheet-item__subtext {
+		font-size: 24rpx;
+		margin-top: 20rpx;
 	}
 </style>

@@ -7,11 +7,11 @@
 			<view class="tabs">
 					<view class="tabs-body">
 						<view @tap="tabsChange(0)" class="tabs-item " :class="current==0?'tabs-active':''" style="margin-right:100rpx;">
-							{{this.$getLang('云端')}}
+							{{$getLang('云端')}}
 							<view v-if="current==0" class="tabs-bar"></view>
 						</view>
 						<view @tap="tabsChange(1)" class="tabs-item " :class="current==1?'tabs-active':''">
-							{{this.$getLang('本地')}}
+							{{$getLang('本地')}}
 							<view v-if="current==1" class="tabs-bar"></view>
 						</view>
 					</view>
@@ -52,7 +52,7 @@
 							<view v-for="(item, index) in cloudList" :key="index" style="background-color: #fff;margin-bottom: 20px;padding:20rpx 10rpx 30rpx 10rpx;border-radius: 12rpx;">
 								<view style="display: flex;justify-content:space-between;">
 									<view style="font-weight: bold;color: #000;">{{item.time}}</view>
-									<view @tap="videoDetailClound(null,index)" style="color: #087DFF;">展开</view>
+									<view @tap="videoDetailClound(null,index)" style="color: #087DFF;">{{$getLang('展开')}}</view>
 								</view>
 								<view class="list_item">
 									<view v-for="(e,i) in cloudList[index].body" :key="i"   @touchstart="touchstart(e)" @touchend="touchend(e)" v-if="i<4">
@@ -79,11 +79,11 @@
 							<u-empty v-if="wifiConnectionState"
 								v-show="localChannel != '1' || (cloudList.length==0)"
 								mode="data"
-								text="无网络,暂无云端视频"
+								:text="$getLang('无网络,暂无云端视频')"
 							>
 							</u-empty>
 							<button v-if="wifiConnectionState" @tap="loadCloundVideo(1)"
-							style="background-color:#087DFF;color: #fff;margin-top: 30rpx;width: 310rpx;font-size: 30rpx;">加载云端视频</button>
+							style="background-color:#087DFF;color: #fff;margin-top: 30rpx;width: 310rpx;font-size: 30rpx;">{{$getLang('加载云端视频')}}</button>
 						</view>
 						
 					</view>
@@ -103,15 +103,15 @@
 							<view v-for="(item, index) in vieoList" :key="index" style="background-color: #fff;margin-bottom: 20px;padding:20rpx 10rpx 30rpx 10rpx;border-radius: 12rpx;">
 								<view style="display: flex;justify-content:space-between;">
 									<view style="font-weight: bold;color: #000;">{{item.time}}</view>
-									<view @tap="videoDetail(null,index)" style="color: #087DFF;">展开</view>
+									<view @tap="videoDetail(null,index)" style="color: #087DFF;">{{$getLang('展开')}}</view>
 								</view>
 								<view class="list_item">
 									<!-- @longpress="longpress(e)" -->
 									<view v-for="(e,i) in vieoList[index].body" :key="i"  v-if="i<4"  @touchstart="touchstart(e)" @touchend="touchend(e)">
 										<view class="player" @click="videoDetail(e,index)" style="position: relative;">
-											<view v-show="e.is_upload" style="position: absolute;top:20rpx;left: 0; width:150rpx;height: 50rpx;line-height: 50rpx;background:green;text-align: center;
+											<view v-show="e.is_upload" style="position: absolute;top:20rpx;left: 0; min-width:150rpx;height: 50rpx;line-height: 50rpx;background:green;text-align: center;
 											font-size:24rpx;padding:2rpx 8rpx;z-index: 99;color: #fff;">
-											已上传云端
+											{{$getLang('已上传云端')}}
 											</view>
 											<image class="video" :src="e.thumbUrl" width="100%" height="250"></image>
 											<view class="tips">
@@ -202,6 +202,24 @@
 			</view>
 		</u-popup>
 		<!-- 上传进度弹出层 end -->
+		
+		
+		<u-popup mode="bottom" v-model="actionSheetShow">
+			<view class="content">
+				<scroll-view scroll-y="true" style="height:120rpx;" :style="{height:heightPop+'rpx'}">
+					<view>
+						<view class="u-action-sheet-item u-line-1" v-for="(item,index) in actionSheetList" :key="index" @click="actionSheetSelectClick(index)">
+							{{item}}
+						</view>
+					</view>
+				</scroll-view>
+				<view class="confrim-btn">
+					<u-button @click="actionSheetShow = false;" style="color: #ccc;">{{$getLang('取消')}}</u-button>
+				</view>
+			</view>
+		</u-popup>
+		
+		
 	</view>
 </template>
 
@@ -297,27 +315,27 @@
 				params:{},
 				
 				dropVal1:'',
-				dropValTitle1:'全部设备',
+				dropValTitle1:this.$getLang('全部设备'),
 				
 				dropVal2:'',
-				dropValTitle2:'录制方向',
+				dropValTitle2:this.$getLang('录制方向'),
 				dropOptions1:[
 				],
 				dropOptions2:[
 					{
-						label: '全部',
+						label: this.$getLang('全部'),
 						value: '',
 					},
 					{
-						label: '前置',
+						label: this.$getLang('前置'),
 						value: '1',
 					},
 					{
-						label: '后置',
+						label: this.$getLang('后置'),
 						value: '2',
 					},
 				],
-				dropValTitle3:"选择日期",
+				dropValTitle3:this.$getLang('选择日期'),
 				vieoListBack:[],
 				wifiConnectionState:false,
 				
@@ -326,9 +344,15 @@
 				//是否长按事件
 			   islongPress:false,
 			   timer:null,//长按计时器
+			   
+			   actionSheetList:[],
+			   actionSheetShow:false,
+			   actionSheetItem:null,//当前操作的内容项
+			   heightPop:120,
 			}
 		},
 		onLoad() {
+			// uni.setStorageSync('language',1);
 			uni.getSystemInfo({
 			  success: (res)=> {
 				  uni.setStorageSync('platform',res.platform);
@@ -371,7 +395,7 @@
 				this.dropValTitle1=equip.apSN;
 				this.dropVal1=equip.apSN;
 				uni.showLoading({
-					title:'加载中...'
+					title:this.$getLang('加载中') 
 				})
 				//判断主要
 				setTimeout(async()=>{
@@ -379,7 +403,7 @@
 					const ssid = equip.apSN;//设备绑定的wifi
 					if(`"${ssid}"`==getCurSSID){
 						this.filterEquipList=[
-							{label:'全部设备',value: '', checked: true},
+							{label:this.$getLang('全部设备'),value: '', checked: true},
 							{label:equip.abbreviation+'('+equip.apSN+')',value: equip.apSN, checked: false},
 						];
 						
@@ -402,7 +426,7 @@
 				},20)
 				
 			}else{
-				this.dropValTitle1="全部设备";
+				this.dropValTitle1=this.$getLang('全部设备');
 				this.dropVal1='';
 			}
 			
@@ -427,18 +451,18 @@
 			selectTranslate(e){
 				// console.log(e)
 				if(e==''){
-					this.dropValTitle2="录制方向";
+					this.dropValTitle2=this.$getLang('录制方向');
 				}else if(e=='0'){
-					this.dropValTitle2="前录";
+					this.dropValTitle2=this.$getLang('前录');
 				}else if(e=='1'){
-					this.dropValTitle2="后录";
+					this.dropValTitle2=this.$getLang('后录');
 				}
 				this.cloudList=[];
 				this.cloundFirst=null;
 				this.loadData();
 			},
 			selectEquipList(e){
-				this.dropValTitle1=e?e:'全部设备';
+				this.dropValTitle1=e?e:this.$getLang('全部设备');
 				this.selectEquip=e;
 				this.dropVal1=e;
 				this.cloudList=[];
@@ -451,14 +475,15 @@
 				}
 			},
 			swiperChange(e){
+				this.videoName='';
 				this.tabsChange(e.target.current);
 			},
 			delAllVideoList:function(){
 				uni.showModal({
 					title:  this.$getLang('提示'),
 					content:  this.$getLang('确认要删除当前视频吗？一旦删除将无法找回，请谨慎操作~'),
-					cancelText:'取消',
-					confirmText:'确定删除',
+					cancelText:this.$getLang('取消'),
+					confirmText:this.$getLang('确定删除'),
 					success: (res) => {
 						if (res.confirm) {
 							uni.getSavedFileList({
@@ -474,7 +499,7 @@
 								// console.log('videoFiles',videoFiles);
 								this.vieoList =[];
 								uni.showToast({
-									title:'清理完成！'
+									title:this.$getLang('清理完成！')
 								})
 							  }
 							});
@@ -503,89 +528,97 @@
 				var itemList= [this.$getLang('上传') , this.$getLang('删除')];
 				if(this.current==0){
 					itemList= [this.$getLang('删除')];
+					this.heightPop=120;
+				}else{
+					this.heightPop=200;
 				}
-				uni.showActionSheet({
-					itemList: itemList,
-					success: async(res) => {
-						
-						if(this.current==0){
-							uni.showModal({
-								title:  this.$getLang('提示'),
-								content:  this.$getLang('确认要删除当前云端视频吗？一旦删除将无法恢复~'),
-								success: (res) => {
-									if (res.confirm) {
-										var datas={ devSN: item.devSN, id:item.id };
-										this.$u.api.delteCloundVideo(datas)
-											.then(res => {
-												if (res.code === 0) {
-													uni.showToast({
-														title:'删除成功！'
-													})
-													//重新加载一次
-													setTimeout(()=>{
-														this.loadCloundVideo();
-													},2000);
-												} else {
-													uni.showToast({
-														title: res.message,
-														icon: 'none'
-													})
-												}
-											})
-											.catch((err)=>{
-												console.log(err)
-											})
-									}
+				this.actionSheetList=itemList;
+				this.actionSheetShow=true;
+				this.actionSheetItem=item;
+			},
+			async actionSheetSelectClick(tapIndex){
+				var item=this.actionSheetItem;
+				this.actionSheetShow=false;
+				if(this.current==0){//云端长按事件
+					if (tapIndex == 0) {
+						uni.showModal({
+							title:  this.$getLang('提示'),
+							content:  this.$getLang('确认要删除当前视频吗'),
+							cancelText:this.$getLang('取消'),
+							confirmText:this.$getLang('确定'),
+							success: (res) => {
+								if (res.confirm) {
+									var datas={ devSN: item.devSN, id:item.id };
+									this.$u.api.delteCloundVideo(datas)
+										.then(res => {
+											if (res.code === 0) {
+												uni.showToast({
+													title:this.$getLang('删除成功')
+												})
+												//重新加载一次
+												setTimeout(()=>{
+													this.loadCloundVideo();
+												},2000);
+											} else {
+												uni.showToast({
+													title: this.$getLang(res.code),
+													icon: 'none'
+												})
+											}
+										})
+										.catch((err)=>{
+											console.log(err)
+										})
 								}
-							})
-						}else{
-							if (res.tapIndex == 0) {
-								// this.uploadShow = true;
-								var flag=await verfyUploadToCloud(this,item.id);
-								if(flag==false){
-									return;
-								}
-								this.params=item;
-								await this.onUpload(item);
-							} else {
-								uni.showModal({
-									title:  this.$getLang('提示'),
-									content:  this.$getLang('确认要删除当前视频吗'),
-									success: (res) => {
-										if (res.confirm) {
-											var fileUrl=item.playUrl;
-											uni.removeSavedFile({
-												filePath: fileUrl,
-												success: ()=> {
-												  uni.showToast({
-													title:'删除成功！'
-												  })
-												  uni.removeStorageSync(fileUrl);
-												  this.loadData();
-												  console.log('删除后',this.vieoList)
-												},
-												fail:()=> {
-													uni.showToast({
-														title:'删除失败！',
-														icon:'none'
-													})
-												}
-											});
-											
+							}
+						})
+					}
+				}else{
+					if (tapIndex == 0) {
+						// this.uploadShow = true;
+						var flag=await verfyUploadToCloud(this,item.id);
+						if(flag==false){
+							return;
+						}
+						this.params=item;
+						await this.onUpload(item);
+					} else {
+						uni.showModal({
+							title:  this.$getLang('提示'),
+							content:  this.$getLang('确认要删除当前视频吗'),
+							cancelText:this.$getLang('取消'),
+							confirmText:this.$getLang('确定'),
+							success: (res) => {
+								if (res.confirm) {
+									var fileUrl=item.playUrl;
+									uni.removeSavedFile({
+										filePath: fileUrl,
+										success: ()=> {
+										  uni.showToast({
+											title:this.$getLang('删除成功！')
+										  })
+										  uni.removeStorageSync(fileUrl);
+										  this.loadData();
+										  console.log('删除后',this.vieoList)
+										},
+										fail:()=> {
 											uni.showToast({
-												title:  this.$getLang('删除成功'),
-												icon: 'none'
+												title:this.$getLang('删除失败！'),
+												icon:'none'
 											})
 										}
-									}
-								})
+									});
+									
+									uni.showToast({
+										title:  this.$getLang('删除成功'),
+										icon: 'none'
+									})
+								}
 							}
-						}
-					},
-					fail: function(res) {
-						console.log(res.errMsg);
+						})
 					}
-				});
+				}
+				
 			},
 			async onUpload(item) {
 				if(item.is_upload=="true"||item.is_upload==true){
@@ -610,7 +643,7 @@
 				var thumbUrl =await this.uploadThumbUrlimg(this.params.thumbUrl);
 				const size = await this.getFileInfo()
 				const sec = Math.floor(Number(this.params.duration) / 1000)
-				this.videoTime = `${ Math.floor(sec/60) }分${Math.floor(sec%60)}秒`
+				this.videoTime = `${ Math.floor(sec/60) }${this.$getLang('分')}${Math.floor(sec%60)}${this.$getLang('秒')}`
 				const nameArr = this.params.name.split('-')
 				const videoDate = `${nameArr[1].replace('_', '-').replace('_', '-')} ${nameArr[2].replace('_', ':').replace('_', ':')}`
 				
@@ -643,7 +676,7 @@
 							if (data.code === 0) {
 								uni.showModal({
 									title: this.$getLang('提示'),
-									content:'恭喜您，当前视频已上传到云端，在云端列表可查看！',
+									content:this.$getLang('恭喜您，当前视频已上传到云端，在云端列表可查看！'),
 									showCancel:false,
 									confirmText:this.$getLang('确定'),
 									success:()=>{
@@ -664,7 +697,7 @@
 								}
 							} else {
 								uni.showToast({
-									title: data.message,
+									title:this.$getLang(data.code),
 									icon: 'none'
 								})
 							}
@@ -761,7 +794,7 @@
 					this.calendarValue =''; //param.startDate + ' - ' + param.endDate
 					this.startDate = ''
 					this.endDate = ''
-					this.dropValTitle3='选择日期';
+					this.dropValTitle3=this.$getLang('选择日期');
 				}
 				
 				this.cloudList=[];
@@ -869,7 +902,7 @@
 							return result;
 						}, []);
 					}
-					// console.log('本地视频vieoList',vieoList)
+					console.log('本地视频vieoList',vieoList)
 					this.vieoList=vieoList;
 					// console.log('本地视频列表',this.vieoList)
 				} else {
@@ -881,10 +914,10 @@
 				if(this.wifiConnectionState&&opt==1){
 					if(getApp().globalData.platform=="ios"){
 						uni.showModal({
-							title:'提示',
-							content:'抱歉，检测到当前网络连接的是设备WIFI，无法加载视频，是否确定当前已切换为数据网络？点击确定进行刷新~',
-							cancelText:'取消',
-							confirmText:'确定',
+							title:this.$getLang('提示'),
+							content:this.$getLang('抱歉，检测到当前网络连接的是设备WIFI，无法加载视频，是否确定当前已切换为数据网络？点击确定进行刷新~'),
+							cancelText:this.$getLang('取消'),
+							confirmText:this.$getLang('确定'),
 							success:(res)=>{
 								if(res.confirm){
 									// const ssid = getApp().globalData.equip.apSN;//设备绑定的wifi
@@ -896,10 +929,10 @@
 						})
 					}else{
 						uni.showModal({
-							title:'提示',
-							content:'抱歉，当前连接的是设备WIFI，无法加载云端视频，是否需要断开设备网络加载云端视频？',
-							cancelText:'取消',
-							confirmText:'确定',
+							title:this.$getLang('提示'),
+							content:this.$getLang('抱歉，当前连接的是设备WIFI，无法加载云端视频，是否需要断开设备网络加载云端视频？'),
+							cancelText:this.$getLang('取消'),
+							confirmText:this.$getLang('确定'),
 							success:(res)=>{
 								if(res.confirm){
 									const ssid = getApp().globalData.equip.apSN;//设备绑定的wifi
@@ -1304,5 +1337,21 @@
 	}
 	.tabs-bar{
 		position: absolute;bottom: -6rpxrpx;left: 23rpx; width:54rpx;height: 6rpx;background-color: #1F252A;border-radius: 2rpx;
+	}
+	
+	.u-action-sheet-item {
+		line-height: 1;
+		justify-content: center;
+		align-items: center;
+		font-size: 32rpx;
+		padding: 34rpx 0;
+		flex-direction: column;
+		text-align: center;
+		color: #087DFF;
+	}
+	
+	.u-action-sheet-item__subtext {
+		font-size: 24rpx;
+		margin-top: 20rpx;
 	}
 </style>

@@ -115,14 +115,14 @@
 							console.log(curSSID.replace('"','').replace('"','')) 
 							removeWifiBySSID(curSSID.replace('"','').replace('"',''));
 							uni.showLoading({
-								title:'网络连接中',
+								title:this.$getLang('网络连接中'),
 								mask:true,
 							})
 							
 							setTimeout(()=>{
 								uni.hideLoading();
 								uni.showToast({
-									title:'网络异常，请重新尝试点击登录！',
+									title:this.$getLang('网络异常，请重新尝试点击登录！'),
 									icon:'none'
 								})
 								

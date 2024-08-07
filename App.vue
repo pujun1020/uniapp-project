@@ -26,6 +26,7 @@
 			console.log('App Hide')
 		}
 	}
+	
 </script>
 
 <style lang="scss">
@@ -42,4 +43,7 @@
 	//   //   font-size: 20px !important;
 	//   // }
 	// }
+/* 	*{
+		text-transform: capitalize !important;
+	} */
 </style>

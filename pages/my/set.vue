@@ -53,6 +53,13 @@
 						this.downloadSound = data.downloadSound === '1'
 						this.area = data.area === '0' ? this.$getLang('中国') : this.$getLang('美国')
 						this.language = data.language === '0' ? this.$getLang('中文') : this.$getLang('英文')
+						var language=uni.getStorageSync('language');
+						if(language==0){
+							this.language=this.$getLang('中文');
+						}
+						if(language==1){
+							this.language=this.$getLang('英文');
+						}
 					} else {
 						uni.showToast({
 							title: res.message,
@@ -73,10 +80,10 @@
 								icon: 'none'
 							})
 							if(key=="uploadSound"){
-								uni.setStorageSync(key,value?"开启":"关闭");
+								uni.setStorageSync(key,value?this.$getLang('开启'):this.$getLang('关闭'));
 							}
 							if(key=="downloadSound"){
-								uni.setStorageSync(key,value?"开启":"关闭");
+								uni.setStorageSync(key,value?this.$getLang('开启'):this.$getLang('关闭'));
 							}
 							if(key=="wifi"){
 								uni.setStorageSync(key,value?"":"no_wifi");

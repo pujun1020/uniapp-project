@@ -87,11 +87,11 @@
 					if(`"${ssid}"`==getCurSSID){
 						uni.showModal({
 							title: this.$getLang('提示'),
-							content:'您当前连接的是设备WIFI，暂无网络，无法操作用户信息！',
+							content:this.$getLang('您当前连接的是设备WIFI，暂无网络，无法操作用户信息！'),
 							showCancel:false,
 							confirmText:this.$getLang('确定'),
 							success:(res)=>{
-								
+								this.isButtonDisabled = false;
 							}
 						})
 						return;
@@ -142,7 +142,7 @@
 					if(`"${ssid}"`==getCurSSID){
 						uni.showModal({
 							title: this.$getLang('提示'),
-							content:'您当前连接的是设备WIFI，暂无网络，无法操作用户信息！',
+							content:this.$getLang('您当前连接的是设备WIFI，暂无网络，无法操作用户信息！'),
 							showCancel:false,
 							confirmText:this.$getLang('确定'),
 							success:(res)=>{

@@ -1,5 +1,5 @@
 import { connectWifi, getConnectedSSID,getConnectedSSIDNew } from './cx-wifi/cx-wifi.js'
-
+import langObg from "@/common/language.js"
 export function connectStartWifi() {
 	return new Promise((resolve, reject) => {
 		const ssid = getApp().globalData.equip.apSN
@@ -41,7 +41,7 @@ export function openWebSocket() {
 				console.error(err)
 				getApp().globalData.socketTask = null
 				uni.showToast({
-					title: '设备连接断开！',
+					title: langObg.getLangContent('设备连接断开'),
 					icon: 'none'
 				})
 				resolve(false)
@@ -57,7 +57,7 @@ export function openWebSocket() {
 		ws.onError((err) => {
 			getApp().globalData.socketTask = null
 			uni.showToast({
-				title: '设备连接断开！',
+				title: langObg.getLangContent('设备连接断开'),
 				icon: 'none'
 			})
 			resolve(false)

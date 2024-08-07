@@ -1,3 +1,4 @@
+import langObg from "./language.js"
 // 读取json文件
 function getJsonData(path) { //path:路径
 	console.log("getData");
@@ -13,13 +14,13 @@ function getJsonData(path) { //path:路径
 							fileReader.readAsText(file, "utf-8"); //读文件的格式
 							fileReader.onerror = e => { //读文件失败
 								console.log("获取文件失败", fileReader.error);
-								plus.nativeUI.toast("获取文件失败,请重启应用", {
+								plus.nativeUI.toast(langObg.getLangContent('获取文件失败,请重启应用'), {
 									background: "rgba(255, 255, 255, 0.6)",
 								});
 								return;
 							};
 							fileReader.onload = e => { //读文件成功
-								console.log("读取文件成功");
+								console.log(langObg.getLangContent('读取文件成功'));
 								let txtData = e.target.result;
 								// console.log(txtData);
 								resolve(txtData); //回调函数内的值想返回到函数外部  就用promise+resolve来返回出去
@@ -27,7 +28,7 @@ function getJsonData(path) { //path:路径
 						});
 					}, error => {
 						console.log("2新建获取文件失败", error);
-						plus.nativeUI.toast("获取文件失败,请重启应用", {
+						plus.nativeUI.toast(langObg.getLangContent('获取文件失败,请重启应用'), {
 							background: "rgba(255, 255, 255, 0.6)",
 						});
 						return;
@@ -35,7 +36,7 @@ function getJsonData(path) { //path:路径
 			},
 			e => {
 				console.log("1请求文件系统失败", e.message);
-				plus.nativeUI.toast("请求系统失败,请重启应用", {
+				plus.nativeUI.toast(langObg.getLangContent('获取文件失败,请重启应用'), {
 					background:  "rgba(255, 255, 255, 0.6)",
 				});
 				return;
@@ -53,8 +54,8 @@ function changeData(path, seek, writeData) { //参数1：上传路径，参数2�
 				}, fileEntry => {
 					fileEntry.file(file => {
 						fileEntry.createWriter(writer => {
-							 console.log( fs.root.toURL(),'路径111')
-								plus.nativeUI.showWaiting("正在保存信息");
+							 console.log( fs.root.toURL(),`${langObg.getLangContent('路径')}111`)
+								plus.nativeUI.showWaiting(langObg.getLangContent('正在保存信息'));
 								writer.seek(seek); //覆盖文件
 								const writeDataTemp = JSON.stringify(writeData, null,
 									"\r").replace(/[\r]/g, "");
@@ -62,7 +63,7 @@ function changeData(path, seek, writeData) { //参数1：上传路径，参数2�
 								writer.onerror = function() {
 									console.log("4写入文件失败", writer.error.message);
 									plus.nativeUI.closeWaiting();
-									plus.nativeUI.toast("修改信息失败,请重新操作", {
+									plus.nativeUI.toast(langObg.getLangContent('修改信息失败,请重新操作'), {
 										background: "rgba(255, 255, 255, 0.6)",
 									});
 									return;
@@ -78,7 +79,7 @@ function changeData(path, seek, writeData) { //参数1：上传路径，参数2�
 							},
 							error => {
 								console.log("3创建creactWriter失败", error);
-								plus.nativeUI.toast("保存文件失败,请重新操作", {
+								plus.nativeUI.toast(langObg.getLangContent('保存文件失败,请重新操作'), {
 									// background: "#ffa38c",
 								});
 								return;
@@ -87,7 +88,7 @@ function changeData(path, seek, writeData) { //参数1：上传路径，参数2�
 				},
 				error => {
 					console.log("2获取文件失败", error);
-					plus.nativeUI.toast("保存文件失败,请重新操作", {
+					plus.nativeUI.toast(langObg.getLangContent('保存文件失败,请重新操作'), {
 						// background: "#ffa38c",
 					});
 					return;
@@ -95,7 +96,7 @@ function changeData(path, seek, writeData) { //参数1：上传路径，参数2�
 			);
 		}, e => {
 			console.log("1请求文件系统失败", e.message);
-			plus.nativeUI.toast("请求系统失败,请重新操作", {
+			plus.nativeUI.toast(langObg.getLangContent('请求系统失败,请重新操作'), {
 				// background: "#ffa38c",
 			});
 			return;
@@ -158,14 +159,14 @@ function moveDirectyOrFile(srcUrl, dstUrl, newName) { //srcUrl需要移动的目
 			}
 		}, function(e) {
 			uni.showToast({
-				title: '获取目标目录失败:' + e.message,
+				title: langObg.getLangContent('获取目标目录失败') + e.message,
 				duration: 2000,
 				icon: 'none'
 			});
 		});
 	}, function(e) {
 		uni.showToast({
-			title: '获取目录失败:' + e.message,
+			title: langObg.getLangContent('获取目录失败') + e.message,
 			duration: 2000,
 			icon: 'none'
 		});
@@ -185,7 +186,7 @@ function CreateNewDir(url, dirName) {
 			}, function(error) {
 				reject(error.message)
 				uni.showToast({
-					title: dirName + '目录创建失败:' + error.message,
+					title: dirName + langObg.getLangContent('目录创建失败') + error.message,
 					duration: 2000,
 					icon: 'none'
 				});
@@ -193,7 +194,7 @@ function CreateNewDir(url, dirName) {
 		}, function(e) {
 			reject(error.message)
 			uni.showToast({
-				title: '获取目录失败:' + e.message,
+				title: langObg.getLangContent('获取目录失败') + e.message,
 				duration: 2000,
 				icon: 'none'
 			});
@@ -226,25 +227,25 @@ function copyFileTo(url, newUrl, dirName, newName) {
 					resolve(en.fullPath);
 				}, e => {
 					console.log(e);
-					reject('错误：复制时出现错误')
+					reject(langObg.getLangContent('错误：复制时出现错误'))
 					uni.showModal({
-						title: "错误",
-						content: "复制时出现错误"
+						title: langObg.getLangContent('错误'),
+						content:langObg.getLangContent('复制时出现错误')
 					})
 				})
 			} else {
-				reject('错误：路径必须是文件')
+				reject(langObg.getLangContent('错误：路径必须是文件'))
 				uni.showModal({
-					title: "错误",
-					content: "路径必须是文件"
+					title: langObg.getLangContent('错误'),
+					content:langObg.getLangContent('路径必须是文件')
 				})
 			}
 		}, (e) => {
 			console.log(e);
 			reject(e)
 			uni.showModal({
-				title: "错误",
-				content: "打开文件系统时出错"
+				title: langObg.getLangContent('错误'),
+				content: langObg.getLangContent('打开文件系统时出错')
 			})
 		});
 	})

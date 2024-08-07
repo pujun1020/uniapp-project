@@ -112,7 +112,7 @@
 			onSelected(equip) {
 				if (equip.sn === this.equipSn) {
 					uni.showToast({
-						title:'已是当前设备，无需切换！',
+						title:this.$getLang('已是当前设备，无需切换！'),
 						icon:'none'
 					}) 
 					return

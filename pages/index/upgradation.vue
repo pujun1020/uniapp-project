@@ -64,35 +64,35 @@
 		
 		<u-popup v-model="showWIFIConnOpt" mode="bottom" height="980" border-radius="14" :mask-close-able="false" zIndex="999">
 			<view style="font-size: 30rpx;font-weight: bold;text-align: center;line-height: 80rpx;">
-				设备连接步骤
+				{{$getLang('设备连接步骤')}}
 			</view>
 			
 			<view style="font-size:26rpx;text-align: center;line-height:40rpx;width: 90%;margin: auto;">
-				如果您是首次连接或自动连接失败，请根据以下步骤操作！
+				{{$getLang('如果您是首次连接或自动连接失败，请根据以下步骤操作！')}}
 			</view>
 			<view v-show="showStep==1" style="width: 90%;margin:15rpx auto;min-height:300rpx;overflow:auto">
 				<view>
-					<view style="line-height: 44rpx;">第一步、打开仪表设备，将设备调节到以下苹果手机投屏界面</view>
+					<view style="line-height: 44rpx;">{{$getLang('第一步、打开仪表设备，将设备调节到以下苹果手机投屏界面')}}</view>
 					<image src="../../static/yindao-1.png" mode="widthFix" style="width: 80%;margin: 20rpx 10%;"></image>
 				</view>
 			</view>
 			<view v-show="showStep==2" style="width: 90%;margin:15rpx auto;min-height:300rpx;overflow:auto">
 				<view>
-					<view style="line-height: 44rpx;">第二步、进入手机WIFI列表界面，找到：<br>
-					WIFI【{{ssid}}】  密码：【{{password}}】<br>
-					进行手动连接。连接成功以后回到当前页面，点击下一步。如下图：</view>
+					<view style="line-height: 44rpx;">{{$getLang('第二步、进入手机WIFI列表界面，找到：')}}<br>
+					WIFI【{{ssid}}】  {{$getLang('密码')}}：【{{password}}】<br>
+					{{$getLang('进行手动连接。连接成功以后回到当前页面，点击下一步。如下图')}}：</view>
 					<image src="../../static/yindao-2.png" mode="widthFix" style="width: 90%;margin-left: 5%;margin-top: 15rpx;"></image>
 				</view>
 			</view>
 			<view style="width: 90%;margin: auto;text-align: center;" v-show="showStep==1">
-				<u-button style="width: 310rpx;background-color:#087DFF;color: #fff;" @tap="showStepFun(1)">下一步</u-button>
+				<u-button style="width: 310rpx;background-color:#087DFF;color: #fff;" @tap="showStepFun(1)">{{$getLang('下一步')}}</u-button>
 			</view>
 			<view style="width: 90%;margin: auto;text-align: center;" v-show="showStep==2">
-				<u-button v-if="showStepNotUse" style="width: 310rpx;background-color:#087DFF;color: #fff;" @tap="showStepFun(2)">下一步</u-button>
+				<u-button v-if="showStepNotUse" style="width: 310rpx;background-color:#087DFF;color: #fff;" @tap="showStepFun(2)">{{$getLang('下一步')}}</u-button>
 			</view>
 			
 			<view style="width: 90%;margin:40rpx auto;text-align: center;">
-				<u-button v-if="showStepNotUse" style="width: 310rpx;" @tap="showStepFun(3)">取消</u-button>
+				<u-button v-if="showStepNotUse" style="width: 310rpx;" @tap="showStepFun(3)">{{$getLang('取消')}}</u-button>
 			</view>
 		</u-popup>
 		<!-- button end -->
@@ -314,10 +314,10 @@ import {connectWifi,getConnectedSSID,removeWifiBySSID,getConnectedSSIDNew} from 
 						
 					}else{
 						uni.showModal({
-							title:'提示',
-							content:'您当前连接的WIFI不正确，请切换为设备WIFI【'+ssid+'】,密码：【'+password+'】，提示：密码已复制，可直接粘贴密码',
+							title:this.$getLang('提示'),
+							content:`${this.$getLang('您当前连接的WIFI不正确，请切换为设备WIFI')}【${ssid}】,${this.$getLang('密码')}：【${password}】，${this.$getLang('提示：密码已复制，可直接粘贴密码')}`,
 							showCancel:false,
-							confirmText:'确定',
+							confirmText:this.$getLang('确定'),
 							success:(res)=>{
 								if(res.confirm){
 									
@@ -358,10 +358,10 @@ import {connectWifi,getConnectedSSID,removeWifiBySSID,getConnectedSSIDNew} from 
 							// 	icon:'none'
 							// })
 							uni.showModal({
-								title:'提示',
-								content:'设备连接失败，请检查是否已打开设备OTA升级界面',
+								title:this.$getLang('提示'),
+								content:this.$getLang('设备连接失败，请检查是否已打开设备OTA升级界面'),
 								showCancel:false,
-								confirmText:'确认',
+								confirmText:this.$getLang('确认'),
 								success:()=>{
 									// this.showWIFIConnOpt=true;
 								}
@@ -586,7 +586,7 @@ import {connectWifi,getConnectedSSID,removeWifiBySSID,getConnectedSSIDNew} from 
 					if(platform=="android"){
 						if (await this.connectWifiNew()) {
 							uni.showToast({
-								title:'WIFI已连接!',
+								title:this.$getLang('WIFI已连接'),
 								icon:'success'
 							})
 							resolve(true);
@@ -598,7 +598,7 @@ import {connectWifi,getConnectedSSID,removeWifiBySSID,getConnectedSSIDNew} from 
 					}else{
 						if (await connectStartWifi()) {
 							uni.showToast({
-								title:'WIFI已连接!',
+								title:this.$getLang('WIFI已连接'),
 								icon:'success'
 							})
 							resolve(true);

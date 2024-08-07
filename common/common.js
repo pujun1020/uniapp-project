@@ -1,5 +1,5 @@
 
-
+import langObg from "@/common/language.js"
 //按照小时进行排序
 export function sortByTime(objArray){
 	 // 使用time属性进行排序
@@ -95,7 +95,7 @@ export function dvrDownLoadToPhotosAlbum(_this,params,opt) {
 	return new Promise((resolve, reject) => {
 		if(params.playUrl.includes('http://')||params.playUrl.includes('https://')){
 			opt=1;
-			_this.uploadOrDownload ='正在下载保存到相册'
+			_this.uploadOrDownload =_this.$getLang('正在下载保存到相册')
 			_this.uploadShow = true;
 		}
 		if(opt==1){//先下载，再保存到相册
@@ -107,13 +107,13 @@ export function dvrDownLoadToPhotosAlbum(_this,params,opt) {
 			        filePath: downloadRes.tempFilePath, // 使用下载成功的临时文件路径
 			        success: () => {
 			          uni.showToast({
-			            title: '已保存相册！'
+			            title:_this.$getLang('已保存相册')
 			          });
 					   _this.uploadShow = false
 			        },
 			        fail: (err) => {
 			          uni.showToast({
-			            title: '已保存相册失败，检查是否权限已打开？',
+			            title: _this.$getLang('已保存相册失败，检查是否权限已打开'),
 						icon:'none'
 			          });
 					   _this.uploadShow = false
@@ -121,9 +121,9 @@ export function dvrDownLoadToPhotosAlbum(_this,params,opt) {
 			      });
 			    } else {
 					 _this.uploadShow = false
-			      console.error('视频下载失败，状态码：', downloadRes.statusCode);
+			      // console.error(`${langObg.getLangContent('视频下载失败，状态码')}：`, downloadRes.statusCode);
 				  uni.showToast({
-				    title: '已保存相册失败，检查是否权限已打开？',
+				    title: _this.$getLang('已保存相册失败，检查是否权限已打开'),
 				  						icon:'none'
 				  });
 			    }
@@ -132,7 +132,7 @@ export function dvrDownLoadToPhotosAlbum(_this,params,opt) {
 				  _this.uploadShow = false
 			    console.error('下载视频失败', err);
 				uni.showToast({
-				  title: '已保存相册失败，检查是否权限已打开？',
+				  title:  _this.$getLang('已保存相册失败，检查是否权限已打开'),
 				   icon:'none'
 				});
 			  }
@@ -146,12 +146,12 @@ export function dvrDownLoadToPhotosAlbum(_this,params,opt) {
 			  filePath: params.playUrl, // 使用下载成功的临时文件路径
 			  success: () => {
 			    uni.showToast({
-			      title: '已保存相册！'
+			      title:  _this.$getLang('已保存相册')
 			    });
 			  },
 			  fail: (err) => {
 			    uni.showToast({
-			      title: '已保存相册失败，检查是否权限已打开？',
+			      title: _this.$getLang('已保存相册失败，检查是否权限已打开'),
 				   icon:'none'
 			    });
 			  }
@@ -182,7 +182,7 @@ export function verfyDownLoad(_this,id,opt) {
 			}else{
 				uni.showModal({
 					title:_this.$getLang('提示'),
-					content:'当前视频已保存在本地，是否需要重新下载？',
+					content:_this.$getLang('当前视频已保存在本地，是否需要重新下载'),
 					cancelText:_this.$getLang('取消'),
 					confirmText:_this.$getLang('确认'),
 					success:(res)=>{

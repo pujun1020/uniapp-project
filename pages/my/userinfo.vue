@@ -155,7 +155,7 @@
 			updateMobile() {
 				if(!this.isValidPhoneNumber(this.mobile)){
 					uni.showToast({
-						title:'手机号格式不正确！',
+						title:this.$getLang('手机号格式不正确'),
 						icon: 'none'
 					})
 					return;
@@ -206,7 +206,7 @@
 			updateEmail() {
 				if(!this.isValidEmail(this.email)){
 					uni.showToast({
-						title:'邮箱号格式不正确！',
+						title:this.$getLang('邮箱号格式不正确'),
 						icon: 'none'
 					})
 					return

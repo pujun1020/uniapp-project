@@ -1,8 +1,8 @@
 <template>  
   <view class="container">  
     <view class="header">  
-      <text class="back-button" @click="goBack">返回</text>  
-      <text class="title">3M IATD 案例中心</text>  
+      <text class="back-button" @click="goBack">{{$getLang('返回')}}</text>  
+      <text class="title">3M IATD {{$getLang('案例中心')}}</text>  
     </view>  
     <scroll-view class="card-list" scroll-y="true">  
       <view v-for="(card, index) in cards" :key="index" class="card">  
@@ -24,12 +24,12 @@ export default {
     return {  
       cards: [  
         {  
-          title: 'FPC 案例',  
-          info: '一般工业/通讯设备和元器件 - FPC - 3764-Q - 2022-02-10',  
+          title: `FPC${this.$getLang('案例')}`,  
+          info: `${this.$getLang('一般工业/通讯设备和元器件')} - FPC - 3764-Q - 2022-02-10`,  
           tags: [  
-            { text: '视频', color: 'red' },  
-            { text: '精华', color: 'red' },  
-            { text: '置顶', color: 'red' }  
+            { text: `${this.$getLang('视频')}`, color: 'red' },  
+            { text: `${this.$getLang('精华')}`, color: 'red' },  
+            { text: `${this.$getLang('置顶')}`, color: 'red' }  
           ]  
         },  
         // 添加更多卡片数据...  

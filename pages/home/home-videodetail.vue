@@ -16,15 +16,15 @@
 			
 			<!-- size -->
 			<view style="display: flex;">
-				<view>视频时长：{{ videoTime }}</view> 
-				<view style="margin-left: 50rpx;"> 视频大小：{{ params.size }}</view> 
-				<view style="margin-left: 50rpx;">{{ params.angle ? (params.angle === 'front' ? $getLang('前录') : $getLang('后录')) : '' }}</view>
+				<view>{{$getLang('视频时长')}}：{{ videoTime }}</view> 
+				<view style="margin-left: 50rpx;"> {{$getLang('视频大小')}}：{{ params.size }}</view> 
+				<view style="margin-left: 50rpx;">{{ params.angle }}</view>
 			</view>
 			<view style="display: flex;" v-if="params.date">
-				<view style="line-height: 50rpx;">视频时间：{{ params.date }}</view> 
+				<view style="line-height: 50rpx;">{{$getLang('视频时间')}}：{{ params.date }}</view> 
 				<view style="margin-left: 50rpx;line-height: 50rpx;">
-					<text  v-if="isUploadToCloud" style="padding: 3rpx 12rpx;background-color: green;color: #fff;font-size: 20rpx;border-radius: 4rpx;">已上传云端</text>
-					<text  v-if="isDownLoad" style="padding: 3rpx 12rpx;background-color: green;color: #fff;font-size: 20rpx;border-radius: 4rpx;">本地已下载</text>
+					<text  v-if="isUploadToCloud" style="padding: 3rpx 12rpx;background-color: green;color: #fff;font-size: 20rpx;border-radius: 4rpx;">{{$getLang('已上传云端')}}</text>
+					<text  v-if="isDownLoad" style="padding: 3rpx 12rpx;background-color: green;color: #fff;font-size: 20rpx;border-radius: 4rpx;">{{$getLang('本地已下载')}}</text>
 				</view>
 			</view>
 		</view>
@@ -32,15 +32,15 @@
 		<scroll-view scroll-y style="width: 100%;" :style="'height:'+winHeight+'px'">
 			<view v-if="curVideoGroup&&curVideoGroup.time" style="width: 100%;min-height: 400rpx;">
 				<!-- <view>【{{curVideoGroup.time}}】视频列表</view> -->
-				<u-cell-group :title="body.hour+'点'" :title-style="{color:'#000',textAlign:'center'}" v-for="body in curVideoGroup.body">
+				<u-cell-group :title="body.hour+$getLang('点')" :title-style="{color:'#000',textAlign:'center'}" v-for="body in curVideoGroup.body">
 					<u-cell-item @click="tapCellItem(item,index)" v-for="(item,index) in body.list" icon="play-circle" 
 					 :arrow="false" 
-					:value="params.date==item.date?'当前视频':''" :value-style="{ color: 'red' }">
+					:value="params.date==item.date? $getLang('当前视频'):''" :value-style="{ color: 'red' }">
 						<view slot="title">
 							<text>{{item.title}}</text>
 							<text style="margin-left: 40rpx;">{{getVideoTime(item)}}</text>
 							<text style="margin-left: 40rpx;">{{item.size}}</text>
-							<text style="margin-left: 40rpx;">{{item.angle ? (item.angle === 'front' ? $getLang('前录') : $getLang('后录')) : ''}}</text>
+							<text style="margin-left: 40rpx;">{{item.angle}}</text>
 						</view>
 					</u-cell-item>
 				</u-cell-group>
@@ -66,7 +66,7 @@
 				</u-grid-item>
 				<u-grid-item bg-color="#fff" @click="onToPhotosAlbum">
 					<u-icon name="download" :size="46"></u-icon>
-					<view class="grid-text">{{'保存到相册'}}</view>
+					<view class="grid-text">{{$getLang('保存到相册')}}</view>
 				</u-grid-item>
 			</u-grid>
 		</view>
@@ -144,14 +144,14 @@
 				// console.log(option);
 				if(option.type==2){
 					this.videoTime=this.params.duration;
-					this.params.angle=this.params.angle==0?'front':'';
+					this.params.angle=this.params.angle==0?this.$getLang('前录'):'';
 					var list=getApp().globalData.curVideoGroup;
 					if(list){
 						this.curVideoGroup=JSON.parse(JSON.stringify(list));;
 					}
 				}else{
 					const sec = Math.floor(Number(this.params.duration) / 1000)
-					this.videoTime = `${ Math.floor(sec/60) }分${Math.floor(sec%60)}秒`
+					this.videoTime = `${ Math.floor(sec/60) }${this.$getLang('分')}${Math.floor(sec%60)}${this.$getLang('秒')}`
 					
 					//判断是否已经上传云端
 					if(this.params.type==1){
@@ -216,7 +216,8 @@
 							if(this.params.type==2){
 								item.title=item.time;
 								item.size=(item.size/1024/1024).toFixed(2)+'Mb';
-								item.angle=item.cameraType=='0'?'front':'';
+								console.log('item.cameraType',item.cameraType)
+								item.angle=item.cameraType=='0'?this.$getLang('前录'):'';
 							}
 							
 							groups[hour].list.push(item); // 将当前对象放入对应小时的list中
@@ -233,7 +234,7 @@
 				}
 				
 				uni.setNavigationBarTitle({
-					title:this.curVideoGroup.time+'视频列表'
+					title:this.curVideoGroup.time+this.$getLang('视频列表')
 				})
 
 			}
@@ -245,7 +246,7 @@
 					this.params=item;
 					if(this.optType==0){
 						const sec = Math.floor(Number(this.params.duration) / 1000)
-						this.videoTime = `${ Math.floor(sec/60) }分${Math.floor(sec%60)}秒`
+						this.videoTime = `${ Math.floor(sec/60) }${this.$getLang('分')}${Math.floor(sec%60)}${this.$getLang('秒')}`
 						setTimeout(async()=>{
 							var flag=await verfyDownLoad(this,this.params.id,1);
 							if(flag){
@@ -270,9 +271,10 @@
 						this.videoTime=item.duration?item.duration:item.totalTime;
 					}
 					
-					this.params.angle=this.params.angle==0?'front':'';
+					// this.params.angle=this.params.angle==0?'Front':'';
 					this.params.type=this.optType;
 					this.isShpwPlayVideo=false;
+					
 					setTimeout(()=>{
 						this.isShpwPlayVideo=true;
 					},50);
@@ -283,17 +285,18 @@
 				// }
 			},
 			getVideoTime(item){
+				// console.log('getVideoTime—'+this.optType,item);
 				if(this.optType==1||this.optType==0){
 					const sec = Math.floor(Number(item.duration) / 1000);
-					return `${ Math.floor(sec/60) }分${Math.floor(sec%60)}秒`;
+					return `${ Math.floor(sec/60) }${this.$getLang('分')}${Math.floor(sec%60)}${this.$getLang('秒')}`;
 				}
 				if(this.optType==2){
-					if(item.totalTime.includes('分')){
+					if(item.totalTime.includes('分')||item.totalTime.includes('m')){
 						return item.totalTime;
 					}else{
 						var time=Number(item.totalTime);
 						const sec = Math.floor(Number(time) / 1000);
-						return `${ Math.floor(sec/60) }分${Math.floor(sec%60)}秒`;
+						return `${ Math.floor(sec/60) }${this.$getLang('分')}${Math.floor(sec%60)}${this.$getLang('秒')}`;
 					}
 					
 				}
@@ -336,10 +339,10 @@
 									}
 									uni.setStorageSync(fileRes.savedFilePath, this.params)
 									var downloadSound=uni.getStorageSync('downloadSound');
-									if(downloadSound!="关闭"){
+									if(downloadSound!='关闭' && downloadSound!='Close'){
 										uni.showModal({
 											title:this.$getLang('提示'),
-											content:'恭喜您，视频下载到本地完成，您可以到【在路上】的【本地】列表进行查看，是否返回DVR列表页面？',
+											content:this.$getLang('恭喜您，视频下载到本地完成，您可以到【在路上】的【本地】列表进行查看，是否返回DVR列表页面？'),
 											cancelText:this.$getLang('取消'),
 											confirmText:this.$getLang('确认'),
 											success:(res)=>{
@@ -354,7 +357,7 @@
 									this.uploadShow = false
 								},
 								fail: (err) => {
-									console.log('保存失败', err)
+									console.log(this.$getLang('保存失败'), err)
 								}
 							})
 						}
@@ -422,10 +425,10 @@
 							if (data.code === 0) {
 								
 								var uploadSound=uni.getStorageSync('uploadSound');
-								if(uploadSound!="关闭"){
+								if(uploadSound!='关闭' && uploadSound!='Close'){
 									uni.showModal({
 										title: this.$getLang('提示'),
-										content:'恭喜您，当前视频已上传到云端，在云端列表可查看！',
+										content:this.$getLang('恭喜您，当前视频已上传到云端，在云端列表可查看！'),
 										showCancel:false,
 										confirmText:this.$getLang('确定'),
 										success:()=>{
@@ -522,25 +525,27 @@
 							resove(res.size)
 						},
 						fail: (err) => {
-							console.log('获取文件失败', err)
+							console.log(this.$getLang('获取文件失败'), err)
 						}
 					})
 				})
 			},
 			uploadLogin() {
 				return new Promise((resove, reject) => {
+					console.log(getApp().globalData.user.userName)
+					console.log(getApp().globalData.user.password)
 					this.$u.upload.login({ username: getApp().globalData.user.userName, password: getApp().globalData.user.password })
 						.then(res => {
 							if (res.code === 0) {
 								getApp().globalData.uploadtoken = res.token
 								resove(true)
 							} else {
-								reject('上传登陆失败')
+								reject(this.$getLang('上传登陆失败'))
 							}
 						}).catch(e => {
 							if(e.errMsg.indexOf('request:fail abort statusCode:-1')>-1){
 								uni.showToast({
-									title:'抱歉，网络连接失败,无法上传云端！',
+									title:this.$getLang('抱歉，网络连接失败,无法上传云端！'),
 									icon:'none'
 								})
 								// setTimeout(()=>{
@@ -571,7 +576,7 @@
 										data: '{ "METHOD":"FILE.DELETE", "exigency":true, "playUrlList":'+JSON.stringify(temps)+'}'
 									})
 									uni.showToast({
-										title:'删除成功！'
+										title:this.$getLang('删除成功')
 									})
 									this.getOpenerEventChannel().emit('sonPageData',this.params)
 									uni.navigateBack();
@@ -594,7 +599,7 @@
 									filePath: fileUrl,
 									success: ()=> {
 									  uni.showToast({
-									  	title:'删除成功！'
+									  	title:this.$getLang('删除成功')
 									  })
 									  uni.removeStorageSync(fileUrl);
 									  setTimeout(()=>{
@@ -605,7 +610,7 @@
 									},
 									fail:()=> {
 										uni.showToast({
-											title:'删除失败！',
+											title:this.$getLang('删除失败！'),
 											icon:'none'
 										})
 									}

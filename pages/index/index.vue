@@ -34,7 +34,7 @@
 							<view class="u-flex-col u-col-center" style="z-index: 999;">
 								<view class="bg__name" v-show="localChannel == '1'">金浪318</view>
 								<view class="bg__name" v-show="localChannel == '0'">{{$getLang('恒勃智驾')}}</view>
-								<view class="bg__status" :style="{ color: socketStatus === '已连接' ? 'green' : '#7D818C' }">{{ socketStatus }}</view>
+								<view class="bg__status" :style="{ color: socketStatus ===$getLang('已连接')  ? 'green' : '#7D818C' }">{{ socketStatus }}</view>
 							</view>
 						</view>
 					</view>
@@ -164,7 +164,10 @@
 			// uni.setStorageSync('language',0);//手动切换语言
 			uni.getSystemInfo({
 			  success: (res)=> {
-
+				  console.log('getSystemInfo',res)
+				  if(res.language!="zh-CN"){
+					  uni.setStorageSync('language',1);
+				  }
 				  uni.setStorageSync('platform',res.platform);
 				  getApp().globalData.platform=res.platform;
 				  
@@ -252,7 +255,7 @@
 				console.log(getCurSSID,ssid);
 				if(`"${ssid}"`==getCurSSID){
 					uni.showLoading({
-						title:'断开设备...',
+						title:this.$getLang('断开设备'),
 					})
 					removeWifiBySSID(ssid);
 					setTimeout(()=>{
@@ -296,7 +299,7 @@
 				console.log(ssid,password)
 				if (index === 1) {
 					uni.showLoading({
-						title:'加载中...',
+						title:this.$getLang('加载中'),
 						mask:true
 					})
 
@@ -310,6 +313,7 @@
 					 }else{
 						 getApp().globalData.vieoListNew=[];
 						 this.$refs['dvrlist'].vieoListNew=[];
+						 this.$refs["dvrlist"].datelist=[];
 						 this.$refs['dvrlist'].wifiConnectionState=false;
 						uni.hideLoading();
 					 }
@@ -319,7 +323,7 @@
 					var getCurSSID=await getConnectedSSIDNew();//当前的网络wifi
 					const ssid = getApp().globalData.equip.apSN;//设备绑定的wifi
 					if(`"${ssid}"`!=getCurSSID){
-						this.socketStatus='未连接'
+						this.socketStatus=this.$getLang('未连接')
 					}
 					// this.isShowTabbar=true;
 				    
@@ -383,7 +387,7 @@
 							// 	});
 							// }
 							try {
-								let devName="恒勃智驾";
+								let devName=this.$getLang('恒勃智驾');
 								const ssid = result[0].split('=')[1].replace('\n', '')
 								const password = result[1].split('=')[1]
 								const url = result[2].split('=')[1]
@@ -409,7 +413,7 @@
 									// console.log('sendDevInfo:',res);
 									if(res.code!==0){
 										uni.showToast({
-											title:'设备已被其他用户绑定，不支持重复绑定设备！',
+											title:this.$getLang('设备已被其他用户绑定，不支持重复绑定设备！'),
 											icon:'none'
 										})
 									}else{
@@ -417,7 +421,7 @@
 										this.loadEquipList();
 										uni.showModal({
 											title: this.$getLang('提示'),
-											content:'恭喜您，设备绑定成功，当前设备的设备号为【'+devsn+'】。注意：设备WIFI名称跟设备号是同一个【'+devsn+'】',
+											content:`${this.$getLang('恭喜您，设备绑定成功，当前设备的设备号为')}【${devsn}】。${this.$getLang('注意：设备WIFI名称跟设备号是同一个')}【${devsn}】`,
 											showCancel:false,
 											confirmText:this.$getLang('确定'),
 											success:(res)=> {
@@ -536,13 +540,13 @@
 					// console.log('getCurSSID',getCurSSID)
 					if(getCurSSID=='fail.location'){
 						clearInterval(this.timer);
-						this.socketStatus='未连接';
+						this.socketStatus=this.$getLang('未连接');
 					}else{
 						const ssid = getApp().globalData.equip.apSN;//设备绑定的wifi
 						if(`"${ssid}"`!=getCurSSID){
-							this.socketStatus='未连接';
+							this.socketStatus=this.$getLang('未连接');
 						}else{
-							this.socketStatus='已连接';
+							this.socketStatus=this.$getLang('已连接');
 							this.bannerImg=this.defaultBannerImg;
 						}
 					}
@@ -573,10 +577,10 @@
 							fail() {
 								clearInterval(this.timer);
 								uni.showModal({
-									title:'提示',
-									content:'抱歉，获取定位信息授权失败！如果wifi无法识别或者设备连接失败，请到手机设置【打开定位授权】',
+									title:this.$getLang('提示'),
+									content:this.$getLang('抱歉，获取定位信息授权失败！如果wifi无法识别或者设备连接失败，请到手机设置【打开定位授权】'),
 									showCancel:false,
-									confirmText:'确认',
+									confirmText:this.$getLang('确认'),
 									success:()=> {
 										if(platform=="android"){
 											var context = plus.android.importClass('android.content.Context');
@@ -620,7 +624,7 @@
 			
 		},
 		onUnload() {
-			console.log('页面卸载，关闭定时器')
+			// console.log('页面卸载，关闭定时器')
 			clearInterval(this.timer);
 		},
 	}
